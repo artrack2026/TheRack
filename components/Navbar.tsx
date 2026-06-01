@@ -41,12 +41,14 @@ export default function Navbar() {
         setUserMenu(false)
       }
     }
-    document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
+    document.addEventListener('mouseup', handler)
+    return () => document.removeEventListener('mouseup', handler)
   }, [])
 
   const handleSignOut = async () => {
+    setUserMenu(false)
     await signOut()
+    router.refresh()
     router.push('/')
   }
 

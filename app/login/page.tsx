@@ -98,7 +98,8 @@ function LoginForm() {
                   type="text"
                   required
                   autoComplete="email"
-                  className="cyber-input pl-11"
+                  className="cyber-input"
+                  style={{ paddingLeft: '2.5rem' }}
                   placeholder="you@example.com"
                   value={form.email}
                   onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
@@ -120,7 +121,8 @@ function LoginForm() {
                   type={showPass ? 'text' : 'password'}
                   required
                   autoComplete="current-password"
-                  className="cyber-input pl-11 pr-10"
+                  className="cyber-input"
+                  style={{ paddingLeft: '2.5rem', paddingRight: '2.5rem' }}
                   placeholder="••••••••"
                   value={form.password}
                   onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
