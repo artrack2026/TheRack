@@ -26,7 +26,8 @@ export async function GET() {
   const cookieStore = await cookies()
   const supabase    = createSupabaseServerClient(cookieStore)
   const { data, error } = await supabase
-    .from('profiles').select('id, email, display_name, role, created_at')
+    .from('profiles')
+    .select('id, email, first_name, last_name, display_name, phone, address_line1, address_line2, city, state, zip, role, created_at')
     .eq('role', 'customer')
     .order('created_at', { ascending: false })
 
@@ -80,8 +81,8 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({ ok: true, userId: authData.user.id })
 }
 
-/* PATCH /api/admin/users — update a user's role
-   Body: { id, role }
+/* PATCH /api/admin/users — update a user's profile
+   Body: { id, ...any profile fields }
 */
 export async function PATCH(req: NextRequest) {
   if (!isSupabaseConfigured) return NextResponse.json({ error: 'Supabase not configured' }, { status: 503 })
@@ -89,11 +90,11 @@ export async function PATCH(req: NextRequest) {
   const check = await requireAdmin()
   if ('error' in check) return NextResponse.json({ error: check.error }, { status: check.status })
 
-  const { id, role } = await req.json()
-  if (!id || !role) return NextResponse.json({ error: 'id and role are required' }, { status: 400 })
+  const { id, ...fields } = await req.json()
+  if (!id) return NextResponse.json({ error: 'id is required' }, { status: 400 })
 
   const admin = createSupabaseAdminClient()
-  const { error } = await admin.from('profiles').update({ role }).eq('id', id)
+  const { error } = await admin.from('profiles').update(fields).eq('id', id)
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
   return NextResponse.json({ ok: true })
