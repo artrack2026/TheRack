@@ -140,56 +140,52 @@ export default function Navbar() {
                 </span>
               </button>
 
-              <AnimatePresence>
-                {userMenu && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -8, scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: -8, scale: 0.95 }}
-                    transition={{ duration: 0.15 }}
-                    className="absolute right-0 mt-2 py-1 min-w-[180px]"
-                    style={{
-                      background: 'var(--color-surface)',
-                      border: '1px solid var(--color-border)',
-                      borderRadius: '12px',
-                      boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
-                    }}
+              {/* No AnimatePresence — static show/hide so buttons always fire */}
+              {userMenu && (
+                <div
+                  className="absolute right-0 mt-2 py-1 min-w-[180px]"
+                  style={{
+                    background: 'var(--color-surface)',
+                    border: '1px solid var(--color-border)',
+                    borderRadius: '12px',
+                    boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+                    zIndex: 100,
+                  }}
+                >
+                  <Link
+                    href="/portal"
+                    className="flex items-center gap-2.5 px-4 py-2.5 text-sm transition-colors hover:bg-white/5"
+                    style={{ color: 'var(--color-text)' }}
                   >
+                    <User size={14} /> My Portal
+                  </Link>
+                  {isAdmin && (
                     <Link
-                      href="/portal"
+                      href="/admin"
                       className="flex items-center gap-2.5 px-4 py-2.5 text-sm transition-colors hover:bg-white/5"
-                      style={{ color: 'var(--color-text)' }}
+                      style={{ color: 'var(--r-violet)' }}
                     >
-                      <User size={14} /> My Portal
+                      <Shield size={14} /> Admin Panel
                     </Link>
-                    {isAdmin && (
-                      <Link
-                        href="/admin"
-                        className="flex items-center gap-2.5 px-4 py-2.5 text-sm transition-colors hover:bg-white/5"
-                        style={{ color: 'var(--r-violet)' }}
-                      >
-                        <Shield size={14} /> Admin Panel
-                      </Link>
-                    )}
-                    <Link
-                      href="/settings"
-                      className="flex items-center gap-2.5 px-4 py-2.5 text-sm transition-colors hover:bg-white/5"
-                      style={{ color: 'var(--color-text-muted)' }}
-                    >
-                      <Settings size={14} /> Settings
-                    </Link>
-                    <div style={{ borderTop: '1px solid var(--color-border)', margin: '4px 0' }} />
-                    <button
-                      onMouseDown={e => e.stopPropagation()}
-                      onClick={handleSignOut}
-                      className="flex items-center gap-2.5 px-4 py-2.5 text-sm w-full text-left transition-colors hover:bg-white/5"
-                      style={{ color: 'var(--r-red)', background: 'none', border: 'none', cursor: 'pointer' }}
-                    >
-                      <LogOut size={14} /> Sign Out
-                    </button>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                  )}
+                  <Link
+                    href="/settings"
+                    className="flex items-center gap-2.5 px-4 py-2.5 text-sm transition-colors hover:bg-white/5"
+                    style={{ color: 'var(--color-text-muted)' }}
+                  >
+                    <Settings size={14} /> Settings
+                  </Link>
+                  <div style={{ borderTop: '1px solid var(--color-border)', margin: '4px 0' }} />
+                  <a
+                    href="/signout"
+                    onClick={e => { e.preventDefault(); handleSignOut() }}
+                    className="flex items-center gap-2.5 px-4 py-2.5 text-sm w-full transition-colors hover:bg-white/5"
+                    style={{ color: 'var(--r-red)', cursor: 'pointer', display: 'flex', textDecoration: 'none' }}
+                  >
+                    <LogOut size={14} /> Sign Out
+                  </a>
+                </div>
+              )}
             </div>
           ) : (
             <Link
