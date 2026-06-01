@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400">
+  <defs>
+    <linearGradient id="tonedpaper" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#b8a888"/>
+      <stop offset="100%" stop-color="#9a8868"/>
+    </linearGradient>
+    <filter id="smudge"><feGaussianBlur stdDeviation="2.5"/></filter>
+  </defs>
+  <rect width="600" height="400" fill="url(#tonedpaper)"/>
+  <!-- paper grain -->
+  <rect width="600" height="400" fill="#a09070" opacity="0.15"/>
+
+  <!-- Fragment 1 — left face profile -->
+  <g opacity="0.88">
+    <!-- head mass charcoal -->
+    <ellipse cx="160" cy="155" rx="65" ry="78" fill="#2a2018" opacity="0.75" filter="url(#smudge)"/>
+    <!-- highlight graphite -->
+    <ellipse cx="148" cy="138" rx="28" ry="35" fill="#c8b898" opacity="0.5"/>
+    <!-- eye mark -->
+    <ellipse cx="155" cy="148" rx="18" ry="8" fill="#1a1008" opacity="0.8"/>
+    <ellipse cx="158" cy="147" rx="6" ry="5" fill="#3a2810" opacity="0.9"/>
+    <!-- nose -->
+    <path d="M160,165 Q168,175 165,183 Q158,187 152,183" stroke="#2a1a08" stroke-width="2" fill="none"/>
+    <!-- lip -->
+    <path d="M148,198 Q158,194 168,198 Q158,205 148,198Z" fill="#3a2818" opacity="0.7"/>
+    <!-- neck -->
+    <rect x="140" y="225" width="38" height="35" fill="#2a2018" opacity="0.5" filter="url(#smudge)"/>
+    <!-- smudge marks -->
+    <ellipse cx="185" cy="190" rx="25" ry="8" fill="#1a1008" opacity="0.3" filter="url(#smudge)" transform="rotate(-20,185,190)"/>
+  </g>
+
+  <!-- Fragment 2 — center face front, fragmented -->
+  <g opacity="0.9">
+    <ellipse cx="310" cy="140" rx="72" ry="88" fill="#1e1608" opacity="0.6" filter="url(#smudge)"/>
+    <ellipse cx="295" cy="122" rx="32" ry="25" fill="#d0c0a0" opacity="0.45"/>
+    <!-- left eye -->
+    <ellipse cx="288" cy="138" rx="14" ry="9" fill="#1a1008" opacity="0.9"/>
+    <circle cx="290" cy="137" r="5" fill="#0a0808"/>
+    <ellipse cx="290" cy="136" rx="2" ry="2" fill="#d0c0a0" opacity="0.5"/>
+    <!-- right eye partial -->
+    <ellipse cx="330" cy="135" rx="12" ry="8" fill="#1a1008" opacity="0.8"/>
+    <circle cx="329" cy="134" r="4" fill="#0a0808"/>
+    <!-- nose bridge line -->
+    <line x1="310" y1="148" x2="308" y2="178" stroke="#2a1a08" stroke-width="2.5" opacity="0.7"/>
+    <!-- mouth — deliberately fragmented -->
+    <path d="M292,200 Q310,195 326,200" stroke="#1a1008" stroke-width="2" fill="none"/>
+    <!-- cross-hatching marks -->
+    <line x1="340" y1="155" x2="370" y2="125" stroke="#2a1a08" stroke-width="1" opacity="0.4"/>
+    <line x1="345" y1="160" x2="375" y2="130" stroke="#2a1a08" stroke-width="1" opacity="0.4"/>
+    <line x1="350" y1="165" x2="380" y2="135" stroke="#2a1a08" stroke-width="1" opacity="0.4"/>
+  </g>
+
+  <!-- Fragment 3 — right, gestural -->
+  <g opacity="0.7">
+    <ellipse cx="470" cy="175" rx="58" ry="70" fill="#2a2018" opacity="0.55" filter="url(#smudge)"/>
+    <ellipse cx="458" cy="158" rx="22" ry="28" fill="#c8b898" opacity="0.4"/>
+    <ellipse cx="462" cy="165" rx="12" ry="7" fill="#1a1008" opacity="0.85"/>
+    <path d="M465,185 Q472,195 468,202 Q461,205 456,200" stroke="#2a1a08" stroke-width="2" fill="none" opacity="0.8"/>
+    <!-- gestural smudge -->
+    <ellipse cx="490" cy="210" rx="30" ry="10" fill="#1a1008" opacity="0.25" filter="url(#smudge)" transform="rotate(15,490,210)"/>
+  </g>
+
+  <!-- charcoal dust/smear at bottom -->
+  <rect x="0" y="340" width="600" height="60" fill="#2a2018" opacity="0.15" filter="url(#smudge)"/>
+
+  <text x="300" y="385" font-family="serif" font-size="10" fill="#1a1008" opacity="0.55" text-anchor="middle" font-style="italic">Portraits of No One — Study IV · Charcoal + Graphite</text>
+</svg>

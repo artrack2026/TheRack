@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { AtSign, Mail, Heart } from 'lucide-react'
+import { AtSign, Mail, Heart, Shield } from 'lucide-react'
 import LogoText from '@/components/LogoText'
 
 export default function Footer() {
@@ -87,9 +87,18 @@ export default function Footer() {
           <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
             © {new Date().getFullYear()} Art-R-Ack. All rights reserved.
           </p>
-          <p className="text-xs flex items-center gap-1.5" style={{ color: 'var(--color-text-muted)' }}>
-            Made with <Heart size={11} style={{ color: 'var(--r-red)' }} /> for art lovers
-          </p>
+          <div className="flex items-center gap-4">
+            <p className="text-xs flex items-center gap-1.5" style={{ color: 'var(--color-text-muted)' }}>
+              Made with <Heart size={11} style={{ color: 'var(--r-red)' }} /> for art lovers
+            </p>
+            <Link
+              href="/admin"
+              className="text-xs flex items-center gap-1 transition-colors hover:opacity-80"
+              style={{ color: 'var(--color-border)' }}
+            >
+              <Shield size={10} /> Admin
+            </Link>
+          </div>
         </div>
       </div>
     </footer>

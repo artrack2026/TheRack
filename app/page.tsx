@@ -38,11 +38,11 @@ const categories = [
 ]
 
 const demoFeatured: Product[] = [
-  { id: 'demo-1', title: 'Warm Dissolution No. 3', description: 'Large-format abstract in terracotta, ochre, and burnt sienna on raw linen.', price: 875, category: 'artwork', images: [], stock_count: 1, featured: true, dimensions: '36" × 48"', materials: 'Oil + cold wax on raw linen', created_at: new Date().toISOString() },
-  { id: 'demo-2', title: 'Reclaimed Factory Window Frame', description: '1940s textile mill steel frame with original industrial paint layers.', price: 340, category: 'reclaimed', images: [], stock_count: 1, featured: true, dimensions: '42" × 60"', materials: 'Salvaged steel', created_at: new Date().toISOString() },
-  { id: 'demo-3', title: 'Botanical Press Prints — Set of 3', description: 'Original pressed botanicals sealed in archival resin on watercolor paper.', price: 120, category: 'goods', images: [], stock_count: 3, featured: true, dimensions: '8" × 10" each', materials: 'Pressed botanicals, archival resin', created_at: new Date().toISOString() },
-  { id: 'demo-4', title: 'Portraits of No One — Study IV', description: 'Charcoal and graphite portrait study on toned paper.', price: 290, category: 'artwork', images: [], stock_count: 1, featured: true, dimensions: '18" × 24"', materials: 'Charcoal, graphite', created_at: new Date().toISOString() },
-  { id: 'demo-7', title: 'Color Study — Spectrum Grid', description: 'A meditative 6×6 grid painting in a single session. Signed, unframed.', price: 480, category: 'artwork', images: [], stock_count: 1, featured: true, dimensions: '24" × 24"', materials: 'Acrylic on birch panel', created_at: new Date().toISOString() },
+  { id: 'demo-1', title: 'Warm Dissolution No. 3', description: 'Large-format abstract in terracotta, ochre, and burnt sienna on raw linen.', price: 875, category: 'artwork', images: ['/images/warm-dissolution.svg'], stock_count: 1, featured: true, dimensions: '36" × 48"', materials: 'Oil + cold wax on raw linen', created_at: new Date().toISOString() },
+  { id: 'demo-2', title: 'Reclaimed Factory Window Frame', description: '1940s textile mill steel frame with original industrial paint layers.', price: 340, category: 'reclaimed', images: ['/images/factory-window.svg'], stock_count: 1, featured: true, dimensions: '42" × 60"', materials: 'Salvaged steel', created_at: new Date().toISOString() },
+  { id: 'demo-3', title: 'Botanical Press Prints — Set of 3', description: 'Original pressed botanicals sealed in archival resin on watercolor paper.', price: 120, category: 'goods', images: ['/images/botanical-prints.svg'], stock_count: 3, featured: true, dimensions: '8" × 10" each', materials: 'Pressed botanicals, archival resin', created_at: new Date().toISOString() },
+  { id: 'demo-4', title: 'Portraits of No One — Study IV', description: 'Charcoal and graphite portrait study on toned paper.', price: 290, category: 'artwork', images: ['/images/portraits-study.svg'], stock_count: 1, featured: true, dimensions: '18" × 24"', materials: 'Charcoal, graphite', created_at: new Date().toISOString() },
+  { id: 'demo-7', title: 'Color Study — Spectrum Grid', description: 'A meditative 6×6 grid painting in a single session. Signed, unframed.', price: 480, category: 'artwork', images: ['/images/spectrum-grid.svg'], stock_count: 1, featured: true, dimensions: '24" × 24"', materials: 'Acrylic on birch panel', created_at: new Date().toISOString() },
 ]
 
 export default function HomePage() {
@@ -140,7 +140,7 @@ export default function HomePage() {
 
           {/* Scroll hint */}
           <motion.div
-            className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2"
+            className="absolute bottom-4 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2"
             animate={{ y: [0, 7, 0] }}
             transition={{ duration: 2.2, repeat: Infinity }}
           >

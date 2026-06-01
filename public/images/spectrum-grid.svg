@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400">
+  <defs>
+    <filter id="knifeBlend"><feGaussianBlur stdDeviation="1.2"/></filter>
+  </defs>
+  <rect width="600" height="400" fill="#1c1c1a"/>
+  <!-- canvas shadow/frame suggestion -->
+  <rect x="80" y="30" width="440" height="340" fill="#0a0a08" rx="2"/>
+  <rect x="85" y="35" width="430" height="330" fill="#1a1810" rx="1"/>
+
+  <!-- 6x6 grid of color cells with palette knife texture feel -->
+  <!-- Row 1 -->
+  <rect x="88" y="38" width="68" height="52" fill="#e05858"/>
+  <rect x="88" y="38" width="68" height="52" fill="#d04040" opacity="0.4" filter="url(#knifeBlend)"/>
+  <rect x="158" y="38" width="68" height="52" fill="#e07838"/>
+  <rect x="228" y="38" width="68" height="52" fill="#d4b030"/>
+  <rect x="298" y="38" width="68" height="52" fill="#3ab870"/>
+  <rect x="368" y="38" width="68" height="52" fill="#1ab4c0"/>
+  <rect x="438" y="38" width="75" height="52" fill="#3878e0"/>
+
+  <!-- Row 2 -->
+  <rect x="88" y="92" width="68" height="52" fill="#c84848" opacity="0.9"/>
+  <rect x="158" y="92" width="68" height="52" fill="#f09050"/>
+  <rect x="228" y="92" width="68" height="52" fill="#e8c840"/>
+  <rect x="298" y="92" width="68" height="52" fill="#50d880"/>
+  <rect x="368" y="92" width="68" height="52" fill="#30c8d0"/>
+  <rect x="438" y="92" width="75" height="52" fill="#5090e8"/>
+
+  <!-- Row 3 -->
+  <rect x="88" y="146" width="68" height="52" fill="#f07070"/>
+  <rect x="158" y="146" width="68" height="52" fill="#d06828"/>
+  <rect x="228" y="146" width="68" height="52" fill="#c8a020"/>
+  <rect x="298" y="146" width="68" height="52" fill="#28a858"/>
+  <rect x="368" y="146" width="68" height="52" fill="#0898a8"/>
+  <rect x="438" y="146" width="75" height="52" fill="#2858c0"/>
+
+  <!-- Row 4 -->
+  <rect x="88" y="200" width="68" height="52" fill="#8844d8"/>
+  <rect x="158" y="200" width="68" height="52" fill="#a060e0"/>
+  <rect x="228" y="200" width="68" height="52" fill="#d84490"/>
+  <rect x="298" y="200" width="68" height="52" fill="#f060a8"/>
+  <rect x="368" y="200" width="68" height="52" fill="#e05858"/>
+  <rect x="438" y="200" width="75" height="52" fill="#e07838"/>
+
+  <!-- Row 5 -->
+  <rect x="88" y="254" width="68" height="52" fill="#6030b0"/>
+  <rect x="158" y="254" width="68" height="52" fill="#8848c8"/>
+  <rect x="228" y="254" width="68" height="52" fill="#b03070"/>
+  <rect x="298" y="254" width="68" height="52" fill="#d85090"/>
+  <rect x="368" y="254" width="68" height="52" fill="#c84040"/>
+  <rect x="438" y="254" width="75" height="52" fill="#d06820"/>
+
+  <!-- Row 6 -->
+  <rect x="88" y="308" width="68" height="55" fill="#4020a0"/>
+  <rect x="158" y="308" width="68" height="55" fill="#7038b8"/>
+  <rect x="228" y="308" width="68" height="55" fill="#902858"/>
+  <rect x="298" y="308" width="68" height="55" fill="#c04080"/>
+  <rect x="368" y="308" width="68" height="55" fill="#b03030"/>
+  <rect x="438" y="308" width="75" height="55" fill="#b85818"/>
+
+  <!-- palette knife texture overlays — impasto feel -->
+  <rect x="88" y="38" width="68" height="8" fill="white" opacity="0.12"/>
+  <rect x="298" y="92" width="68" height="6" fill="white" opacity="0.1"/>
+  <rect x="158" y="200" width="40" height="5" fill="white" opacity="0.08"/>
+  <rect x="438" y="146" width="50" height="7" fill="white" opacity="0.1"/>
+  <rect x="228" y="308" width="55" height="6" fill="white" opacity="0.09"/>
+
+  <!-- grid lines — thin gap between cells -->
+  <rect x="88" y="38" width="425" height="325" fill="none" stroke="#1c1c1a" stroke-width="2"/>
+  <line x1="156" y1="38" x2="156" y2="363" stroke="#1c1c1a" stroke-width="2"/>
+  <line x1="226" y1="38" x2="226" y2="363" stroke="#1c1c1a" stroke-width="2"/>
+  <line x1="296" y1="38" x2="296" y2="363" stroke="#1c1c1a" stroke-width="2"/>
+  <line x1="366" y1="38" x2="366" y2="363" stroke="#1c1c1a" stroke-width="2"/>
+  <line x1="436" y1="38" x2="436" y2="363" stroke="#1c1c1a" stroke-width="2"/>
+  <line x1="88" y1="90" x2="513" y2="90" stroke="#1c1c1a" stroke-width="2"/>
+  <line x1="88" y1="144" x2="513" y2="144" stroke="#1c1c1a" stroke-width="2"/>
+  <line x1="88" y1="198" x2="513" y2="198" stroke="#1c1c1a" stroke-width="2"/>
+  <line x1="88" y1="252" x2="513" y2="252" stroke="#1c1c1a" stroke-width="2"/>
+  <line x1="88" y1="306" x2="513" y2="306" stroke="#1c1c1a" stroke-width="2"/>
+
+  <text x="510" y="380" font-family="serif" font-size="10" fill="#8a8278" text-anchor="end" font-style="italic">Spectrum Grid · Acrylic on birch</text>
+</svg>

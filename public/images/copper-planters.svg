@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400">
+  <defs>
+    <linearGradient id="copperbg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1a1810"/>
+      <stop offset="100%" stop-color="#141210"/>
+    </linearGradient>
+    <linearGradient id="copper1" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#4a2a10"/>
+      <stop offset="25%" stop-color="#c87830"/>
+      <stop offset="50%" stop-color="#e89840"/>
+      <stop offset="75%" stop-color="#a86020"/>
+      <stop offset="100%" stop-color="#3a2010"/>
+    </linearGradient>
+    <linearGradient id="copper2" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#3a2010"/>
+      <stop offset="30%" stop-color="#b87028"/>
+      <stop offset="55%" stop-color="#d88838"/>
+      <stop offset="80%" stop-color="#906020"/>
+      <stop offset="100%" stop-color="#2a1808"/>
+    </linearGradient>
+    <linearGradient id="linen" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#d8ceb8"/>
+      <stop offset="100%" stop-color="#b8ae98"/>
+    </linearGradient>
+    <linearGradient id="patina" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#487858" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#285838" stop-opacity="0.3"/>
+    </linearGradient>
+  </defs>
+  <rect width="600" height="400" fill="url(#copperbg)"/>
+  <!-- shelf suggestion -->
+  <rect x="100" y="290" width="400" height="6" fill="#3a3020" rx="1"/>
+  <rect x="100" y="296" width="400" height="15" fill="#2a2018" opacity="0.8"/>
+
+  <!-- Planter 1 — left -->
+  <!-- linen pot body -->
+  <path d="M185,288 Q178,235 182,200 Q185,180 210,178 Q235,178 238,200 Q242,235 235,288Z" fill="url(#linen)"/>
+  <!-- linen texture -->
+  <line x1="190" y1="200" x2="188" y2="285" stroke="#c8be9a" stroke-width="0.8" opacity="0.4"/>
+  <line x1="200" y1="198" x2="198" y2="286" stroke="#c8be9a" stroke-width="0.8" opacity="0.4"/>
+  <line x1="210" y1="178" x2="210" y2="287" stroke="#c8be9a" stroke-width="0.8" opacity="0.4"/>
+  <line x1="220" y1="178" x2="220" y2="287" stroke="#a8a080" stroke-width="0.8" opacity="0.35"/>
+  <line x1="230" y1="180" x2="230" y2="286" stroke="#c8be9a" stroke-width="0.8" opacity="0.4"/>
+  <!-- copper sleeve -->
+  <path d="M182,288 Q176,260 180,240 Q183,225 210,223 Q237,225 240,240 Q244,260 238,288Z" fill="url(#copper1)"/>
+  <!-- patina patches -->
+  <ellipse cx="195" cy="255" rx="12" ry="18" fill="url(#patina)"/>
+  <ellipse cx="228" cy="270" rx="8" ry="12" fill="url(#patina)" opacity="0.7"/>
+  <!-- copper rim top -->
+  <ellipse cx="210" cy="224" rx="28" ry="6" fill="#c87830"/>
+  <ellipse cx="210" cy="222" rx="28" ry="5" fill="#e89840"/>
+  <!-- plant -->
+  <line x1="210" y1="178" x2="210" y2="155" stroke="#4a6a38" stroke-width="2"/>
+  <ellipse cx="210" cy="145" rx="25" ry="18" fill="#5a8040" opacity="0.9" transform="rotate(-5,210,145)"/>
+  <ellipse cx="190" cy="158" rx="18" ry="12" fill="#486030" opacity="0.8" transform="rotate(15,190,158)"/>
+  <ellipse cx="232" cy="155" rx="20" ry="13" fill="#6a9048" opacity="0.85" transform="rotate(-10,232,155)"/>
+
+  <!-- Planter 2 — right -->
+  <path d="M365,288 Q358,235 362,200 Q365,180 390,178 Q415,178 418,200 Q422,235 415,288Z" fill="url(#linen)"/>
+  <!-- linen texture -->
+  <line x1="370" y1="200" x2="368" y2="285" stroke="#c8be9a" stroke-width="0.8" opacity="0.4"/>
+  <line x1="380" y1="198" x2="378" y2="286" stroke="#c8be9a" stroke-width="0.8" opacity="0.4"/>
+  <line x1="390" y1="178" x2="390" y2="287" stroke="#c8be9a" stroke-width="0.8" opacity="0.4"/>
+  <line x1="400" y1="178" x2="400" y2="287" stroke="#a8a080" stroke-width="0.8" opacity="0.35"/>
+  <line x1="410" y1="180" x2="410" y2="286" stroke="#c8be9a" stroke-width="0.8" opacity="0.4"/>
+  <!-- copper sleeve -->
+  <path d="M362,288 Q356,255 360,232 Q363,215 390,213 Q417,215 420,232 Q424,255 418,288Z" fill="url(#copper2)"/>
+  <ellipse cx="393" cy="248" rx="10" ry="15" fill="url(#patina)" opacity="0.8"/>
+  <ellipse cx="375" cy="265" rx="7" ry="10" fill="url(#patina)" opacity="0.6"/>
+  <!-- copper rim -->
+  <ellipse cx="390" cy="214" rx="28" ry="6" fill="#b87028"/>
+  <ellipse cx="390" cy="212" rx="28" ry="5" fill="#d88838"/>
+  <!-- plant — different variety -->
+  <line x1="390" y1="178" x2="390" y2="160" stroke="#5a7040" stroke-width="2"/>
+  <ellipse cx="390" cy="148" rx="18" ry="20" fill="#4a6838" opacity="0.9"/>
+  <ellipse cx="373" cy="162" rx="14" ry="10" fill="#5a7840" opacity="0.8" transform="rotate(20,373,162)"/>
+  <ellipse cx="408" cy="160" rx="16" ry="11" fill="#3a5828" opacity="0.85" transform="rotate(-15,408,160)"/>
+  <ellipse cx="385" cy="140" rx="10" ry="14" fill="#6a8848" opacity="0.8" transform="rotate(-5,385,140)"/>
+
+  <text x="300" y="335" font-family="sans-serif" font-size="10" fill="#7a6848" text-anchor="middle">Spun Copper · Raw Linen · Pair</text>
+</svg>

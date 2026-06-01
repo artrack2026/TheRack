@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400">
+  <defs>
+    <linearGradient id="oakwood" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#8a5e30"/>
+      <stop offset="20%" stop-color="#6a4520"/>
+      <stop offset="50%" stop-color="#9a6a38"/>
+      <stop offset="80%" stop-color="#7a5228"/>
+      <stop offset="100%" stop-color="#5a3c18"/>
+    </linearGradient>
+    <linearGradient id="iron" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#5a5248"/>
+      <stop offset="50%" stop-color="#3a322a"/>
+      <stop offset="100%" stop-color="#2a2218"/>
+    </linearGradient>
+    <linearGradient id="roombg" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1e1c18"/>
+      <stop offset="100%" stop-color="#141210"/>
+    </linearGradient>
+  </defs>
+  <rect width="600" height="400" fill="url(#roombg)"/>
+  <!-- floor suggestion -->
+  <rect x="0" y="340" width="600" height="60" fill="#1a1610" opacity="0.8"/>
+  <line x1="0" y1="340" x2="600" y2="340" stroke="#2a2418" stroke-width="1"/>
+  <!-- wall shadow -->
+  <rect x="160" y="60" width="20" height="290" fill="#0a0a08" opacity="0.3"/>
+
+  <!-- main oak plank -->
+  <rect x="180" y="70" width="240" height="42" fill="url(#oakwood)" rx="3"/>
+  <!-- wood grain lines -->
+  <line x1="185" y1="78" x2="415" y2="80" stroke="#5a3c18" stroke-width="0.7" opacity="0.4"/>
+  <line x1="185" y1="85" x2="415" y2="88" stroke="#9a7040" stroke-width="0.5" opacity="0.3"/>
+  <line x1="185" y1="93" x2="415" y2="95" stroke="#5a3c18" stroke-width="0.7" opacity="0.35"/>
+  <line x1="185" y1="100" x2="415" y2="102" stroke="#9a7040" stroke-width="0.5" opacity="0.25"/>
+  <!-- live edge suggestion left -->
+  <path d="M180,70 Q172,75 175,82 Q168,88 173,95 Q165,100 170,112 L180,112Z" fill="url(#oakwood)"/>
+  <!-- live edge right -->
+  <path d="M420,70 Q428,76 424,84 Q432,90 426,98 Q434,105 428,112 L420,112Z" fill="url(#oakwood)"/>
+
+  <!-- mounting brackets -->
+  <rect x="195" y="60" width="8" height="14" fill="url(#iron)" rx="1"/>
+  <rect x="397" y="60" width="8" height="14" fill="url(#iron)" rx="1"/>
+  <circle cx="199" cy="63" r="3" fill="#1a1408"/>
+  <circle cx="401" cy="63" r="3" fill="#1a1408"/>
+
+  <!-- 5 hand-forged hooks — each different shape -->
+  <!-- Hook 1 -->
+  <path d="M218,112 L218,175 Q218,195 238,195 Q258,195 258,175 Q258,162 248,158" stroke="url(#iron)" stroke-width="6" fill="none" stroke-linecap="round"/>
+  <!-- Hook 2 — curves differently -->
+  <path d="M268,112 L268,168 Q268,192 292,192 Q310,192 312,172 Q314,158 304,152" stroke="url(#iron)" stroke-width="6" fill="none" stroke-linecap="round"/>
+  <!-- Hook 3 — shorter, rounder -->
+  <path d="M322,112 L322,160 Q322,178 338,180 Q354,182 356,165 Q358,152 350,148" stroke="url(#iron)" stroke-width="6" fill="none" stroke-linecap="round"/>
+  <!-- Hook 4 — longer -->
+  <path d="M372,112 L372,182 Q372,205 390,205 Q408,205 408,185 Q408,170 398,165" stroke="url(#iron)" stroke-width="6" fill="none" stroke-linecap="round"/>
+  <!-- Hook 5 -->
+  <path d="M408,112 L408,170 Q408,188 422,188 Q436,188 438,170 Q440,156 430,152" stroke="url(#iron)" stroke-width="5" fill="none" stroke-linecap="round"/>
+
+  <!-- shadow under rack -->
+  <ellipse cx="300" cy="345" rx="140" ry="8" fill="#0a0808" opacity="0.5"/>
+
+  <text x="300" y="375" font-family="sans-serif" font-size="10" fill="#6a5a40" text-anchor="middle">Barn Oak · Hand-forged Iron · 5 Hooks</text>
+</svg>
