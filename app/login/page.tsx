@@ -115,13 +115,13 @@ function LoginForm() {
           }}
         >
           {/* Rainbow top stripe */}
-          <div
+      {/* <div
             className="absolute top-0 left-0 right-0 h-1"
             style={{
               background: 'linear-gradient(90deg,#e05858,#e07838,#d4b030,#3ab870,#1ab4c0,#3878e0,#8844d8,#d84490)',
               borderRadius: '18px 18px 0 0',
             }}
-          />
+          /> */}
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-5">
             {/* Email */}
