@@ -71,13 +71,21 @@ export default function ProductCard({ product, index = 0 }: Props) {
             className="relative overflow-hidden"
             style={{ height: '216px', background: 'var(--color-bg)', borderRadius: '11px 11px 0 0' }}
           >
-            <Image
-              src={imageSrc}
-              alt={product.title}
-              fill
-              className="object-cover transition-transform duration-500 group-hover:scale-105"
-              sizes="(max-width: 768px) 100vw, 33vw"
-            />
+            {imageSrc.endsWith('.svg') ? (
+              <img
+                src={imageSrc}
+                alt={product.title}
+                className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
+              />
+            ) : (
+              <Image
+                src={imageSrc}
+                alt={product.title}
+                fill
+                className="object-cover transition-transform duration-500 group-hover:scale-105"
+                sizes="(max-width: 768px) 100vw, 33vw"
+              />
+            )}
 
             {/* Hover overlay */}
             <div

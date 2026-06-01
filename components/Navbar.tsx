@@ -54,6 +54,9 @@ export default function Navbar() {
     } catch (_) {
       // sign out best-effort
     }
+    // Clear any stale session storage so auth never gets stuck
+    localStorage.clear()
+    sessionStorage.clear()
     window.location.replace('/')
   }
 
