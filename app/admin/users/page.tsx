@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, FormEvent } from 'react'
+import { formatName, formatEmail } from '@/lib/format'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Users, Plus, X, Loader, CheckCircle, Shield, User, AlertCircle, Eye, EyeOff } from 'lucide-react'
 
@@ -106,7 +107,7 @@ export default function UsersPage() {
                 <div className="flex flex-col gap-1.5">
                   <label className="text-xs font-semibold tracking-widest uppercase" style={{ color: 'var(--color-text-muted)' }}>Email *</label>
                   <input required type="text" className="cyber-input" placeholder="customer@email.com"
-                    value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
+                    value={form.email} onChange={e => setForm(f => ({ ...f, email: formatEmail(e.target.value) }))} />
                   <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Saved lowercase automatically</p>
                 </div>
 
@@ -125,7 +126,7 @@ export default function UsersPage() {
                 <div className="flex flex-col gap-1.5">
                   <label className="text-xs font-semibold tracking-widest uppercase" style={{ color: 'var(--color-text-muted)' }}>Display Name</label>
                   <input type="text" className="cyber-input" placeholder="Customer Name"
-                    value={form.display_name} onChange={e => setForm(f => ({ ...f, display_name: e.target.value }))} />
+                    value={form.display_name} onChange={e => setForm(f => ({ ...f, display_name: formatName(e.target.value) }))} />
                 </div>
 
                 <div className="flex flex-col gap-1.5">

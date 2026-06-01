@@ -100,6 +100,8 @@ export interface Database {
         Row: {
           id: string
           email: string
+          first_name: string | null
+          last_name: string | null
           display_name: string | null
           phone: string | null
           address_line1: string | null
@@ -113,6 +115,8 @@ export interface Database {
         Insert: {
           id: string
           email: string
+          first_name?: string | null
+          last_name?: string | null
           display_name?: string | null
           phone?: string | null
           address_line1?: string | null
@@ -125,6 +129,8 @@ export interface Database {
         }
         Update: {
           email?: string
+          first_name?: string | null
+          last_name?: string | null
           display_name?: string | null
           phone?: string | null
           address_line1?: string | null

@@ -42,6 +42,8 @@ export interface ThemeColors {
 export interface Profile {
   id: string
   email: string
+  first_name: string | null
+  last_name: string | null
   display_name: string | null
   phone: string | null
   address_line1: string | null

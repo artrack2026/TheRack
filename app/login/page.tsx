@@ -58,12 +58,52 @@ function LoginForm() {
         transition={{ duration: 0.5 }}
         className="relative w-full max-w-sm"
       >
-        {/* Logo */}
+        {/* Logo — Option A (original): logo above, tagline below */}
+        {/*
         <div className="text-center mb-8">
           <Link href="/">
             <LogoText className="text-3xl" />
           </Link>
           <p className="mt-2 text-sm" style={{ color: 'var(--color-text-muted)' }}>
+            Sign in to your account
+          </p>
+        </div>
+        */}
+
+        {/* Logo — Option B: line below name + water reflection */}
+        <div className="text-center mb-8">
+          <Link href="/" className="inline-block">
+            {/* Main logo */}
+            <LogoText className="text-3xl" />
+
+            {/* Divider line — below name */}
+            <div
+              className="mx-auto mt-1 mb-0"
+              style={{
+                height: '1.5px',
+                width: '100%',
+                background: 'linear-gradient(90deg, transparent, #d4b030, #3ab870, #1ab4c0, transparent)',
+                opacity: 0.7,
+              }}
+            />
+
+            {/* Water reflection */}
+            <div
+              style={{
+                transform: 'scaleY(-1)',
+                transformOrigin: 'top center',
+                opacity: 0.28,
+                maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, transparent 100%)',
+                WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, transparent 100%)',
+                marginTop: '1px',
+                pointerEvents: 'none',
+              }}
+            >
+              <LogoText className="text-3xl" />
+            </div>
+          </Link>
+
+          <p className="mt-3 text-sm" style={{ color: 'var(--color-text-muted)' }}>
             Sign in to your account
           </p>
         </div>

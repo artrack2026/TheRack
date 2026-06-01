@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Send, CheckCircle, AlertCircle, Loader } from 'lucide-react'
+import { formatPhone, formatName, formatEmail } from '@/lib/format'
 
 interface Props {
   productId?: string
@@ -40,17 +41,13 @@ export default function InquiryForm({ productId, productTitle, onClose }: Props)
       >
         <CheckCircle size={48} style={{ color: 'var(--color-primary)' }} />
         <div>
-          <p className="text-lg font-bold" style={{ color: 'var(--color-text)' }}>
-            Message Sent!
-          </p>
+          <p className="text-lg font-bold" style={{ color: 'var(--color-text)' }}>Message Sent!</p>
           <p className="text-sm mt-1" style={{ color: 'var(--color-text-muted)' }}>
             I&apos;ll get back to you as soon as possible.
           </p>
         </div>
         {onClose && (
-          <button className="cyber-btn text-xs" onClick={onClose}>
-            Close
-          </button>
+          <button className="cyber-btn text-xs" onClick={onClose}>Close</button>
         )}
       </motion.div>
     )
@@ -63,7 +60,7 @@ export default function InquiryForm({ productId, productTitle, onClose }: Props)
           className="text-xs tracking-widest uppercase px-3 py-2 mb-1"
           style={{
             borderLeft: '2px solid var(--color-accent)',
-            background: 'rgba(255,0,170,0.05)',
+            background: 'rgba(191,91,74,0.07)',
             color: 'var(--color-accent)',
           }}
         >
@@ -73,34 +70,34 @@ export default function InquiryForm({ productId, productTitle, onClose }: Props)
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="flex flex-col gap-1.5">
-          <label className="text-xs tracking-widest uppercase" style={{ color: 'var(--color-text-muted)' }}>
+          <label className="text-xs tracking-widest uppercase font-semibold" style={{ color: 'var(--color-text-muted)' }}>
             Name *
           </label>
           <input
             required
             className="cyber-input"
-            placeholder="Your name"
+            placeholder="Jane McGann"
             value={form.name}
-            onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+            onChange={e => setForm(f => ({ ...f, name: formatName(e.target.value) }))}
           />
         </div>
         <div className="flex flex-col gap-1.5">
-          <label className="text-xs tracking-widest uppercase" style={{ color: 'var(--color-text-muted)' }}>
+          <label className="text-xs tracking-widest uppercase font-semibold" style={{ color: 'var(--color-text-muted)' }}>
             Email *
           </label>
           <input
             required
-            type="email"
+            type="text"
             className="cyber-input"
             placeholder="you@example.com"
             value={form.email}
-            onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+            onChange={e => setForm(f => ({ ...f, email: formatEmail(e.target.value) }))}
           />
         </div>
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <label className="text-xs tracking-widest uppercase" style={{ color: 'var(--color-text-muted)' }}>
+        <label className="text-xs tracking-widest uppercase font-semibold" style={{ color: 'var(--color-text-muted)' }}>
           Phone (optional)
         </label>
         <input
@@ -108,12 +105,12 @@ export default function InquiryForm({ productId, productTitle, onClose }: Props)
           className="cyber-input"
           placeholder="(555) 000-0000"
           value={form.phone}
-          onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
+          onChange={e => setForm(f => ({ ...f, phone: formatPhone(e.target.value) }))}
         />
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <label className="text-xs tracking-widest uppercase" style={{ color: 'var(--color-text-muted)' }}>
+        <label className="text-xs tracking-widest uppercase font-semibold" style={{ color: 'var(--color-text-muted)' }}>
           Message *
         </label>
         <textarea
@@ -128,28 +125,18 @@ export default function InquiryForm({ productId, productTitle, onClose }: Props)
 
       {status === 'error' && (
         <div
-          className="flex items-center gap-2 text-sm px-3 py-2"
-          style={{
-            borderLeft: '2px solid var(--color-accent)',
-            background: 'rgba(255,0,170,0.05)',
-            color: 'var(--color-accent)',
-          }}
+          className="flex items-center gap-2 text-sm px-3 py-2 rounded-lg"
+          style={{ background: 'rgba(224,88,88,0.1)', color: 'var(--r-red)', border: '1px solid rgba(224,88,88,0.25)' }}
         >
           <AlertCircle size={14} />
           Something went wrong. Please try again.
         </div>
       )}
 
-      <button
-        type="submit"
-        disabled={status === 'sending'}
-        className="cyber-btn self-start"
-      >
-        {status === 'sending' ? (
-          <><Loader size={14} className="animate-spin" /> Sending...</>
-        ) : (
-          <><Send size={14} /> Send Message</>
-        )}
+      <button type="submit" disabled={status === 'sending'} className="cyber-btn self-start">
+        {status === 'sending'
+          ? <><Loader size={14} className="animate-spin" /> Sending...</>
+          : <><Send size={14} /> Send Message</>}
       </button>
     </form>
   )
