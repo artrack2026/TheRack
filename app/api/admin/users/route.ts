@@ -26,7 +26,9 @@ export async function GET() {
   const cookieStore = await cookies()
   const supabase    = createSupabaseServerClient(cookieStore)
   const { data, error } = await supabase
-    .from('profiles').select('id, email, display_name, role, created_at').order('created_at', { ascending: false })
+    .from('profiles').select('id, email, display_name, role, created_at')
+    .eq('role', 'customer')
+    .order('created_at', { ascending: false })
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json(data)
