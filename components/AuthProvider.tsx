@@ -31,13 +31,18 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
 
   const fetchProfile = useCallback(async (uid: string) => {
     if (!isSupabaseConfigured) return
-    const supabase = getSupabaseClient()
-    const { data } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', uid)
-      .single()
-    setProfile(data ?? null)
+    try {
+      const supabase = getSupabaseClient()
+      const { data } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', uid)
+        .single()
+      setProfile(data ?? null)
+    } catch {
+      // Profile fetch failed — non-fatal, user is still logged in
+      setProfile(null)
+    }
   }, [])
 
   const refreshProfile = useCallback(async () => {
@@ -48,9 +53,13 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
     if (!isSupabaseConfigured) { setLoading(false); return }
     const supabase = getSupabaseClient()
 
+    // Safety net — never spin forever
+    const timeout = setTimeout(() => setLoading(false), 4000)
+
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       setUser(session?.user ?? null)
       if (session?.user) await fetchProfile(session.user.id)
+      clearTimeout(timeout)
       setLoading(false)
     })
 
@@ -61,9 +70,13 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
       } else {
         setProfile(null)
       }
+      setLoading(false)
     })
 
-    return () => subscription.unsubscribe()
+    return () => {
+      clearTimeout(timeout)
+      subscription.unsubscribe()
+    }
   }, [fetchProfile])
 
   /* Email normalized to lowercase before every sign-in */

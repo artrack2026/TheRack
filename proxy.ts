@@ -2,6 +2,21 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
+/* ── Coming Soon firewall ──────────────────────────────────────────
+   Set NEXT_PUBLIC_COMING_SOON=true in Vercel env vars to enable.
+   Admins who are logged in can still access everything normally.
+────────────────────────────────────────────────────────────────── */
+const COMING_SOON = process.env.NEXT_PUBLIC_COMING_SOON === 'true'
+
+const PUBLIC_PATHS = [
+  '/coming-soon',
+  '/login',
+  '/api',
+  '/_next',
+  '/images',
+  '/favicon.ico',
+]
+
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request: { headers: request.headers } })
 
@@ -26,19 +41,30 @@ export async function proxy(request: NextRequest) {
     },
   )
 
-  // Refresh session — keeps auth cookies fresh on every request
   const { data: { user } } = await supabase.auth.getUser()
-
   const { pathname } = request.nextUrl
 
-  // Unauthenticated users: redirect to /login with a ?from= param
+  // ── Coming Soon firewall ──
+  if (COMING_SOON) {
+    const isPublicPath = PUBLIC_PATHS.some(p => pathname.startsWith(p))
+    const isAdmin = user
+      ? await supabase.from('profiles').select('role').eq('id', user.id).single()
+          .then(({ data }) => data?.role === 'admin')
+      : false
+
+    // Block everyone except admins and public paths
+    if (!isPublicPath && !isAdmin) {
+      return NextResponse.redirect(new URL('/coming-soon', request.url))
+    }
+  }
+
+  // ── Auth guards ──
   if (!user && (pathname.startsWith('/portal') || pathname.startsWith('/admin'))) {
     const loginUrl = new URL('/login', request.url)
     loginUrl.searchParams.set('from', pathname)
     return NextResponse.redirect(loginUrl)
   }
 
-  // Already logged-in users don't need to see /login
   if (user && pathname === '/login') {
     return NextResponse.redirect(new URL('/portal', request.url))
   }
@@ -47,5 +73,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/portal/:path*', '/admin/:path*', '/login'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
 }

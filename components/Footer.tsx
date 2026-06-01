@@ -94,7 +94,7 @@ export default function Footer() {
             <Link
               href="/admin"
               className="text-xs flex items-center gap-1 transition-colors hover:opacity-80"
-              style={{ color: 'var(--color-border)' }}
+              style={{ color: '#6b6560' }}
             >
               <Shield size={10} /> Admin
             </Link>
