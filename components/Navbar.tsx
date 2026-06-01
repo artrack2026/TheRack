@@ -22,7 +22,7 @@ export default function Navbar() {
   const [userMenu, setUserMenu]   = useState(false)
   const pathname                  = usePathname()
   const router                    = useRouter()
-  const { user, profile, isAdmin, signOut } = useAuth()
+  const { user, profile, isAdmin } = useAuth()
   const { itemCount, openCart }   = useCart()
   const menuRef                   = useRef<HTMLDivElement>(null)
 
@@ -48,8 +48,13 @@ export default function Navbar() {
 
   const handleSignOut = async () => {
     setUserMenu(false)
-    await signOut()
-    window.location.href = '/'
+    try {
+      const { getSupabaseClient } = await import('@/lib/supabase')
+      await getSupabaseClient().auth.signOut()
+    } catch (_) {
+      // sign out best-effort
+    }
+    window.location.replace('/')
   }
 
   return (
