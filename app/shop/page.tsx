@@ -149,8 +149,7 @@ function ShopContent() {
             value={sort}
             onChange={e => setSort(e.target.value)}
             className="cyber-input appearance-none cursor-pointer shrink-0"
-            style={{ paddingLeft: '2.5rem' }}
-            style={{ minWidth: '190px' }}
+            style={{ paddingLeft: '2.5rem', minWidth: '190px' }}
           >
             {SORT_OPTIONS.map(({ value, label }) => (
               <option key={value} value={value} style={{ background: 'var(--color-surface)' }}>
