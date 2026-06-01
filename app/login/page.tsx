@@ -36,6 +36,8 @@ function LoginForm() {
       )
       setLoading(false)
     } else {
+      // refresh() lets Next.js sync the session cookie before navigating
+      router.refresh()
       router.push(from)
     }
   }
