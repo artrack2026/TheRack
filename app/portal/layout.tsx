@@ -13,7 +13,7 @@ const portalLinks = [
 ]
 
 export default function PortalLayout({ children }: { children: React.ReactNode }) {
-  const { user, loading, signOut } = useAuth()
+  const { user, loading } = useAuth()
   const router   = useRouter()
   const pathname = usePathname()
 
@@ -59,7 +59,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
           <div style={{ borderTop: '1px solid var(--color-border)', margin: '4px 0' }} />
 
           <button
-            onClick={() => signOut().then(() => { window.location.href = '/' })}
+            onClick={() => { window.location.href = '/api/auth/signout' }}
             className="flex items-center gap-2.5 px-4 py-2.5 rounded-lg text-sm w-full transition-colors hover:bg-white/5"
             style={{ color: 'var(--r-red)', background: 'none', border: 'none', cursor: 'pointer' }}
           >

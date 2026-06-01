@@ -46,18 +46,9 @@ export default function Navbar() {
     return () => document.removeEventListener('click', handler)
   }, [])
 
-  const handleSignOut = async () => {
+  const handleSignOut = () => {
     setUserMenu(false)
-    try {
-      const { getSupabaseClient } = await import('@/lib/supabase')
-      await getSupabaseClient().auth.signOut()
-    } catch (_) {
-      // sign out best-effort
-    }
-    // Clear any stale session storage so auth never gets stuck
-    localStorage.clear()
-    sessionStorage.clear()
-    window.location.replace('/')
+    window.location.href = '/api/auth/signout'
   }
 
   return (
