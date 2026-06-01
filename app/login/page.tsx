@@ -96,7 +96,7 @@ function LoginForm() {
                   type="text"
                   required
                   autoComplete="email"
-                  className="cyber-input pl-10"
+                  className="cyber-input pl-11"
                   placeholder="you@example.com"
                   value={form.email}
                   onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
@@ -118,7 +118,7 @@ function LoginForm() {
                   type={showPass ? 'text' : 'password'}
                   required
                   autoComplete="current-password"
-                  className="cyber-input pl-10 pr-10"
+                  className="cyber-input pl-11 pr-10"
                   placeholder="••••••••"
                   value={form.password}
                   onChange={e => setForm(f => ({ ...f, password: e.target.value }))}

@@ -138,23 +138,24 @@ export default function HomePage() {
             </Link>
           </motion.div>
 
-          {/* Scroll hint */}
-          <motion.div
-            className="absolute bottom-4 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2"
-            animate={{ y: [0, 7, 0] }}
-            transition={{ duration: 2.2, repeat: Infinity }}
+        </div>
+
+        {/* Scroll hint — anchored to the section, not the inner container */}
+        <motion.div
+          className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2"
+          animate={{ y: [0, 7, 0] }}
+          transition={{ duration: 2.2, repeat: Infinity }}
+        >
+          <div
+            className="w-5 h-8 border-2 rounded-full flex items-start justify-center pt-1.5"
+            style={{ borderColor: 'var(--color-border)' }}
           >
             <div
-              className="w-5 h-8 border-2 rounded-full flex items-start justify-center pt-1.5"
-              style={{ borderColor: 'var(--color-border)' }}
-            >
-              <div
-                className="w-1 h-2 rounded-full"
-                style={{ background: 'var(--color-primary)' }}
-              />
-            </div>
-          </motion.div>
-        </div>
+              className="w-1 h-2 rounded-full"
+              style={{ background: 'var(--color-primary)' }}
+            />
+          </div>
+        </motion.div>
       </section>
 
       {/* ── Spinning Rack ── */}

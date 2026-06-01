@@ -107,7 +107,7 @@ function ShopContent() {
             style={{ color: 'var(--color-text-muted)' }}
           />
           <input
-            className="cyber-input pl-10"
+            className="cyber-input pl-11"
             placeholder="Search items..."
             value={search}
             onChange={e => setSearch(e.target.value)}
@@ -147,7 +147,7 @@ function ShopContent() {
           <select
             value={sort}
             onChange={e => setSort(e.target.value)}
-            className="cyber-input pl-9 pr-4 appearance-none cursor-pointer shrink-0"
+            className="cyber-input pl-11 pr-4 appearance-none cursor-pointer shrink-0"
             style={{ minWidth: '190px' }}
           >
             {SORT_OPTIONS.map(({ value, label }) => (

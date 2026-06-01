@@ -165,7 +165,10 @@ body::before {
   background: var(--color-surface);
   border: 1.5px solid var(--color-border);
   color: var(--color-text);
-  padding: 0.7rem 1rem;
+  padding-top: 0.7rem;
+  padding-bottom: 0.7rem;
+  padding-left: 1rem;
+  padding-right: 1rem;
   width: 100%;
   outline: none;
   border-radius: 8px;
