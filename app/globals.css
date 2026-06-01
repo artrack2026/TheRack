@@ -1,0 +1,402 @@
+@import "tailwindcss";
+
+/* ── Tokens ── */
+:root {
+  --color-bg:         #1c1c1a;
+  --color-surface:    #262623;
+  --color-surface-2:  #2f2f2c;
+  --color-primary:    #c8902a;
+  --color-accent:     #bf5b4a;
+  --color-text:       #eee9e0;
+  --color-text-muted: #8a8278;
+  --color-border:     #393935;
+
+  /* Rainbow accents — used contextually, not as glows */
+  --r-red:    #e05858;
+  --r-orange: #e07838;
+  --r-yellow: #d4b030;
+  --r-green:  #3ab870;
+  --r-cyan:   #1ab4c0;
+  --r-blue:   #3878e0;
+  --r-violet: #8844d8;
+  --r-pink:   #d84490;
+}
+
+/* ── Reset ── */
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+
+/* ── Body + grain texture ── */
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: 'Inter', system-ui, sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+  position: relative;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.72' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  opacity: 0.04;
+  pointer-events: none;
+  z-index: 0;
+  mix-blend-mode: overlay;
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: var(--color-bg); }
+::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: var(--color-text-muted); }
+
+/* ── Selection ── */
+::selection { background: rgba(200, 144, 42, 0.25); color: var(--color-text); }
+
+/* ═══════════════════════════════════════
+   BUTTONS
+   Most things: rounded. A few: sharp.
+═══════════════════════════════════════ */
+
+/* Primary button — rounded, warm fill */
+.art-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.7rem 1.75rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border-radius: 8px;
+  border: 1.5px solid var(--color-primary);
+  color: var(--color-primary);
+  background: transparent;
+  cursor: pointer;
+  text-decoration: none;
+  overflow: hidden;
+  transition: color 0.25s ease;
+}
+
+.art-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--color-primary);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.28s ease;
+  z-index: 0;
+}
+
+.art-btn:hover::before { transform: scaleX(1); }
+.art-btn:hover { color: var(--color-bg); }
+.art-btn > * { position: relative; z-index: 1; }
+
+/* Ghost / secondary variant */
+.art-btn-ghost {
+  border-color: var(--color-border);
+  color: var(--color-text-muted);
+}
+.art-btn-ghost::before { background: var(--color-surface-2); }
+.art-btn-ghost:hover { color: var(--color-text); }
+
+/* Accent variant */
+.art-btn-accent {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+.art-btn-accent::before { background: var(--color-accent); }
+.art-btn-accent:hover { color: var(--color-bg); }
+
+/* Keep .cyber-btn as alias so existing JSX doesn't break */
+.cyber-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.7rem 1.75rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border-radius: 8px;
+  border: 1.5px solid var(--color-primary);
+  color: var(--color-primary);
+  background: transparent;
+  cursor: pointer;
+  text-decoration: none;
+  overflow: hidden;
+  transition: color 0.25s ease;
+}
+.cyber-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--color-primary);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.28s ease;
+  z-index: 0;
+}
+.cyber-btn:hover::before { transform: scaleX(1); }
+.cyber-btn:hover { color: var(--color-bg); }
+.cyber-btn > * { position: relative; z-index: 1; }
+
+.cyber-btn-accent {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+.cyber-btn-accent::before { background: var(--color-accent); }
+.cyber-btn-accent:hover { color: var(--color-bg); }
+
+/* ═══════════════════════════════════════
+   INPUTS — rounded, no clip-path
+═══════════════════════════════════════ */
+
+.cyber-input,
+.art-input {
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  color: var(--color-text);
+  padding: 0.7rem 1rem;
+  width: 100%;
+  outline: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  transition: border-color 0.2s ease, background 0.2s ease;
+  font-family: inherit;
+}
+.cyber-input:focus,
+.art-input:focus {
+  border-color: var(--color-primary);
+  background: var(--color-surface-2);
+}
+.cyber-input::placeholder,
+.art-input::placeholder {
+  color: var(--color-text-muted);
+}
+
+/* Per-page input tints — applied by wrapping the form in a div with this class */
+.input-tint-rose .cyber-input,
+.input-tint-rose .art-input {
+  background: rgba(224, 88, 88, 0.07);
+  border-color: rgba(224, 88, 88, 0.28);
+}
+.input-tint-rose .cyber-input:focus,
+.input-tint-rose .art-input:focus {
+  background: rgba(224, 88, 88, 0.11);
+  border-color: rgba(224, 88, 88, 0.5);
+}
+
+.input-tint-blue .cyber-input,
+.input-tint-blue .art-input {
+  background: rgba(56, 120, 224, 0.07);
+  border-color: rgba(56, 120, 224, 0.28);
+}
+.input-tint-blue .cyber-input:focus,
+.input-tint-blue .art-input:focus {
+  background: rgba(56, 120, 224, 0.12);
+  border-color: rgba(56, 120, 224, 0.5);
+}
+
+.input-tint-violet .cyber-input,
+.input-tint-violet .art-input {
+  background: rgba(136, 68, 216, 0.07);
+  border-color: rgba(136, 68, 216, 0.28);
+}
+.input-tint-violet .cyber-input:focus,
+.input-tint-violet .art-input:focus {
+  background: rgba(136, 68, 216, 0.12);
+  border-color: rgba(136, 68, 216, 0.5);
+}
+
+/* ═══════════════════════════════════════
+   CARDS
+   Rounded by default; colored left-border for accent.
+   A "sharp" variant for intentional contrast.
+═══════════════════════════════════════ */
+
+.art-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
+}
+.art-card:hover {
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+  transform: translateY(-2px);
+}
+
+/* Colored left border accent — "bookmark" style */
+.accent-bar-left {
+  border-left: 3px solid currentColor;
+  border-radius: 0 10px 10px 0;
+}
+
+/* Sharp panel — intentional contrast element, used sparingly */
+.panel-sharp {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 0;
+}
+
+/* neon-border alias — keep for existing JSX, now just a rounded card */
+.neon-border {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
+}
+.neon-border:hover {
+  border-color: rgba(200, 144, 42, 0.45);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+  transform: translateY(-2px);
+}
+
+/* ═══════════════════════════════════════
+   TAGS / BADGES
+═══════════════════════════════════════ */
+
+/* Pill tag — rounded, soft color bg */
+.art-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.65rem;
+  border-radius: 99px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--color-text);
+}
+
+/* Sharp label — used for "Featured" badges, price, etc. The intentional sharp accent */
+.art-label {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.5rem;
+  border-radius: 0;         /* sharp — intentional contrast */
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* category-badge alias — now a pill */
+.category-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.65rem;
+  border-radius: 99px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border: 1px solid currentColor;
+}
+
+/* ═══════════════════════════════════════
+   TYPOGRAPHY UTILITIES
+═══════════════════════════════════════ */
+
+/* Rainbow cycling gradient text — for logo / hero only */
+.rainbow-text {
+  background: linear-gradient(
+    135deg,
+    #e05858, #e07838, #d4b030, #3ab870,
+    #1ab4c0, #3878e0, #8844d8, #d84490, #e05858
+  );
+  background-size: 300% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: rainbow-slide 9s linear infinite;
+}
+
+/* Gradient text — 2-color shimmer */
+.gradient-text {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-accent), var(--color-primary));
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: shimmer 3s linear infinite;
+}
+
+/* Decorative color underline beneath headings */
+.heading-underline {
+  display: block;
+  height: 3px;
+  border-radius: 99px;
+  margin-top: 0.75rem;
+  width: 48px;
+}
+
+/* ═══════════════════════════════════════
+   ANIMATIONS
+═══════════════════════════════════════ */
+
+@keyframes shimmer {
+  to { background-position: 200% center; }
+}
+
+@keyframes rainbow-slide {
+  0%   { background-position: 0% center; }
+  100% { background-position: 300% center; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-8px); }
+}
+.float-anim { animation: float 4.5s ease-in-out infinite; }
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes sway {
+  0%, 100% { transform: rotateZ(-0.7deg); }
+  50%       { transform: rotateZ(0.7deg); }
+}
+
+@keyframes pulse-soft {
+  0%, 100% { opacity: 0.5; }
+  50%       { opacity: 1; }
+}
+.pulse-glow { animation: pulse-soft 2.5s ease-in-out infinite; }
+
+@keyframes hook-pulse {
+  0%, 100% { transform: scale(1); }
+  50%       { transform: scale(1.5); }
+}
+
+/* ═══════════════════════════════════════
+   RACK ROD (metallic bar)
+═══════════════════════════════════════ */
+
+.rack-rod-bar {
+  height: 10px;
+  border-radius: 5px;
+  background: linear-gradient(
+    180deg,
+    #777 0%,
+    #d8d0c0 28%,
+    #b0a898 55%,
+    #5a5650 100%
+  );
+  box-shadow:
+    0 3px 10px rgba(0, 0, 0, 0.5),
+    0 1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  position: relative;
+}
