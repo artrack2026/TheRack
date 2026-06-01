@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
-import { createServerClient } from '@supabase/ssr'
+import { createBrowserClient, createServerClient } from '@supabase/ssr'
 
 /* ── Database type ──────────────────────────────────────────────────────────
    Supabase's GenericSchema (v2.x) requires Tables, Views, Functions, Enums.
@@ -270,18 +270,19 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
 export const isSupabaseConfigured = !!(supabaseUrl && supabaseAnonKey)
 
-/* ── Browser / data client ── */
-
-let _client: ReturnType<typeof createClient<Database>> | null = null
+/* ── Browser / data client ──
+   Must use createBrowserClient (not createClient) so the session is stored
+   in BOTH localStorage AND cookies. The middleware reads cookies to check auth —
+   if we use plain createClient the middleware never sees the session and
+   redirects every protected route back to /login.
+── */
 
 export function getSupabaseClient() {
   if (!isSupabaseConfigured) {
     throw new Error('Supabase not configured. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to .env.local')
   }
-  if (!_client) {
-    _client = createClient<Database>(supabaseUrl!, supabaseAnonKey!)
-  }
-  return _client
+  // createBrowserClient is internally a singleton keyed by URL+anonKey
+  return createBrowserClient<Database>(supabaseUrl!, supabaseAnonKey!)
 }
 
 /* ── Server client (API routes / middleware) ── */
