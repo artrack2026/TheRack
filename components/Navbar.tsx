@@ -48,8 +48,7 @@ export default function Navbar() {
   const handleSignOut = async () => {
     setUserMenu(false)
     await signOut()
-    router.refresh()
-    router.push('/')
+    window.location.href = '/'
   }
 
   return (
