@@ -34,15 +34,16 @@ export default function Navbar() {
 
   useEffect(() => { setOpen(false); setUserMenu(false) }, [pathname])
 
-  /* Close user menu on outside click */
+  /* Close user menu on outside click — use click (not mousedown/mouseup)
+     so buttons inside the menu always get their onClick fired first */
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
         setUserMenu(false)
       }
     }
-    document.addEventListener('mouseup', handler)
-    return () => document.removeEventListener('mouseup', handler)
+    document.addEventListener('click', handler)
+    return () => document.removeEventListener('click', handler)
   }, [])
 
   const handleSignOut = async () => {
@@ -174,6 +175,7 @@ export default function Navbar() {
                     </Link>
                     <div style={{ borderTop: '1px solid var(--color-border)', margin: '4px 0' }} />
                     <button
+                      onMouseDown={e => e.stopPropagation()}
                       onClick={handleSignOut}
                       className="flex items-center gap-2.5 px-4 py-2.5 text-sm w-full text-left transition-colors hover:bg-white/5"
                       style={{ color: 'var(--r-red)', background: 'none', border: 'none', cursor: 'pointer' }}
