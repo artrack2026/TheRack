@@ -70,40 +70,37 @@ function LoginForm() {
         </div>
         */}
 
-        {/* Logo — Option B: line below name + water reflection */}
+        {/* Logo — Option B: logo → line → water reflection below */}
         <div className="text-center mb-8">
-          <Link href="/" className="inline-block">
-            {/* Main logo */}
-            <LogoText className="text-3xl" />
+          <Link href="/" className="inline-block" style={{ lineHeight: 1 }}>
 
-            {/* Divider line — below name */}
-            <div
-              className="mx-auto mt-1 mb-0"
-              style={{
-                height: '1.5px',
-                width: '100%',
-                background: 'linear-gradient(90deg, transparent, #d4b030, #3ab870, #1ab4c0, transparent)',
-                opacity: 0.7,
-              }}
-            />
-
-            {/* Water reflection */}
-            <div
-              style={{
-                transform: 'scaleY(-1)',
-                transformOrigin: 'top center',
-                opacity: 0.28,
-                maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, transparent 100%)',
-                WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, transparent 100%)',
-                marginTop: '1px',
-                pointerEvents: 'none',
-              }}
-            >
+            {/* 1. Main logo — renders normally */}
+            <div>
               <LogoText className="text-3xl" />
             </div>
+
+            {/* 2. Divider line — sits directly below the name */}
+            <div style={{
+              height: '1.5px',
+              margin: '5px 0 4px',
+              background: 'linear-gradient(90deg, transparent, #d4b030, #3ab870, #1ab4c0, transparent)',
+            }} />
+
+            {/* 3. Water reflection — flipped in place, fades downward */}
+            <div style={{
+              transform: 'scaleY(-1)',
+              opacity: 0.45,
+              maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.75) 0%, transparent 90%)',
+              WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.75) 0%, transparent 90%)',
+              pointerEvents: 'none',
+              display: 'block',
+            }}>
+              <LogoText className="text-3xl" />
+            </div>
+
           </Link>
 
-          <p className="mt-3 text-sm" style={{ color: 'var(--color-text-muted)' }}>
+          <p className="mt-4 text-sm" style={{ color: 'var(--color-text-muted)' }}>
             Sign in to your account
           </p>
         </div>
