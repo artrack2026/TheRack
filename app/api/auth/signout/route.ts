@@ -21,5 +21,12 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  return NextResponse.redirect(redirectTo)
+  const response = NextResponse.redirect(redirectTo)
+  
+  // Add cache-busting headers to ensure browser doesn't cache the redirect
+  response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate')
+  response.headers.set('Pragma', 'no-cache')
+  response.headers.set('Expires', '0')
+
+  return response
 }

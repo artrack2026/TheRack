@@ -13,6 +13,7 @@ interface AuthContextValue {
   signIn:  (email: string, password: string) => Promise<string | null>
   signOut: () => Promise<void>
   refreshProfile: () => Promise<void>
+  refreshSession: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextValue>({
@@ -20,6 +21,7 @@ const AuthContext = createContext<AuthContextValue>({
   signIn: async () => null,
   signOut: async () => {},
   refreshProfile: async () => {},
+  refreshSession: async () => {},
 })
 
 export function useAuth() { return useContext(AuthContext) }
@@ -49,6 +51,19 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
     if (user) await fetchProfile(user.id)
   }, [user, fetchProfile])
 
+  /* Force session refresh — called on page focus or when auth might be stale */
+  const refreshSession = useCallback(async () => {
+    if (!isSupabaseConfigured) return
+    const supabase = getSupabaseClient()
+    const { data: { session } } = await supabase.auth.getSession()
+    setUser(session?.user ?? null)
+    if (session?.user) {
+      await fetchProfile(session.user.id)
+    } else {
+      setProfile(null)
+    }
+  }, [fetchProfile])
+
   useEffect(() => {
     if (!isSupabaseConfigured) { setLoading(false); return }
     const supabase = getSupabaseClient()
@@ -59,6 +74,13 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       setUser(session?.user ?? null)
       if (session?.user) await fetchProfile(session.user.id)
+      else setProfile(null)
+      clearTimeout(timeout)
+      setLoading(false)
+    }).catch(() => {
+      // If getSession fails, still mark as not loading
+      setUser(null)
+      setProfile(null)
       clearTimeout(timeout)
       setLoading(false)
     })
@@ -73,11 +95,16 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
       setLoading(false)
     })
 
+    /* Force session refresh when page regains focus — catches auth state mismatches */
+    const handleFocus = () => { refreshSession() }
+    window.addEventListener('focus', handleFocus)
+
     return () => {
       clearTimeout(timeout)
       subscription.unsubscribe()
+      window.removeEventListener('focus', handleFocus)
     }
-  }, [fetchProfile])
+  }, [fetchProfile, refreshSession])
 
   /* Email normalized to lowercase before every sign-in */
   const signIn = async (email: string, password: string): Promise<string | null> => {
@@ -99,7 +126,7 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
     <AuthContext.Provider value={{
       user, profile, loading,
       isAdmin: profile?.role === 'admin',
-      signIn, signOut, refreshProfile,
+      signIn, signOut, refreshProfile, refreshSession,
     }}>
       {children}
     </AuthContext.Provider>

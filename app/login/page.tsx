@@ -36,8 +36,9 @@ function LoginForm() {
       )
       setLoading(false)
     } else {
-      // refresh() lets Next.js sync the session cookie before navigating
-      router.refresh()
+      // Small delay ensures cookies are written before navigation
+      // Prevents race condition between client and server auth state
+      await new Promise(resolve => setTimeout(resolve, 100))
       router.push(from)
     }
   }

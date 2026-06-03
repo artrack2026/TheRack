@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { Package, MessageSquare, Users, ShoppingCart, ArrowRight } from 'lucide-react'
+import { Package, MessageSquare, Users, ShoppingCart, ArrowRight, Settings } from 'lucide-react'
 import Link from 'next/link'
 import { isSupabaseConfigured, getSupabaseClient } from '@/lib/supabase'
 
@@ -39,6 +39,13 @@ export default function AdminDashboard() {
       badge: stats.newInquiries > 0 ? `${stats.newInquiries} new` : undefined },
     { label: 'Orders',      value: stats.orders,      icon: ShoppingCart,  color: '#3ab870', href: '/admin/orders' },
     { label: 'Customers',   value: stats.users,        icon: Users,         color: '#3878e0', href: '/admin/users' },
+  ]
+
+  const quickLinks = [
+    { href: '/admin/products', label: 'Add Product', icon: Package },
+    { href: '/admin/inquiries', label: 'View Inquiries', icon: MessageSquare },
+    { href: '/admin/users', label: 'Manage Users', icon: Users },
+    { href: '/admin/showroom', label: 'Showroom Settings', icon: Settings },
   ]
 
   return (
@@ -84,15 +91,17 @@ export default function AdminDashboard() {
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45, delay: 0.3 }}>
         <p className="text-xs font-semibold tracking-widest uppercase mb-4" style={{ color: 'var(--color-text-muted)' }}>Quick Actions</p>
         <div className="flex flex-wrap gap-3">
-          <Link href="/admin/products" className="cyber-btn text-sm" style={{ color: 'var(--r-violet)', borderColor: 'var(--r-violet)' }}>
-            Add Product <ArrowRight size={14} />
-          </Link>
-          <Link href="/admin/inquiries" className="cyber-btn text-sm">
-            View Inquiries <ArrowRight size={14} />
-          </Link>
-          <Link href="/admin/users" className="cyber-btn text-sm cyber-btn-accent">
-            Manage Users <ArrowRight size={14} />
-          </Link>
+          {quickLinks.map(({ href, label, icon: Icon }, index) => (
+            <Link
+              key={href}
+              href={href}
+              className="cyber-btn text-sm flex items-center gap-2"
+              style={index === 0 ? { color: 'var(--r-violet)', borderColor: 'var(--r-violet)' } : {}}
+            >
+              <Icon size={14} />
+              {label} <ArrowRight size={14} />
+            </Link>
+          ))}
         </div>
       </motion.div>
     </div>

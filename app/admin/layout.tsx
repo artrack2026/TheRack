@@ -3,7 +3,7 @@
 import { useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
-import { LayoutDashboard, Package, MessageSquare, Users, LogOut, ChevronRight, Shield } from 'lucide-react'
+import { LayoutDashboard, Package, MessageSquare, Users, LogOut, ChevronRight, Shield, Settings } from 'lucide-react'
 import { useAuth } from '@/components/AuthProvider'
 
 const adminLinks = [
@@ -11,6 +11,7 @@ const adminLinks = [
   { href: '/admin/products',     label: 'Products',  icon: Package },
   { href: '/admin/inquiries',    label: 'Inquiries', icon: MessageSquare },
   { href: '/admin/users',        label: 'Users',     icon: Users },
+  { href: '/admin/showroom',     label: 'Showroom Settings', icon: Settings },
 ]
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
