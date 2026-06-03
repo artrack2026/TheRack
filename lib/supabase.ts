@@ -265,6 +265,59 @@ export interface Database {
         }
         Relationships: Rel
       }
+      showroom_settings: {
+        Row: {
+          id: number
+          products_per_row: number
+          rows_per_page: number
+          inquiry_email: string
+          instagram: string | null
+          facebook: string | null
+          x: string | null
+          tiktok: string | null
+          snapchat: string | null
+          youtube: string | null
+          linkedin: string | null
+          threads: string | null
+          bluesky: string | null
+          mastodon: string | null
+          updated_at: string
+        }
+        Insert: {
+          id?: number
+          products_per_row?: number
+          rows_per_page?: number
+          inquiry_email?: string
+          instagram?: string | null
+          facebook?: string | null
+          x?: string | null
+          tiktok?: string | null
+          snapchat?: string | null
+          youtube?: string | null
+          linkedin?: string | null
+          threads?: string | null
+          bluesky?: string | null
+          mastodon?: string | null
+          updated_at?: string
+        }
+        Update: {
+          products_per_row?: number
+          rows_per_page?: number
+          inquiry_email?: string
+          instagram?: string | null
+          facebook?: string | null
+          x?: string | null
+          tiktok?: string | null
+          snapchat?: string | null
+          youtube?: string | null
+          linkedin?: string | null
+          threads?: string | null
+          bluesky?: string | null
+          mastodon?: string | null
+          updated_at?: string
+        }
+        Relationships: Rel
+      }
     }
   }
 }
@@ -432,6 +485,25 @@ create table if not exists order_items (
   created_at timestamptz default now()
 );
 
+create table if not exists showroom_settings (
+  id integer primary key default 1,
+  products_per_row integer default 4,
+  rows_per_page integer default 2,
+  inquiry_email text default '',
+  instagram text,
+  facebook text,
+  x text,
+  tiktok text,
+  snapchat text,
+  youtube text,
+  linkedin text,
+  threads text,
+  bluesky text,
+  mastodon text,
+  updated_at timestamptz default now(),
+  constraint showroom_settings_id_check check (id = 1)
+);
+
 -- ── Row-Level Security ────────────────────────────────────────────
 alter table products    enable row level security;
 alter table inquiries   enable row level security;
@@ -440,6 +512,7 @@ alter table carts       enable row level security;
 alter table cart_items  enable row level security;
 alter table orders      enable row level security;
 alter table order_items enable row level security;
+alter table showroom_settings enable row level security;
 
 create policy "products_public_read"   on products for select using (true);
 create policy "products_admin_all"     on products for all using (
@@ -463,4 +536,8 @@ create policy "orders_admin"           on orders for all using (
   exists (select 1 from profiles where id = auth.uid() and role = 'admin'));
 
 create policy "order_items_open"       on order_items for all using (true);
+
+create policy "showroom_settings_public_read" on showroom_settings for select using (true);
+create policy "showroom_settings_admin_update" on showroom_settings for update using (
+  exists (select 1 from profiles where id = auth.uid() and role = 'admin'));
 `

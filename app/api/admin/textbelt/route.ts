@@ -9,6 +9,7 @@ export async function GET() {
       success: false,
       remaining: null,
       initialPurchased: initialQuota ? Number(initialQuota) : null,
+      apiKey: null,
       message: 'Textbelt API key is not configured. Set TEXTBELT_API_KEY in environment variables.',
     }, { status: 500 })
   }
@@ -22,6 +23,7 @@ export async function GET() {
         success: false,
         remaining: null,
         initialPurchased: initialQuota ? Number(initialQuota) : null,
+        apiKey: key,
         message: data?.error || data?.message || 'Unable to fetch Textbelt quota.',
       }, { status: 500 })
     }
@@ -36,6 +38,7 @@ export async function GET() {
       success: true,
       remaining,
       initialPurchased: initialQuota ? Number(initialQuota) : null,
+      apiKey: key,
       message: null,
     })
   } catch (error) {
@@ -43,6 +46,7 @@ export async function GET() {
       success: false,
       remaining: null,
       initialPurchased: initialQuota ? Number(initialQuota) : null,
+      apiKey: key,
       message: error instanceof Error ? error.message : 'Textbelt quota request failed.',
     }, { status: 500 })
   }
