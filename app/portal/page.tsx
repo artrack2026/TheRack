@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Package, User, ShoppingBag, ArrowRight } from 'lucide-react'
 import { useAuth } from '@/components/AuthProvider'
 import { useCart } from '@/components/CartProvider'
+import { getDisplayName } from '@/lib/format'
 
 const RAINBOW = ['#e05858','#e07838','#d4b030','#3ab870','#1ab4c0','#3878e0','#8844d8','#d84490']
 
@@ -12,7 +13,7 @@ export default function PortalPage() {
   const { user, profile } = useAuth()
   const { cart, openCart } = useCart()
 
-  const name = profile?.display_name ?? user?.email?.split('@')[0] ?? 'there'
+  const name = getDisplayName(profile, user)
   const cartCount = cart?.items.reduce((n, i) => n + i.quantity, 0) ?? 0
 
   const cards = [

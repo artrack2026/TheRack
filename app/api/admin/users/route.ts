@@ -1,20 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { createSupabaseServerClient, createSupabaseAdminClient, isSupabaseConfigured } from '@/lib/supabase'
-
-/* Guard: ensure caller is an authenticated admin */
-async function requireAdmin() {
-  const cookieStore = await cookies()
-  const supabase    = createSupabaseServerClient(cookieStore)
-
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { error: 'Unauthorized', status: 401 }
-
-  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
-  if (profile?.role !== 'admin') return { error: 'Forbidden', status: 403 }
-
-  return { user }
-}
+import { requireAdmin } from '@/lib/api-auth'
 
 /* GET /api/admin/users — list all profiles */
 export async function GET() {

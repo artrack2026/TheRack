@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { createSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase'
+import { requireAdmin } from '@/lib/api-auth'
 
 interface ShowroomSettings {
   products_per_row: number
@@ -98,24 +99,13 @@ export async function POST(request: NextRequest) {
   }
 
   try {
+    const check = await requireAdmin()
+    if ('error' in check) {
+      return NextResponse.json({ success: false, message: check.error }, { status: check.status })
+    }
+
     const cookieStore = await cookies()
     const supabase = createSupabaseServerClient(cookieStore)
-
-    // Check if user is admin
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) {
-      return NextResponse.json({ success: false, message: 'Not authenticated' }, { status: 401 })
-    }
-
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
-
-    if (profile?.role !== 'admin') {
-      return NextResponse.json({ success: false, message: 'Not authorized' }, { status: 403 })
-    }
 
     const body = await request.json()
     const { products_per_row, rows_per_page, inquiry_email, instagram, facebook, x, tiktok, snapchat, youtube, linkedin, threads, bluesky, mastodon } = body

@@ -44,3 +44,33 @@ export function formatEmail(value: string): string {
 export function formatZip(value: string): string {
   return value.replace(/\D/g, '').slice(0, 5)
 }
+
+/* ── Profile display helpers ──────────────────────────────────────
+   Single source of truth for resolving a user's visible name.
+   Priority: display_name → first_name → fallback.
+   Never uses the email address — splitting on '@' leaks account
+   info and produces ugly strings like "mycolab-hub".
+──────────────────────────────────────────────────────────────────── */
+
+import type { User } from '@supabase/supabase-js'
+import type { Profile } from '@/lib/types'
+
+export function getDisplayName(
+  profile: Profile | null | undefined,
+  _user?: User | null,
+  fallback = 'there'
+): string {
+  return profile?.display_name || profile?.first_name || fallback
+}
+
+export function getAvatarInitial(
+  profile: Profile | null | undefined,
+  user?: User | null
+): string {
+  return (
+    profile?.display_name?.[0] ??
+    profile?.first_name?.[0] ??
+    user?.email?.[0] ??
+    'U'
+  ).toUpperCase()
+}

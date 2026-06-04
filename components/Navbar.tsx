@@ -8,6 +8,7 @@ import { Menu, X, ShoppingBag, Settings, LogOut, User, LayoutDashboard, Shield }
 import LogoText from '@/components/LogoText'
 import { useAuth } from '@/components/AuthProvider'
 import { useCart } from '@/components/CartProvider'
+import { getDisplayName, getAvatarInitial } from '@/lib/format'
 
 const navLinks = [
   { href: '/',        label: 'Home' },
@@ -127,10 +128,10 @@ export default function Navbar() {
                   className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold"
                   style={{ background: 'var(--color-primary)', color: 'var(--color-bg)' }}
                 >
-                  {(profile?.display_name?.[0] ?? user.email?.[0] ?? 'U').toUpperCase()}
+                  {getAvatarInitial(profile, user)}
                 </div>
                 <span className="text-sm" style={{ color: 'var(--color-text)' }}>
-                  {profile?.display_name ?? user.email?.split('@')[0]}
+                  {getDisplayName(profile, user)}
                 </span>
               </button>
 
