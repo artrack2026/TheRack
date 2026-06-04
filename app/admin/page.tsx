@@ -95,8 +95,7 @@ export default function AdminDashboard() {
             <Link
               key={href}
               href={href}
-              className="cyber-btn text-sm flex items-center gap-2"
-              style={index === 0 ? { color: 'var(--r-violet)', borderColor: 'var(--r-violet)' } : {}}
+              className={`cyber-btn text-sm flex items-center gap-2${index === 0 ? ' btn--violet' : ''}`}
             >
               <Icon size={14} />
               {label} <ArrowRight size={14} />
