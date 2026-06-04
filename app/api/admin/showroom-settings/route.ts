@@ -185,6 +185,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (error) throw error
+    if (!data) throw new Error('No data returned after save')
 
     return NextResponse.json({
       success: true,
