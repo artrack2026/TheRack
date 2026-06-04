@@ -58,64 +58,17 @@ body::before {
 
 /* ═══════════════════════════════════════
    BUTTONS
-   Most things: rounded. A few: sharp.
+   --btn-fill       : the hover background color
+   --btn-hover-text : the text color while filled
+   Add a .btn--<color> modifier to get the complementary-pair
+   hover behavior. Hover text is pre-chosen for contrast.
 ═══════════════════════════════════════ */
 
-/* Primary button — rounded, warm fill */
-.art-btn {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  padding: 0.7rem 1.75rem;
-  font-size: 0.82rem;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  border-radius: 8px;
-  border: 1.5px solid var(--color-primary);
-  color: var(--color-primary);
-  background: transparent;
-  cursor: pointer;
-  text-decoration: none;
-  overflow: hidden;
-  transition: color 0.25s ease;
-}
-
-.art-btn::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: var(--color-primary);
-  transform: scaleX(0);
-  transform-origin: left;
-  transition: transform 0.28s ease;
-  z-index: 0;
-}
-
-.art-btn:hover::before { transform: scaleX(1); }
-.art-btn:hover { color: var(--color-bg); }
-.art-btn > * { position: relative; z-index: 1; }
-
-/* Ghost / secondary variant */
-.art-btn-ghost {
-  border-color: var(--color-border);
-  color: var(--color-text-muted);
-}
-.art-btn-ghost::before { background: var(--color-surface-2); }
-.art-btn-ghost:hover { color: var(--color-text); }
-
-/* Accent variant */
-.art-btn-accent {
-  border-color: var(--color-accent);
-  color: var(--color-accent);
-}
-.art-btn-accent::before { background: var(--color-accent); }
-.art-btn-accent:hover { color: var(--color-bg); }
-
-/* Keep .cyber-btn as alias so existing JSX doesn't break */
+.art-btn,
 .cyber-btn {
+  --btn-fill:       var(--color-primary);
+  --btn-hover-text: var(--color-bg);
+
   position: relative;
   display: inline-flex;
   align-items: center;
@@ -135,26 +88,108 @@ body::before {
   overflow: hidden;
   transition: color 0.25s ease;
 }
+
+.art-btn::before,
 .cyber-btn::before {
   content: '';
   position: absolute;
   inset: 0;
-  background: var(--color-primary);
+  background: var(--btn-fill);
   transform: scaleX(0);
   transform-origin: left;
   transition: transform 0.28s ease;
   z-index: 0;
 }
+
+.art-btn:hover::before,
 .cyber-btn:hover::before { transform: scaleX(1); }
-.cyber-btn:hover { color: var(--color-bg); }
+
+.art-btn:hover,
+.cyber-btn:hover { color: var(--btn-hover-text); }
+
+.art-btn > *,
 .cyber-btn > * { position: relative; z-index: 1; }
 
+/* Ghost / secondary variant */
+.art-btn-ghost {
+  --btn-fill:       var(--color-surface-2);
+  --btn-hover-text: var(--color-text);
+  border-color: var(--color-border);
+  color: var(--color-text-muted);
+}
+
+/* Accent variant (rust) */
+.art-btn-accent,
 .cyber-btn-accent {
+  --btn-fill:       var(--color-accent);
+  --btn-hover-text: var(--color-bg);
   border-color: var(--color-accent);
   color: var(--color-accent);
 }
-.cyber-btn-accent::before { background: var(--color-accent); }
-.cyber-btn-accent:hover { color: var(--color-bg); }
+
+/* ── Color modifiers — complementary-pair hover ────────────────────
+   Usage: <button class="cyber-btn btn--red"> or .art-btn btn--blue
+   Pairs follow color-wheel opposites from the rainbow token set.
+   Hover-text is pre-chosen so it always contrasts the fill.
+
+   red    → fill: cyan    (7.4:1 dark text)
+   orange → fill: blue    (6.2:1 light text)
+   yellow → fill: violet  (10.5:1 light text)
+   green  → fill: pink    (7.1:1 dark text)
+   cyan   → fill: red     (4.9:1 dark text)
+   blue   → fill: orange  (4.9:1 dark text)
+   violet → fill: yellow  (8.6:1 dark text)
+   pink   → fill: green   (7.1:1 dark text)
+──────────────────────────────────────────────────────────────────── */
+
+.btn--red {
+  --btn-fill:       var(--r-cyan);
+  --btn-hover-text: var(--color-bg);
+  border-color: var(--r-red);
+  color: var(--r-red);
+}
+.btn--orange {
+  --btn-fill:       var(--r-blue);
+  --btn-hover-text: var(--color-text);
+  border-color: var(--r-orange);
+  color: var(--r-orange);
+}
+.btn--yellow {
+  --btn-fill:       var(--r-violet);
+  --btn-hover-text: var(--color-text);
+  border-color: var(--r-yellow);
+  color: var(--r-yellow);
+}
+.btn--green {
+  --btn-fill:       var(--r-pink);
+  --btn-hover-text: var(--color-bg);
+  border-color: var(--r-green);
+  color: var(--r-green);
+}
+.btn--cyan {
+  --btn-fill:       var(--r-red);
+  --btn-hover-text: var(--color-bg);
+  border-color: var(--r-cyan);
+  color: var(--r-cyan);
+}
+.btn--blue {
+  --btn-fill:       var(--r-orange);
+  --btn-hover-text: var(--color-bg);
+  border-color: var(--r-blue);
+  color: var(--r-blue);
+}
+.btn--violet {
+  --btn-fill:       var(--r-yellow);
+  --btn-hover-text: var(--color-bg);
+  border-color: var(--r-violet);
+  color: var(--r-violet);
+}
+.btn--pink {
+  --btn-fill:       var(--r-green);
+  --btn-hover-text: var(--color-bg);
+  border-color: var(--r-pink);
+  color: var(--r-pink);
+}
 
 /* ═══════════════════════════════════════
    INPUTS — rounded, no clip-path

@@ -142,30 +142,47 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
 
-    // Upsert settings (only one row exists)
-    const { data, error } = await supabase
+    // Check if the settings row exists
+    const { data: existing } = await supabase
       .from('showroom_settings')
-      .upsert([
-        {
-          id: 1,
-          products_per_row,
-          rows_per_page,
-          inquiry_email,
-          instagram: instagram || null,
-          facebook: facebook || null,
-          x: x || null,
-          tiktok: tiktok || null,
-          snapchat: snapchat || null,
-          youtube: youtube || null,
-          linkedin: linkedin || null,
-          threads: threads || null,
-          bluesky: bluesky || null,
-          mastodon: mastodon || null,
-          updated_at: new Date().toISOString(),
-        },
-      ], { onConflict: 'id' })
-      .select()
+      .select('id')
+      .eq('id', 1)
       .single()
+
+    const payload = {
+      products_per_row,
+      rows_per_page,
+      inquiry_email,
+      instagram: instagram || null,
+      facebook: facebook || null,
+      x: x || null,
+      tiktok: tiktok || null,
+      snapchat: snapchat || null,
+      youtube: youtube || null,
+      linkedin: linkedin || null,
+      threads: threads || null,
+      bluesky: bluesky || null,
+      mastodon: mastodon || null,
+      updated_at: new Date().toISOString(),
+    }
+
+    let data, error
+    if (existing) {
+      // Row exists — UPDATE (covered by RLS admin update policy)
+      ;({ data, error } = await supabase
+        .from('showroom_settings')
+        .update(payload)
+        .eq('id', 1)
+        .select()
+        .single())
+    } else {
+      // No row yet — INSERT
+      ;({ data, error } = await supabase
+        .from('showroom_settings')
+        .insert([{ id: 1, ...payload }])
+        .select()
+        .single())
+    }
 
     if (error) throw error
 

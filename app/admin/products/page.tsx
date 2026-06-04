@@ -71,7 +71,7 @@ export default function AdminProductsPage() {
           <h2 className="text-3xl font-black mb-1" style={{ color: 'var(--color-text)' }}>Products</h2>
           <div className="h-1 w-10" style={{ background: 'var(--r-red)', borderRadius: 0 }} />
         </div>
-        <button onClick={openNew} className="cyber-btn text-sm" style={{ color: 'var(--r-red)', borderColor: 'var(--r-red)' }}>
+        <button onClick={openNew} className="cyber-btn btn--red text-sm">
           <Plus size={14} /> Add Product
         </button>
       </motion.div>
