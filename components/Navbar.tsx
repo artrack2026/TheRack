@@ -131,7 +131,7 @@ export default function Navbar() {
                   {getAvatarInitial(profile, user)}
                 </div>
                 <span className="text-sm" style={{ color: 'var(--color-text)' }}>
-                  {getDisplayName(profile, user)}
+                  {getDisplayName(profile, user, '')}
                 </span>
               </button>
 
