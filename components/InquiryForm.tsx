@@ -76,7 +76,7 @@ export default function InquiryForm({ productId, productTitle, onClose }: Props)
           <input
             required
             className="cyber-input"
-            placeholder="Jane McGann"
+            placeholder="Anastasia Beaverhousin"
             value={form.name}
             onChange={e => setForm(f => ({ ...f, name: formatName(e.target.value) }))}
           />
