@@ -42,10 +42,10 @@ export default function AdminDashboard() {
   ]
 
   const quickLinks = [
-    { href: '/admin/products', label: 'Add Product', icon: Package },
-    { href: '/admin/inquiries', label: 'View Inquiries', icon: MessageSquare },
-    { href: '/admin/users', label: 'Manage Users', icon: Users },
-    { href: '/admin/showroom', label: 'Showroom Settings', icon: Settings },
+    { href: '/admin/products',  label: 'Add Product',       icon: Package,       color: 'violet' },
+    { href: '/admin/inquiries', label: 'View Inquiries',    icon: MessageSquare, color: 'orange' },
+    { href: '/admin/users',     label: 'Manage Users',      icon: Users,         color: 'blue'   },
+    { href: '/admin/showroom',  label: 'Showroom Settings', icon: Settings,      color: 'yellow' },
   ]
 
   return (
@@ -91,11 +91,11 @@ export default function AdminDashboard() {
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45, delay: 0.3 }}>
         <p className="text-xs font-semibold tracking-widest uppercase mb-4" style={{ color: 'var(--color-text-muted)' }}>Quick Actions</p>
         <div className="flex flex-wrap gap-3">
-          {quickLinks.map(({ href, label, icon: Icon }, index) => (
+          {quickLinks.map(({ href, label, icon: Icon, color }) => (
             <Link
               key={href}
               href={href}
-              className={`cyber-btn text-sm flex items-center gap-2${index === 0 ? ' btn--violet' : ''}`}
+              className={`cyber-btn btn--${color} flex items-center gap-2`}
             >
               <Icon size={14} />
               {label} <ArrowRight size={14} />

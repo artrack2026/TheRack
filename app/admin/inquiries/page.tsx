@@ -90,8 +90,7 @@ export default function InquiriesPage() {
                   {st === 'new' && (
                     <button
                       onClick={() => updateStatus(inq.id!, 'read')}
-                      className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-medium transition-colors hover:bg-white/5"
-                      style={{ color: '#d4b030', border: '1px solid #d4b03040', background: 'none', cursor: 'pointer' }}
+                      className="cyber-btn btn--yellow btn--sm flex items-center gap-1.5"
                     >
                       <MailOpen size={12} /> Mark Read
                     </button>
@@ -99,16 +98,14 @@ export default function InquiriesPage() {
                   {st !== 'replied' && (
                     <button
                       onClick={() => updateStatus(inq.id!, 'replied')}
-                      className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-medium transition-colors hover:bg-white/5"
-                      style={{ color: '#3ab870', border: '1px solid #3ab87040', background: 'none', cursor: 'pointer' }}
+                      className="cyber-btn btn--green btn--sm flex items-center gap-1.5"
                     >
                       <CheckCircle size={12} /> Mark Replied
                     </button>
                   )}
                   <a
                     href={`mailto:${inq.email}?subject=Re: Your inquiry${inq.product_title ? ` about ${inq.product_title}` : ''}`}
-                    className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-medium transition-colors hover:bg-white/5 no-underline"
-                    style={{ color: 'var(--color-text-muted)', border: '1px solid var(--color-border)' }}
+                    className="cyber-btn art-btn-ghost btn--sm flex items-center gap-1.5 no-underline"
                   >
                     Reply via Email
                   </a>
