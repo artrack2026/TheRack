@@ -60,14 +60,20 @@ body::before {
    BUTTONS
    --btn-fill       : the hover background color
    --btn-hover-text : the text color while filled
-   Add a .btn--<color> modifier to get the complementary-pair
-   hover behavior. Hover text is pre-chosen for contrast.
+
+   Base classes use complementary-pair fills:
+     cyber-btn       gold (#c8902a)  → fills blue   (#3878e0)  6.1:1 light text
+     cyber-btn-accent rust (#bf5b4a) → fills cyan   (#1ab4c0)  6.7:1 dark text
+     art-btn-ghost   muted           → fills surface-2         neutral
+
+   Add a .btn--<color> modifier to override with a specific
+   complementary pair (see table below).
 ═══════════════════════════════════════ */
 
 .art-btn,
 .cyber-btn {
-  --btn-fill:       var(--color-primary);
-  --btn-hover-text: var(--color-bg);
+  --btn-fill:       var(--r-blue);
+  --btn-hover-text: var(--color-text);
 
   position: relative;
   display: inline-flex;
@@ -118,10 +124,10 @@ body::before {
   color: var(--color-text-muted);
 }
 
-/* Accent variant (rust) */
+/* Accent variant (rust) — fills with cyan (complementary) */
 .art-btn-accent,
 .cyber-btn-accent {
-  --btn-fill:       var(--color-accent);
+  --btn-fill:       var(--r-cyan);
   --btn-hover-text: var(--color-bg);
   border-color: var(--color-accent);
   color: var(--color-accent);
