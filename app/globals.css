@@ -92,7 +92,6 @@ body::before {
   cursor: pointer;
   text-decoration: none;
   overflow: hidden;
-  transition: color 0.25s ease;
 }
 
 .art-btn::before,
@@ -110,8 +109,7 @@ body::before {
 .art-btn:hover::before,
 .cyber-btn:hover::before { transform: scaleX(1); }
 
-.art-btn:hover,
-.cyber-btn:hover { color: var(--btn-hover-text); }
+/* text color intentionally unchanged on hover — accent color stays visible against complementary fill */
 
 .art-btn > *,
 .cyber-btn > * { position: relative; z-index: 1; }

@@ -1,0 +1,134 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { createSupabaseAdminClient, isSupabaseConfigured } from '@/lib/supabase'
+
+export async function POST(req: NextRequest) {
+  if (!isSupabaseConfigured) {
+    return NextResponse.json({ error: 'Not configured' }, { status: 503 })
+  }
+
+  try {
+    const body = await req.json()
+    const {
+      cartId,
+      firstName,
+      lastName,
+      email,
+      phone,
+      address_line1,
+      address_line2,
+      city,
+      state,
+      zip,
+      notes,
+      paymentMethod,
+      userId = null,
+      sessionId = null,
+    } = body
+
+    if (!firstName || !lastName || !email || !cartId) {
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+    }
+
+    const admin = createSupabaseAdminClient()
+
+    // Fetch cart with items and product details
+    const { data: cart, error: cartError } = await admin
+      .from('carts')
+      .select(`
+        *,
+        items:cart_items(
+          id, product_id, quantity, price_at_add,
+          product:products(id, title, category)
+        )
+      `)
+      .eq('id', cartId)
+      .single()
+
+    if (cartError || !cart) {
+      return NextResponse.json({ error: 'Cart not found' }, { status: 404 })
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const items = (cart as any).items ?? []
+    if (items.length === 0) {
+      return NextResponse.json({ error: 'Cart is empty' }, { status: 400 })
+    }
+
+    // Fetch checkout settings
+    const { data: settings } = await admin
+      .from('showroom_settings')
+      .select('tax_rate, shipping_fee, free_shipping_threshold')
+      .eq('id', 1)
+      .single()
+
+    const taxRate            = (settings?.tax_rate            as number) ?? 0
+    const shippingFee        = (settings?.shipping_fee        as number) ?? 0
+    const freeThreshold      = (settings?.free_shipping_threshold as number) ?? 0
+
+    // Calculate totals
+    const subtotal = items.reduce(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (sum: number, item: any) => sum + item.price_at_add * item.quantity,
+      0,
+    )
+    const shipping = freeThreshold > 0 && subtotal >= freeThreshold ? 0 : shippingFee
+    const tax      = Math.round(subtotal * taxRate * 100) / 100
+    const total    = Math.round((subtotal + shipping + tax) * 100) / 100
+
+    // Create order
+    const { data: order, error: orderError } = await admin
+      .from('orders')
+      .insert({
+        user_id:        userId,
+        session_id:     sessionId,
+        status:         'pending',
+        total,
+        customer_name:  `${firstName} ${lastName}`.trim(),
+        customer_email: email.toLowerCase().trim(),
+        customer_phone: phone || null,
+        address_line1:  address_line1 || null,
+        address_line2:  address_line2 || null,
+        city:           city || null,
+        state:          state || null,
+        zip:            zip || null,
+        notes:          notes || null,
+        payment_method: paymentMethod || null,
+      })
+      .select()
+      .single()
+
+    if (orderError || !order) {
+      console.error('Order insert error:', orderError)
+      return NextResponse.json({ error: 'Failed to create order' }, { status: 500 })
+    }
+
+    // Create order items
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const orderItems = items.map((item: any) => ({
+      order_id:         order.id,
+      product_id:       item.product_id,
+      product_title:    item.product?.title    ?? 'Unknown Product',
+      product_category: item.product?.category ?? 'goods',
+      quantity:         item.quantity,
+      price:            item.price_at_add,
+    }))
+
+    const { error: itemsError } = await admin.from('order_items').insert(orderItems)
+    if (itemsError) console.error('Order items insert error:', itemsError)
+
+    // Delete cart (cleanup)
+    await admin.from('cart_items').delete().eq('cart_id', cartId)
+    await admin.from('carts').delete().eq('id', cartId)
+
+    return NextResponse.json({
+      orderId:   order.id,
+      total:     order.total,
+      subtotal,
+      shipping,
+      tax,
+    })
+  } catch (err) {
+    console.error('POST /api/orders error:', err)
+    return NextResponse.json({ error: 'Server error' }, { status: 500 })
+  }
+}

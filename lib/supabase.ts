@@ -110,6 +110,7 @@ export interface Database {
           state: string | null
           zip: string | null
           role: 'customer' | 'admin'
+          birthday: string | null
           created_at: string
         }
         Insert: {
@@ -125,6 +126,7 @@ export interface Database {
           state?: string | null
           zip?: string | null
           role?: 'customer' | 'admin'
+          birthday?: string | null
           created_at?: string
         }
         Update: {
@@ -139,6 +141,7 @@ export interface Database {
           state?: string | null
           zip?: string | null
           role?: 'customer' | 'admin'
+          birthday?: string | null
           created_at?: string
         }
         Relationships: Rel
@@ -204,6 +207,7 @@ export interface Database {
           state: string | null
           zip: string | null
           notes: string | null
+          payment_method: string | null
           created_at: string
         }
         Insert: {
@@ -221,6 +225,7 @@ export interface Database {
           state?: string | null
           zip?: string | null
           notes?: string | null
+          payment_method?: string | null
           created_at?: string
         }
         Update: {
@@ -235,6 +240,7 @@ export interface Database {
           state?: string | null
           zip?: string | null
           notes?: string | null
+          payment_method?: string | null
         }
         Relationships: Rel
       }
@@ -281,6 +287,10 @@ export interface Database {
           threads: string | null
           bluesky: string | null
           mastodon: string | null
+          tax_rate: number
+          shipping_fee: number
+          free_shipping_threshold: number
+          payment_methods: unknown
           updated_at: string
         }
         Insert: {
@@ -298,6 +308,10 @@ export interface Database {
           threads?: string | null
           bluesky?: string | null
           mastodon?: string | null
+          tax_rate?: number
+          shipping_fee?: number
+          free_shipping_threshold?: number
+          payment_methods?: unknown
           updated_at?: string
         }
         Update: {
@@ -314,6 +328,10 @@ export interface Database {
           threads?: string | null
           bluesky?: string | null
           mastodon?: string | null
+          tax_rate?: number
+          shipping_fee?: number
+          free_shipping_threshold?: number
+          payment_methods?: unknown
           updated_at?: string
         }
         Relationships: Rel

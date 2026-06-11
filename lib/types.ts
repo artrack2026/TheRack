@@ -52,7 +52,30 @@ export interface Profile {
   state: string | null
   zip: string | null
   role: 'customer' | 'admin'
+  birthday: string | null
   created_at: string
+}
+
+/* ── Payment ── */
+
+export type PaymentMethodType = 'instruction' | 'stripe' | 'square'
+
+export interface PaymentMethod {
+  id: string
+  name: string
+  enabled: boolean
+  type: PaymentMethodType
+  icon: string
+  detail?: string
+  instructions?: string
+  sort_order: number
+}
+
+export interface CheckoutSettings {
+  tax_rate: number
+  shipping_fee: number
+  free_shipping_threshold: number
+  payment_methods: PaymentMethod[]
 }
 
 /* ── Cart ── */
@@ -102,6 +125,7 @@ export interface Order {
   state: string | null
   zip: string | null
   notes: string | null
+  payment_method: string | null
   created_at: string
   items?: OrderItem[]
 }
