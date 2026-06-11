@@ -500,9 +500,9 @@ export default function CheckoutPage() {
                     </span>
                   </div>
 
-                  {config?.free_shipping_threshold > 0 && subtotal < config.free_shipping_threshold && (
+                  {(config?.free_shipping_threshold ?? 0) > 0 && subtotal < (config?.free_shipping_threshold ?? 0) && (
                     <p className="text-xs text-center mt-2" style={{ color: 'var(--color-text-muted)' }}>
-                      Add ${(config.free_shipping_threshold - subtotal).toFixed(2)} more for free shipping
+                      Add ${((config?.free_shipping_threshold ?? 0) - subtotal).toFixed(2)} more for free shipping
                     </p>
                   )}
                 </div>
