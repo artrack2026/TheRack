@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Menu, X, ShoppingBag, Settings, LogOut, User, LayoutDashboard, Shield } from 'lucide-react'
+import { Menu, X, ShoppingBag, LogOut, User, LayoutDashboard, Shield } from 'lucide-react'
 import LogoText from '@/components/LogoText'
 import { useAuth } from '@/components/AuthProvider'
 import { useCart } from '@/components/CartProvider'
@@ -70,8 +70,8 @@ export default function Navbar() {
             paired typographically (uppercase, wide tracking) but visually distinct
             from the animated rainbow wordmark. Gated by route, not auth state, so it
             never depends on whether the admin check has finished loading yet. */}
-        <Link href="/" className="flex flex-col items-start leading-none">
-          <LogoText className="text-xl" />
+        <Link href="/" className="flex flex-col items-center leading-none">
+          <LogoText className="text-3xl" />
           {pathname.startsWith('/admin') && (
             <span
               className="text-[0.6rem] font-semibold tracking-[0.3em] uppercase mt-1"
@@ -171,16 +171,9 @@ export default function Navbar() {
                       className="flex items-center gap-2.5 px-4 py-2.5 text-sm transition-colors hover:bg-white/5"
                       style={{ color: 'var(--r-violet)' }}
                     >
-                      <Shield size={14} /> Admin Panel
+                      <Shield size={14} /> The Vault
                     </Link>
                   )}
-                  <Link
-                    href="/settings"
-                    className="flex items-center gap-2.5 px-4 py-2.5 text-sm transition-colors hover:bg-white/5"
-                    style={{ color: 'var(--color-text-muted)' }}
-                  >
-                    <Settings size={14} /> Settings
-                  </Link>
                   <div style={{ borderTop: '1px solid var(--color-border)', margin: '4px 0' }} />
                   <a
                     href="/signout"
@@ -272,7 +265,7 @@ export default function Navbar() {
                   </Link>
                   {isAdmin && (
                     <Link href="/admin" className="px-4 py-2.5 rounded-lg text-sm flex items-center gap-2" style={{ color: 'var(--r-violet)' }}>
-                      <LayoutDashboard size={14} /> Admin Panel
+                      <LayoutDashboard size={14} /> The Vault
                     </Link>
                   )}
                   <button

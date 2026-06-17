@@ -4,6 +4,21 @@ import Link from 'next/link'
 import { AtSign, Mail, Heart, Shield } from 'lucide-react'
 import LogoText from '@/components/LogoText'
 
+/* WillowRoo Media credit — mirrors their brand mark: brushed silver "Willow"
+   paired with metallic gold "Roo", same two-tone split as their logo. */
+const willowGradient = {
+  background: 'linear-gradient(160deg, #ffffff, #b8b8b8 45%, #e8e8e8 55%, #9a9a9a)',
+  WebkitBackgroundClip: 'text' as const,
+  WebkitTextFillColor: 'transparent' as const,
+  backgroundClip: 'text' as const,
+}
+const rooGradient = {
+  background: 'linear-gradient(160deg, #f0cf7a, #c8902a 45%, #e8c468 55%, #a3701c)',
+  WebkitBackgroundClip: 'text' as const,
+  WebkitTextFillColor: 'transparent' as const,
+  backgroundClip: 'text' as const,
+}
+
 export default function Footer() {
   return (
     <footer
@@ -84,20 +99,25 @@ export default function Footer() {
           className="mt-10 pt-8 border-t flex flex-col md:flex-row items-center justify-between gap-3"
           style={{ borderColor: 'var(--color-border)' }}
         >
-          <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-            © {new Date().getFullYear()} Art-R-Ack. All rights reserved.
-          </p>
-          <div className="flex items-center gap-4">
-            <p className="text-xs flex items-center gap-1.5" style={{ color: 'var(--color-text-muted)' }}>
-              Made with <Heart size={11} style={{ color: 'var(--r-red)' }} /> for art lovers
+          <Link
+            href="/admin"
+            className="text-xs flex items-center gap-1 transition-colors hover:opacity-80"
+            style={{ color: '#6b6560' }}
+          >
+            <Shield size={10} /> Admin
+          </Link>
+          <div className="flex flex-col items-center md:items-end gap-1.5">
+            <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+              © {new Date().getFullYear()} Art-R-Ack. All rights reserved.
             </p>
-            <Link
-              href="/admin"
-              className="text-xs flex items-center gap-1 transition-colors hover:opacity-80"
-              style={{ color: '#6b6560' }}
-            >
-              <Shield size={10} /> Admin
-            </Link>
+            <p className="text-xs flex items-center gap-1.5" style={{ color: 'var(--color-text-muted)' }}>
+              Made with <Heart size={11} style={{ color: 'var(--r-red)' }} /> for art lovers by{' '}
+              <span className="font-bold tracking-tight">
+                <span style={willowGradient}>Willow</span>
+                <span style={rooGradient}>Roo</span>
+              </span>{' '}
+              Media.
+            </p>
           </div>
         </div>
       </div>
