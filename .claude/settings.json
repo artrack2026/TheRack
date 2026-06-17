@@ -14,7 +14,9 @@
       "Bash(npx eslint *)",
       "Bash(git mv *)",
       "Bash(curl -s http://localhost:3000/ -o /tmp/home.html)",
-      "Bash(kill %1)"
+      "Bash(kill %1)",
+      "Bash(curl -s http://localhost:3000/admin -o /tmp/admin.html -w \"%{http_code}\\\\n\")",
+      "Bash(pkill -f \"next dev\")"
     ],
     "additionalDirectories": [
       "/tmp"

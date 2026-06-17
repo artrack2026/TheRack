@@ -73,7 +73,7 @@ body::before {
 .art-btn,
 .cyber-btn {
   --btn-fill:       var(--r-blue);
-  --btn-hover-text: var(--color-text);
+  --btn-hover-text: var(--color-bg);
 
   position: relative;
   display: inline-flex;
@@ -109,7 +109,11 @@ body::before {
 .art-btn:hover::before,
 .cyber-btn:hover::before { transform: scaleX(1); }
 
-/* text color intentionally unchanged on hover — accent color stays visible against complementary fill */
+/* Swap text/icon color on hover so it stays readable against the fill —
+   each modifier below sets --btn-hover-text to whichever of light/dark
+   text actually contrasts its specific fill color. */
+.art-btn:hover,
+.cyber-btn:hover { color: var(--btn-hover-text); }
 
 .art-btn > *,
 .cyber-btn > * { position: relative; z-index: 1; }
@@ -136,61 +140,61 @@ body::before {
    Pairs follow color-wheel opposites from the rainbow token set.
    Hover-text is pre-chosen so it always contrasts the fill.
 
-   red    → fill: cyan    (7.4:1 dark text)
-   orange → fill: blue    (6.2:1 light text)
-   yellow → fill: violet  (10.5:1 light text)
-   green  → fill: pink    (7.1:1 dark text)
-   cyan   → fill: red     (4.9:1 dark text)
-   blue   → fill: orange  (4.9:1 dark text)
-   violet → fill: yellow  (8.6:1 dark text)
-   pink   → fill: green   (7.1:1 dark text)
+   red    → fill: cyan    (6.8:1 dark text)
+   orange → fill: blue    (4.0:1 dark text)
+   yellow → fill: violet  (4.5:1 light text)
+   green  → fill: pink    (4.2:1 dark text)
+   cyan   → fill: red     (4.6:1 dark text)
+   blue   → fill: orange  (5.6:1 dark text)
+   violet → fill: yellow  (8.2:1 dark text)
+   pink   → fill: green   (6.7:1 dark text)
 ──────────────────────────────────────────────────────────────────── */
 
 .btn--red {
   --btn-fill:       var(--r-cyan);
-  --btn-hover-text: var(--color-bg);
+  --btn-hover-text: var(--color-bg);   /* 6.8:1 on cyan */
   border-color: var(--r-red);
   color: var(--r-red);
 }
 .btn--orange {
   --btn-fill:       var(--r-blue);
-  --btn-hover-text: var(--color-text);
+  --btn-hover-text: var(--color-bg);   /* 4.0:1 on blue */
   border-color: var(--r-orange);
   color: var(--r-orange);
 }
 .btn--yellow {
   --btn-fill:       var(--r-violet);
-  --btn-hover-text: var(--color-text);
+  --btn-hover-text: var(--color-text); /* 4.5:1 on violet */
   border-color: var(--r-yellow);
   color: var(--r-yellow);
 }
 .btn--green {
   --btn-fill:       var(--r-pink);
-  --btn-hover-text: var(--color-bg);
+  --btn-hover-text: var(--color-bg);   /* 4.2:1 on pink */
   border-color: var(--r-green);
   color: var(--r-green);
 }
 .btn--cyan {
   --btn-fill:       var(--r-red);
-  --btn-hover-text: var(--color-bg);
+  --btn-hover-text: var(--color-bg);   /* 4.6:1 on red */
   border-color: var(--r-cyan);
   color: var(--r-cyan);
 }
 .btn--blue {
   --btn-fill:       var(--r-orange);
-  --btn-hover-text: var(--color-bg);
+  --btn-hover-text: var(--color-bg);   /* 5.6:1 on orange */
   border-color: var(--r-blue);
   color: var(--r-blue);
 }
 .btn--violet {
   --btn-fill:       var(--r-yellow);
-  --btn-hover-text: var(--color-bg);
+  --btn-hover-text: var(--color-bg);   /* 8.2:1 on yellow */
   border-color: var(--r-violet);
   color: var(--r-violet);
 }
 .btn--pink {
   --btn-fill:       var(--r-green);
-  --btn-hover-text: var(--color-bg);
+  --btn-hover-text: var(--color-bg);   /* 6.7:1 on green */
   border-color: var(--r-pink);
   color: var(--r-pink);
 }

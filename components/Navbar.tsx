@@ -66,9 +66,20 @@ export default function Navbar() {
     >
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
 
-        {/* Logo */}
-        <Link href="/" className="flex items-center gap-2">
+        {/* Logo — admin-only pages get a "Studio Vault" sub-label underneath,
+            paired typographically (uppercase, wide tracking) but visually distinct
+            from the animated rainbow wordmark. Gated by route, not auth state, so it
+            never depends on whether the admin check has finished loading yet. */}
+        <Link href="/" className="flex flex-col items-start leading-none">
           <LogoText className="text-xl" />
+          {pathname.startsWith('/admin') && (
+            <span
+              className="text-[0.6rem] font-semibold tracking-[0.3em] uppercase mt-1"
+              style={{ color: 'var(--r-violet)' }}
+            >
+              Studio Vault
+            </span>
+          )}
         </Link>
 
         {/* Desktop nav links */}
