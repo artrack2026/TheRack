@@ -10,7 +10,11 @@
       "Bash(node -e \"require\\('dns'\\).lookup\\('google.com',{all:true},\\(e,a\\)=>console.log\\(e,a\\)\\)\")",
       "Bash(node -e \"require\\('dns'\\).resolve6\\('db.bitbrthvjmkntihyjeyx.supabase.co',\\(e,a\\)=>console.log\\('v6',e,a\\)\\)\")",
       "Bash(node -e ' *)",
-      "Bash(cat > *)"
+      "Bash(cat > *)",
+      "Bash(npx eslint *)",
+      "Bash(git mv *)",
+      "Bash(curl -s http://localhost:3000/ -o /tmp/home.html)",
+      "Bash(kill %1)"
     ],
     "additionalDirectories": [
       "/tmp"

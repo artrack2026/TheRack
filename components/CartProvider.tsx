@@ -92,7 +92,7 @@ export default function CartProvider({ children }: { children: React.ReactNode }
     fetch('/api/cart/merge', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ sessionId: cart.session_id, userId: user.id }),
+      body: JSON.stringify({ sessionId: cart.session_id }),
     }).then(r => r.ok ? r.json() : null).then(data => {
       if (data?.cart) setCart(data.cart)
     })
@@ -115,9 +115,7 @@ export default function CartProvider({ children }: { children: React.ReactNode }
         body: JSON.stringify({
           productId: product.id,
           sessionId,
-          userId: user?.id ?? null,
           existingCartId: cart?.id ?? null,
-          price: product.price,
         }),
       })
 
@@ -160,7 +158,7 @@ export default function CartProvider({ children }: { children: React.ReactNode }
     } finally {
       setLoading(false)
     }
-  }, [cart, user, setCart])
+  }, [cart, setCart])
 
   const removeItem = useCallback(async (cartItemId: string) => {
     if (!cart) return

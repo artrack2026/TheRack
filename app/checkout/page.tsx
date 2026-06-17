@@ -55,7 +55,7 @@ function interpolateInstructions(text: string, detail?: string): string {
 
 export default function CheckoutPage() {
   const { cart, clearCart }   = useCart()
-  const { user, profile }     = useAuth()
+  const { profile }           = useAuth()
   const router                = useRouter()
 
   const [form, setForm]               = useState<Form>(EMPTY_FORM)
@@ -179,7 +179,6 @@ export default function CheckoutPage() {
           zip:           form.zip.trim(),
           notes:         form.notes.trim() || null,
           paymentMethod: selectedMethod,
-          userId:        user?.id ?? null,
           sessionId:     cart.session_id,
         }),
       })

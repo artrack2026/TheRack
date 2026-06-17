@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server'
+import { requireAdmin } from '@/lib/api-auth'
 
 export async function GET() {
+  const check = await requireAdmin()
+  if ('error' in check) return NextResponse.json({ error: check.error }, { status: check.status })
+
   const key = process.env.TEXTBELT_API_KEY
   const initialQuota = process.env.TEXTBELT_INITIAL_QUOTA
 

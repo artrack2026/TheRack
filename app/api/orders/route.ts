@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createSupabaseAdminClient, isSupabaseConfigured } from '@/lib/supabase'
+import { cookies } from 'next/headers'
+import { createSupabaseAdminClient, createSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase'
 
 export async function POST(req: NextRequest) {
   if (!isSupabaseConfigured) {
@@ -21,9 +22,15 @@ export async function POST(req: NextRequest) {
       zip,
       notes,
       paymentMethod,
-      userId = null,
       sessionId = null,
     } = body
+
+    /* user_id always comes from the authenticated session, never the request body —
+       otherwise a caller could attribute an order to an arbitrary account. */
+    const cookieStore   = await cookies()
+    const sessionClient = createSupabaseServerClient(cookieStore)
+    const { data: { user } } = await sessionClient.auth.getUser()
+    const userId = user?.id ?? null
 
     if (!firstName || !lastName || !email || !cartId) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
