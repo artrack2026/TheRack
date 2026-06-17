@@ -2,7 +2,18 @@
   "permissions": {
     "allow": [
       "mcp__claude_ai_Supabase__list_projects",
-      "mcp__claude_ai_Supabase__list_tables"
+      "mcp__claude_ai_Supabase__list_tables",
+      "Bash(node -e \"require.resolve\\('pg'\\)\")",
+      "Bash(mkdir -p /tmp/pgcheck)",
+      "Bash(npm init *)",
+      "Bash(npm install *)",
+      "Bash(node -e \"require\\('dns'\\).lookup\\('google.com',{all:true},\\(e,a\\)=>console.log\\(e,a\\)\\)\")",
+      "Bash(node -e \"require\\('dns'\\).resolve6\\('db.bitbrthvjmkntihyjeyx.supabase.co',\\(e,a\\)=>console.log\\('v6',e,a\\)\\)\")",
+      "Bash(node -e ' *)",
+      "Bash(cat > *)"
+    ],
+    "additionalDirectories": [
+      "/tmp"
     ]
   }
 }
