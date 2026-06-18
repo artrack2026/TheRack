@@ -103,7 +103,10 @@ body::before {
   transform: scaleX(0);
   transform-origin: left;
   transition: transform 0.28s ease;
-  z-index: 0;
+  /* -1, not 0 — must paint behind ALL content, including bare text nodes
+     (e.g. <Icon/> {label} <ArrowRight/>) that aren't wrapped in an element
+     and so can never be targeted by the ".cyber-btn > *" z-index rule below. */
+  z-index: -1;
 }
 
 .art-btn:hover::before,
@@ -114,9 +117,6 @@ body::before {
    text actually contrasts its specific fill color. */
 .art-btn:hover,
 .cyber-btn:hover { color: var(--btn-hover-text); }
-
-.art-btn > *,
-.cyber-btn > * { position: relative; z-index: 1; }
 
 /* Ghost / secondary variant */
 .art-btn-ghost {

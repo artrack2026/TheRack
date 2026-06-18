@@ -16,7 +16,14 @@
       "Bash(curl -s http://localhost:3000/ -o /tmp/home.html)",
       "Bash(kill %1)",
       "Bash(curl -s http://localhost:3000/admin -o /tmp/admin.html -w \"%{http_code}\\\\n\")",
-      "Bash(pkill -f \"next dev\")"
+      "Bash(pkill -f \"next dev\")",
+      "Bash(npx playwright *)",
+      "Bash(cp /tmp/test_btn.mjs /tmp/pwtest/test_btn.mjs)",
+      "Bash(node test_btn.mjs)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" \"http://localhost:3000/_next/static/chunks/%5Broot-of-the-server%5D__0wbwd_e._.css\")",
+      "Bash(curl -s \"http://localhost:3000/_next/static/chunks/%5Broot-of-the-server%5D__0wbwd_e._.css\")",
+      "Bash(curl -sI \"http://localhost:3000/_next/static/chunks/%5Broot-of-the-server%5D__0wbwd_e._.css\")",
+      "Bash(node test_btn2.mjs)"
     ],
     "additionalDirectories": [
       "/tmp"

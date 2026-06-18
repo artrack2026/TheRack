@@ -74,7 +74,7 @@ export default function Navbar() {
           <LogoText className="text-3xl" />
           {pathname.startsWith('/admin') && (
             <span
-              className="text-[0.6rem] font-semibold tracking-[0.3em] uppercase mt-1"
+              className="text-[0.8rem] font-semibold tracking-[0.3em] uppercase mt-1"
               style={{ color: 'var(--r-violet)' }}
             >
               Studio Vault

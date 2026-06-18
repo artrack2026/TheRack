@@ -112,11 +112,16 @@ export default function Footer() {
             </p>
             <p className="text-xs flex items-center gap-1.5" style={{ color: 'var(--color-text-muted)' }}>
               Made with <Heart size={11} style={{ color: 'var(--r-red)' }} /> for art lovers by{' '}
-              <span className="font-bold tracking-tight">
+              <a
+                href="https://www.willowroo.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-bold tracking-tight transition-opacity hover:opacity-80"
+              >
                 <span style={willowGradient}>Willow</span>
                 <span style={rooGradient}>Roo</span>
-              </span>{' '}
-              Media.
+                <span style={willowGradient}> Media</span>
+              </a>.
             </p>
           </div>
         </div>

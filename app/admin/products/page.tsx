@@ -1,11 +1,12 @@
 'use client'
 
-import { useEffect, useState, FormEvent } from 'react'
+import { useEffect, useState, FormEvent, ChangeEvent } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, Pencil, Trash2, Star, X, Loader, Save } from 'lucide-react'
+import { Plus, Pencil, Trash2, Star, X, Loader, Save, ImagePlus } from 'lucide-react'
 import Image from 'next/image'
 import { isSupabaseConfigured, getSupabaseClient } from '@/lib/supabase'
 import { Product, ProductCategory } from '@/lib/types'
+import { compressImage } from '@/lib/image-compress'
 
 const EMPTY: Omit<Product, 'id' | 'created_at'> = {
   title: '', description: '', price: 0, category: 'artwork',
@@ -19,6 +20,8 @@ export default function AdminProductsPage() {
   const [loading, setLoading]   = useState(true)
   const [editing, setEditing]   = useState<Partial<Product> | null>(null)
   const [saving, setSaving]     = useState(false)
+  const [uploading, setUploading]     = useState(false)
+  const [uploadError, setUploadError] = useState<string | null>(null)
 
   const load = async () => {
     if (!isSupabaseConfigured) { setLoading(false); return }
@@ -49,6 +52,50 @@ export default function AdminProductsPage() {
     await load()
     setSaving(false)
     close()
+  }
+
+  const handleImageUpload = async (e: ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? [])
+    e.target.value = '' // allow re-selecting the same file again later
+    if (files.length === 0) return
+
+    setUploading(true)
+    setUploadError(null)
+    try {
+      for (const file of files) {
+        const { blob, contentType } = await compressImage(file)
+
+        const presignRes = await fetch('/api/admin/media', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ filename: file.name.replace(/\.[^.]+$/, '.webp'), contentType }),
+        })
+        if (!presignRes.ok) throw new Error((await presignRes.json()).error ?? 'Could not get upload URL')
+        const { uploadUrl, publicUrl } = await presignRes.json()
+
+        const putRes = await fetch(uploadUrl, { method: 'PUT', headers: { 'Content-Type': contentType }, body: blob })
+        if (!putRes.ok) throw new Error('Upload to S3 failed')
+
+        setEditing(prev => prev ? { ...prev, images: [...(prev.images ?? []), publicUrl] } : prev)
+      }
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : 'Upload failed')
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const removeImage = async (url: string) => {
+    setEditing(prev => prev ? { ...prev, images: (prev.images ?? []).filter(i => i !== url) } : prev)
+    try {
+      await fetch('/api/admin/media', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url }),
+      })
+    } catch {
+      // best-effort cleanup — the image is already detached from the product either way
+    }
   }
 
   const toggleFeatured = async (p: Product) => {
@@ -129,6 +176,51 @@ export default function AdminProductsPage() {
                   <textarea rows={3} className="cyber-input resize-none" placeholder="Describe this piece…"
                     value={editing.description ?? ''}
                     onChange={e => setEditing(prev => ({ ...prev, description: e.target.value }))} />
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <label className="text-xs font-semibold tracking-widest uppercase" style={{ color: 'var(--color-text-muted)' }}>
+                    Product Images
+                  </label>
+
+                  {(editing.images?.length ?? 0) > 0 && (
+                    <div className="grid grid-cols-4 gap-2">
+                      {editing.images!.map(url => (
+                        <div
+                          key={url}
+                          className="relative aspect-square rounded-lg overflow-hidden"
+                          style={{ background: 'var(--color-bg)', border: '1px solid var(--color-border)' }}
+                        >
+                          <Image src={url} alt="" fill className="object-cover" sizes="80px" />
+                          <button
+                            type="button"
+                            onClick={() => removeImage(url)}
+                            aria-label="Remove image"
+                            className="absolute top-1 right-1 p-1 rounded-full"
+                            style={{ background: 'rgba(0,0,0,0.6)', color: '#fff', border: 'none', cursor: 'pointer' }}
+                          >
+                            <X size={11} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <label className="cyber-btn art-btn-ghost btn--sm self-start cursor-pointer">
+                    {uploading
+                      ? <><Loader size={13} className="animate-spin" /> Uploading…</>
+                      : <><ImagePlus size={13} /> Add Images</>}
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      multiple
+                      hidden
+                      disabled={uploading}
+                      onChange={handleImageUpload}
+                    />
+                  </label>
+
+                  {uploadError && <p className="text-xs" style={{ color: 'var(--r-red)' }}>{uploadError}</p>}
                 </div>
 
                 <label className="flex items-center gap-3 cursor-pointer">
