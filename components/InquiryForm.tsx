@@ -103,7 +103,7 @@ export default function InquiryForm({ productId, productTitle, onClose }: Props)
         <input
           type="tel"
           className="cyber-input"
-          placeholder="(555) 000-0000"
+          placeholder="(555) 555-0123"
           value={form.phone}
           onChange={e => setForm(f => ({ ...f, phone: formatPhone(e.target.value) }))}
         />

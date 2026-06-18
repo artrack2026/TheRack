@@ -274,7 +274,7 @@ export default function CheckoutPage() {
                   <Field label="Phone" error={fieldError('phone')} className="col-span-2 sm:col-span-1">
                     <input
                       type="tel" value={form.phone} onChange={set('phone')}
-                      className="cyber-input" placeholder="(555) 000-0000"
+                      className="cyber-input" placeholder="(555) 555-0123"
                     />
                   </Field>
                 </div>

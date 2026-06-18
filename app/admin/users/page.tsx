@@ -310,7 +310,7 @@ export default function UsersPage() {
                         {/* Display name + phone */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           {ef('display_name', 'Display Name',  'How they appear', formatName)}
-                          {ef('phone',        'Phone',         '(555) 000-0000',  formatPhone, 'tel')}
+                          {ef('phone',        'Phone',         '(555) 555-0123',  formatPhone, 'tel')}
                         </div>
 
                         {/* Address */}

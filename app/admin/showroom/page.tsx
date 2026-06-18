@@ -453,7 +453,7 @@ export default function ShowroomSettingsPage() {
                             type="text"
                             value={method.detail || ''}
                             onChange={e => updateMethod(method.id, { detail: e.target.value })}
-                            placeholder="e.g. payments@example.com  or  @username  or  +1 555-000-0000"
+                            placeholder="e.g. payments@example.com  or  @username  or  +1 555-555-0123"
                             className="cyber-input w-full text-sm"
                           />
                           <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
