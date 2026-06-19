@@ -110,12 +110,18 @@ export interface OrderItem {
   created_at: string
 }
 
+export type OrderStatus =
+  | 'new' | 'in_process' | 'ready_to_ship' | 'shipped' | 'delivered' | 'cancelled' | 'refunded'
+
 export interface Order {
   id: string
   user_id: string | null
   session_id: string | null
-  status: 'pending' | 'paid' | 'shipped' | 'delivered' | 'cancelled'
+  status: OrderStatus
   total: number
+  shipping_total: number
+  tax_total: number
+  amount_paid: number
   customer_name: string
   customer_email: string
   customer_phone: string | null
@@ -126,6 +132,8 @@ export interface Order {
   zip: string | null
   notes: string | null
   payment_method: string | null
+  payment_detail: string | null
+  payment_instructions: string | null
   created_at: string
   items?: OrderItem[]
 }

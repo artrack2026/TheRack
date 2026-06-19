@@ -196,8 +196,11 @@ export interface Database {
           id: string
           user_id: string | null
           session_id: string | null
-          status: 'pending' | 'paid' | 'shipped' | 'delivered' | 'cancelled'
+          status: 'new' | 'in_process' | 'ready_to_ship' | 'shipped' | 'delivered' | 'cancelled' | 'refunded'
           total: number
+          shipping_total: number
+          tax_total: number
+          amount_paid: number
           customer_name: string
           customer_email: string
           customer_phone: string | null
@@ -208,14 +211,19 @@ export interface Database {
           zip: string | null
           notes: string | null
           payment_method: string | null
+          payment_detail: string | null
+          payment_instructions: string | null
           created_at: string
         }
         Insert: {
           id?: string
           user_id?: string | null
           session_id?: string | null
-          status?: 'pending' | 'paid' | 'shipped' | 'delivered' | 'cancelled'
+          status?: 'new' | 'in_process' | 'ready_to_ship' | 'shipped' | 'delivered' | 'cancelled' | 'refunded'
           total: number
+          shipping_total?: number
+          tax_total?: number
+          amount_paid?: number
           customer_name: string
           customer_email: string
           customer_phone?: string | null
@@ -226,11 +234,16 @@ export interface Database {
           zip?: string | null
           notes?: string | null
           payment_method?: string | null
+          payment_detail?: string | null
+          payment_instructions?: string | null
           created_at?: string
         }
         Update: {
-          status?: 'pending' | 'paid' | 'shipped' | 'delivered' | 'cancelled'
+          status?: 'new' | 'in_process' | 'ready_to_ship' | 'shipped' | 'delivered' | 'cancelled' | 'refunded'
           total?: number
+          shipping_total?: number
+          tax_total?: number
+          amount_paid?: number
           customer_name?: string
           customer_email?: string
           customer_phone?: string | null
@@ -241,6 +254,8 @@ export interface Database {
           zip?: string | null
           notes?: string | null
           payment_method?: string | null
+          payment_detail?: string | null
+          payment_instructions?: string | null
         }
         Relationships: Rel
       }
@@ -503,8 +518,11 @@ create table if not exists orders (
   id uuid primary key default gen_random_uuid(),
   user_id uuid references auth.users(id) on delete set null,
   session_id text,
-  status text check (status in ('pending','paid','shipped','delivered','cancelled')) not null default 'pending',
+  status text check (status in ('new','in_process','ready_to_ship','shipped','delivered','cancelled','refunded')) not null default 'new',
   total numeric(10,2) not null,
+  shipping_total numeric(10,2) not null default 0,
+  tax_total numeric(10,2) not null default 0,
+  amount_paid numeric(10,2) not null default 0,
   customer_name text not null,
   customer_email text not null,
   customer_phone text,
@@ -514,6 +532,9 @@ create table if not exists orders (
   state text,
   zip text,
   notes text,
+  payment_method text,
+  payment_detail text,
+  payment_instructions text,
   created_at timestamptz default now()
 );
 

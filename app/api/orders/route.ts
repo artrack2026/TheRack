@@ -64,13 +64,25 @@ export async function POST(req: NextRequest) {
     // Fetch checkout settings
     const { data: settings } = await admin
       .from('showroom_settings')
-      .select('tax_rate, shipping_fee, free_shipping_threshold')
+      .select('tax_rate, shipping_fee, free_shipping_threshold, payment_methods')
       .eq('id', 1)
       .single()
 
     const taxRate            = (settings?.tax_rate            as number) ?? 0
     const shippingFee        = (settings?.shipping_fee        as number) ?? 0
     const freeThreshold      = (settings?.free_shipping_threshold as number) ?? 0
+
+    // Snapshot the selected payment method's name/detail/instructions as they
+    // appeared at checkout — admin settings can change later, so the order
+    // keeps its own copy for the invoice.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const methods = Array.isArray(settings?.payment_methods) ? (settings.payment_methods as any[]) : []
+    const selectedMethod      = methods.find(m => m.id === paymentMethod)
+    const paymentMethodName   = selectedMethod?.name ?? null
+    const paymentDetail       = selectedMethod?.detail ?? null
+    const paymentInstructions = selectedMethod?.type === 'instruction' && selectedMethod?.instructions
+      ? String(selectedMethod.instructions).replace(/\{detail\}/g, selectedMethod.detail ?? '').replace(/\{name\}/g, selectedMethod.detail ?? '')
+      : null
 
     // Calculate totals
     const subtotal = items.reduce(
@@ -88,8 +100,11 @@ export async function POST(req: NextRequest) {
       .insert({
         user_id:        userId,
         session_id:     sessionId,
-        status:         'pending',
+        status:         'new',
         total,
+        shipping_total: shipping,
+        tax_total:      tax,
+        amount_paid:    0,
         customer_name:  `${firstName} ${lastName}`.trim(),
         customer_email: email.toLowerCase().trim(),
         customer_phone: phone || null,
@@ -99,7 +114,9 @@ export async function POST(req: NextRequest) {
         state:          state || null,
         zip:            zip || null,
         notes:          notes || null,
-        payment_method: paymentMethod || null,
+        payment_method:       paymentMethodName,
+        payment_detail:       paymentDetail,
+        payment_instructions: paymentInstructions,
       })
       .select()
       .single()

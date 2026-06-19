@@ -453,3 +453,20 @@ body::before {
     inset 0 1px 0 rgba(255, 255, 255, 0.15);
   position: relative;
 }
+
+/* ═══════════════════════════════════════
+   INVOICE PRINT
+═══════════════════════════════════════ */
+
+@media print {
+  body * { visibility: hidden; }
+  .invoice-printable, .invoice-printable * { visibility: visible; }
+  .invoice-printable {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background: #fff;
+  }
+  .no-print { display: none !important; }
+}

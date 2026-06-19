@@ -4,21 +4,26 @@ import { useEffect, useState, useMemo, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   ShoppingCart, Search, X, ChevronUp, ChevronDown, ChevronsUpDown,
-  Clock, CheckCircle, Truck, Package, XCircle, DollarSign,
+  Clock, CheckCircle, Truck, Package, XCircle, DollarSign, PackageCheck, RotateCcw,
   User, Mail, Phone, MapPin, Calendar, Gift, TrendingUp,
-  ChevronRight, ExternalLink, Loader, AlertCircle, Edit3, Save, RefreshCcw,
+  ChevronRight, ExternalLink, Loader, AlertCircle, Save, RefreshCcw,
 } from 'lucide-react'
 import { getSupabaseClient, isSupabaseConfigured } from '@/lib/supabase'
 import { Order, OrderItem, Profile } from '@/lib/types'
+import InvoiceModal from './InvoiceModal'
 
 /* ── Constants ── */
 
+const MAROON = '#7a1f2b'
+
 const STATUS_META: Record<string, { label: string; color: string; icon: React.ElementType }> = {
-  pending:   { label: 'Pending',   color: '#d4b030', icon: Clock       },
-  paid:      { label: 'Paid',      color: '#3ab870', icon: CheckCircle },
-  shipped:   { label: 'Shipped',   color: '#3878e0', icon: Truck       },
-  delivered: { label: 'Delivered', color: '#8844d8', icon: Package     },
-  cancelled: { label: 'Cancelled', color: '#e05858', icon: XCircle     },
+  new:           { label: 'New',           color: '#d4b030', icon: Clock       },
+  in_process:    { label: 'In Process',    color: '#3878e0', icon: Package     },
+  ready_to_ship: { label: 'Ready to Ship', color: '#8844d8', icon: PackageCheck},
+  shipped:       { label: 'Shipped',       color: '#3ab8a0', icon: Truck       },
+  delivered:     { label: 'Delivered',     color: '#3ab870', icon: CheckCircle },
+  cancelled:     { label: 'Cancelled',     color: '#e05858', icon: XCircle     },
+  refunded:      { label: 'Refunded',      color: MAROON,    icon: RotateCcw   },
 }
 const ALL_STATUSES = Object.keys(STATUS_META)
 
@@ -72,6 +77,9 @@ export default function AdminOrdersPage() {
   const [drawer, setDrawer]               = useState<CustomerProfile | null>(null)
   const [loadingDrawer, setLoadingDrawer] = useState(false)
 
+  // Invoice modal
+  const [invoiceOrderId, setInvoiceOrderId] = useState<string | null>(null)
+
   /* ── Load orders ── */
 
   const load = useCallback(async () => {
@@ -99,7 +107,7 @@ export default function AdminOrdersPage() {
 
   const stats = useMemo(() => {
     const total    = orders.length
-    const pending  = orders.filter(o => o.status === 'pending').length
+    const pending  = orders.filter(o => o.status === 'new').length
     const revenue  = orders.filter(o => o.status !== 'cancelled').reduce((s, o) => s + o.total, 0)
     const thisMonth = orders.filter(o => {
       const d = new Date(o.created_at)
@@ -313,14 +321,13 @@ export default function AdminOrdersPage() {
                 <tr style={{ borderBottom: '1px solid var(--color-border)', background: 'var(--color-bg)' }}>
                   {(
                     [
-                      { key: null,          label: '#',              w: '80px'  },
                       { key: 'created_at',  label: 'Date',           w: '110px' },
+                      { key: null,          label: '#',              w: '80px'  },
                       { key: 'customer_name', label: 'Customer',     w: '160px' },
-                      { key: 'customer_email', label: 'Email',       w: '180px' },
                       { key: null,          label: 'Items',          w: '60px'  },
-                      { key: 'payment_method', label: 'Payment',     w: '100px' },
+                      { key: 'payment_method', label: 'Payment',     w: '120px' },
                       { key: 'total',       label: 'Total',          w: '90px'  },
-                      { key: 'status',      label: 'Status',         w: '120px' },
+                      { key: 'status',      label: 'Status',         w: '150px' },
                       { key: null,          label: '',               w: '40px'  },
                     ] as { key: SortKey | null; label: string; w: string }[]
                   ).map(({ key, label, w }) => (
@@ -341,10 +348,11 @@ export default function AdminOrdersPage() {
               </thead>
               <tbody>
                 {visible.map((order, idx) => {
-                  const st = STATUS_META[order.status] ?? STATUS_META.pending
+                  const st = STATUS_META[order.status] ?? STATUS_META.new
                   const StIcon = st.icon
                   const isUpdating = updatingStatus === order.id
                   const menuOpen = statusMenu === order.id
+                  const balanceDue = Math.max(0, order.total - order.amount_paid)
 
                   return (
                     <tr
@@ -355,19 +363,24 @@ export default function AdminOrdersPage() {
                         background: idx % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.015)',
                       }}
                     >
-                      {/* Order # */}
-                      <td className="px-4 py-3">
-                        <span className="font-mono text-xs font-bold" style={{ color: 'var(--color-text-muted)' }}>
-                          {shortId(order.id)}
-                        </span>
-                      </td>
-
                       {/* Date */}
                       <td className="px-4 py-3 text-xs" style={{ color: 'var(--color-text-muted)', whiteSpace: 'nowrap' }}>
                         {fmtDate(order.created_at)}
                       </td>
 
-                      {/* Customer name — clickable */}
+                      {/* Order # — clickable, opens invoice */}
+                      <td className="px-4 py-3">
+                        <button
+                          onClick={() => setInvoiceOrderId(order.id)}
+                          className="font-mono text-xs font-bold hover:underline"
+                          style={{ color: 'var(--color-accent)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                          title="View invoice"
+                        >
+                          {shortId(order.id)}
+                        </button>
+                      </td>
+
+                      {/* Customer name — clickable, opens profile drawer */}
                       <td className="px-4 py-3">
                         <button
                           onClick={() => openDrawer(order.customer_email)}
@@ -379,17 +392,6 @@ export default function AdminOrdersPage() {
                         </button>
                       </td>
 
-                      {/* Email */}
-                      <td className="px-4 py-3">
-                        <a
-                          href={`mailto:${order.customer_email}`}
-                          className="text-xs hover:underline"
-                          style={{ color: 'var(--color-text-muted)' }}
-                        >
-                          {order.customer_email}
-                        </a>
-                      </td>
-
                       {/* Items count */}
                       <td className="px-4 py-3 text-center">
                         <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: 'var(--color-bg)', color: 'var(--color-text-muted)' }}>
@@ -397,11 +399,16 @@ export default function AdminOrdersPage() {
                         </span>
                       </td>
 
-                      {/* Payment method */}
+                      {/* Payment — amount paid + balance due */}
                       <td className="px-4 py-3">
-                        <span className="text-xs capitalize" style={{ color: 'var(--color-text-muted)' }}>
-                          {order.payment_method ?? '—'}
-                        </span>
+                        <p className="text-xs font-semibold" style={{ color: 'var(--color-text)' }}>
+                          {fmtMoney(order.amount_paid)} paid
+                        </p>
+                        {balanceDue > 0 && (
+                          <p className="text-xs font-bold" style={{ color: MAROON }}>
+                            {fmtMoney(balanceDue)} due
+                          </p>
+                        )}
                       </td>
 
                       {/* Total */}
@@ -647,7 +654,7 @@ export default function AdminOrdersPage() {
                       ) : (
                         <div className="flex flex-col gap-2">
                           {drawer.orders.map(o => {
-                            const sm = STATUS_META[o.status] ?? STATUS_META.pending
+                            const sm = STATUS_META[o.status] ?? STATUS_META.new
                             const SmIcon = sm.icon
                             return (
                               <div
@@ -698,6 +705,13 @@ export default function AdminOrdersPage() {
           </>
         )}
       </AnimatePresence>
+
+      {/* ── Invoice Modal ── */}
+      <InvoiceModal
+        orderId={invoiceOrderId}
+        onClose={() => setInvoiceOrderId(null)}
+        onOrderUpdate={updated => setOrders(prev => prev.map(o => o.id === updated.id ? { ...o, ...updated } : o))}
+      />
     </div>
   )
 }
