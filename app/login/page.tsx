@@ -7,11 +7,13 @@ import { Mail, Lock, Eye, EyeOff, AlertCircle, Loader } from 'lucide-react'
 import Link from 'next/link'
 import LogoText from '@/components/LogoText'
 import { useAuth } from '@/components/AuthProvider'
+import { getSupabaseClient } from '@/lib/supabase'
 
 function LoginForm() {
   const { signIn } = useAuth()
   const router     = useRouter()
   const params     = useSearchParams()
+  const hasFrom    = params.has('from')
   const from       = params.get('from') || '/portal'
 
   const [form, setForm]         = useState({ email: '', password: '' })
@@ -39,7 +41,23 @@ function LoginForm() {
       // Small delay ensures cookies are written before navigation
       // Prevents race condition between client and server auth state
       await new Promise(resolve => setTimeout(resolve, 100))
-      router.push(from)
+
+      // Not bounced from a specific protected page — send admins straight
+      // to their dashboard instead of the customer portal
+      let destination = from
+      if (!hasFrom) {
+        const supabase = getSupabaseClient()
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', user.id)
+            .single()
+          if (profile?.role === 'admin') destination = '/admin'
+        }
+      }
+      router.push(destination)
     }
   }
 
