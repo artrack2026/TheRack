@@ -451,6 +451,44 @@ export default function ShowroomSettingsPage() {
               </div>
             </div>
 
+            <div>
+              <div className="flex items-center gap-2 mb-6">
+                <Settings size={16} style={{ color: 'var(--color-accent)' }} />
+                <h2 className="text-sm tracking-widest uppercase font-bold" style={{ color: 'var(--color-text)' }}>
+                  Social Media
+                </h2>
+              </div>
+              <p className="text-xs font-semibold uppercase tracking-widest mb-4" style={{ color: 'var(--color-text-muted)' }}>
+                Social media handles (leave empty to hide)
+              </p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {[
+                  { key: 'instagram', label: 'Instagram', placeholder: '@handle' },
+                  { key: 'facebook',  label: 'Facebook',  placeholder: 'username' },
+                  { key: 'x',         label: 'X',         placeholder: '@handle' },
+                  { key: 'tiktok',    label: 'TikTok',    placeholder: '@handle' },
+                  { key: 'snapchat',  label: 'Snapchat',  placeholder: 'username' },
+                  { key: 'youtube',   label: 'YouTube',   placeholder: '@channel' },
+                  { key: 'linkedin',  label: 'LinkedIn',  placeholder: 'username' },
+                  { key: 'threads',   label: 'Threads',   placeholder: '@handle' },
+                  { key: 'bluesky',   label: 'Bluesky',   placeholder: '@handle.bsky.social' },
+                  { key: 'mastodon',  label: 'Mastodon',  placeholder: '@handle@instance' },
+                ].map(({ key, label, placeholder }) => (
+                  <div key={key}>
+                    <label className="block text-xs font-semibold mb-1" style={{ color: 'var(--color-text-muted)' }}>{label}</label>
+                    <input
+                      type="text"
+                      value={(form[key as keyof ShowroomSettings] as string) || ''}
+                      onChange={e => setForm({ ...form, [key]: e.target.value || null })}
+                      className="cyber-input w-full"
+                      placeholder={placeholder}
+                      style={{ fontSize: '0.85rem' }}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
             <div
               className="p-6"
               style={{ background: colors.background, border: `1px solid ${colors.border}` }}
@@ -664,38 +702,6 @@ export default function ShowroomSettingsPage() {
                     onChange={e => setForm({ ...form, inquiry_email: e.target.value })}
                     className="cyber-input w-full" placeholder="admin@example.com" />
                 </FieldRow>
-              </div>
-
-              <div className="mt-6 pt-4 border-t" style={{ borderColor: 'var(--color-border)' }}>
-                <p className="text-xs font-semibold uppercase tracking-widest mb-4" style={{ color: 'var(--color-text-muted)' }}>
-                  Social media handles (leave empty to hide)
-                </p>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  {[
-                    { key: 'instagram', label: 'Instagram', placeholder: '@handle' },
-                    { key: 'facebook',  label: 'Facebook',  placeholder: 'username' },
-                    { key: 'x',         label: 'X',         placeholder: '@handle' },
-                    { key: 'tiktok',    label: 'TikTok',    placeholder: '@handle' },
-                    { key: 'snapchat',  label: 'Snapchat',  placeholder: 'username' },
-                    { key: 'youtube',   label: 'YouTube',   placeholder: '@channel' },
-                    { key: 'linkedin',  label: 'LinkedIn',  placeholder: 'username' },
-                    { key: 'threads',   label: 'Threads',   placeholder: '@handle' },
-                    { key: 'bluesky',   label: 'Bluesky',   placeholder: '@handle.bsky.social' },
-                    { key: 'mastodon',  label: 'Mastodon',  placeholder: '@handle@instance' },
-                  ].map(({ key, label, placeholder }) => (
-                    <div key={key}>
-                      <label className="block text-xs font-semibold mb-1" style={{ color: 'var(--color-text-muted)' }}>{label}</label>
-                      <input
-                        type="text"
-                        value={(form[key as keyof ShowroomSettings] as string) || ''}
-                        onChange={e => setForm({ ...form, [key]: e.target.value || null })}
-                        className="cyber-input w-full"
-                        placeholder={placeholder}
-                        style={{ fontSize: '0.85rem' }}
-                      />
-                    </div>
-                  ))}
-                </div>
               </div>
             </div>
           </section>
