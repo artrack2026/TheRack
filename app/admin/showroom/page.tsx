@@ -127,6 +127,41 @@ const PRESETS: { name: string; colors: ThemeColors }[] = [
       accent: '#ff8800', text: '#ffe8e0', textMuted: '#885040', border: '#201010',
     },
   },
+  {
+    name: 'Sunset Coral',
+    colors: {
+      background: '#140a08', surface: '#1e1210', primary: '#ff6f5e',
+      accent: '#ffb347', text: '#fff0ea', textMuted: '#9a7268', border: '#2a1815',
+    },
+  },
+  {
+    name: 'Arctic Cyan',
+    colors: {
+      background: '#08121a', surface: '#0e1c26', primary: '#4fd8ff',
+      accent: '#7af0c0', text: '#eafcff', textMuted: '#5d8a98', border: '#16303c',
+    },
+  },
+  {
+    name: 'Rose Quartz',
+    colors: {
+      background: '#160a12', surface: '#22101c', primary: '#ff6fc6',
+      accent: '#c084fc', text: '#fde8f6', textMuted: '#9a6688', border: '#2c1828',
+    },
+  },
+  {
+    name: 'Cyber Lime',
+    colors: {
+      background: '#0a0f08', surface: '#121a0e', primary: '#c6ff3a',
+      accent: '#00e0a0', text: '#f0ffe0', textMuted: '#7a9060', border: '#1c2814',
+    },
+  },
+  {
+    name: 'Charcoal Sky',
+    colors: {
+      background: '#0c0c10', surface: '#15151c', primary: '#6c8cff',
+      accent: '#ffd166', text: '#eef0fa', textMuted: '#787890', border: '#1f1f2a',
+    },
+  },
 ]
 
 function isActivePreset(preset: ThemeColors, current: ThemeColors): boolean {
