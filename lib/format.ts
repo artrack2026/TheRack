@@ -74,3 +74,17 @@ export function getAvatarInitial(
     'U'
   ).toUpperCase()
 }
+
+/* ── Textbelt phone formatting ──────────────────────────────────────
+   Textbelt expects a bare US digit string (no punctuation, no +1).
+   formatPhone() above produces "(555) 555-0123" for display — this
+   strips it back down to "5551234567" for the SMS API.
+──────────────────────────────────────────────────────────────────── */
+export function toTextbeltPhone(phone: string): string {
+  return phone.replace(/\D/g, '')
+}
+
+export function maskPhone(phone: string): string {
+  const digits = toTextbeltPhone(phone)
+  return digits.length >= 4 ? `(•••) •••-${digits.slice(-4)}` : '•••• ••••'
+}

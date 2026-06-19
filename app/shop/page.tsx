@@ -23,7 +23,7 @@ const SORT_OPTIONS = [
 
 /* Category accent colors — match ProductCard */
 const CAT_COLOR: Record<string, string> = {
-  all:       'var(--color-primary)',
+  all:       'var(--color-accent)',
   artwork:   '#e05858',
   reclaimed: '#3ab870',
   goods:     '#8844d8',

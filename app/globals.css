@@ -228,7 +228,7 @@ body::before {
 }
 .cyber-input:focus,
 .art-input:focus {
-  border-color: var(--color-primary);
+  border-color: var(--color-accent);
   background: var(--color-surface-2);
 }
 .cyber-input::placeholder,

@@ -68,7 +68,7 @@ function SuccessContent() {
         {totalParam && (
           <div className="flex justify-between text-sm">
             <span style={{ color: 'var(--color-text-muted)' }}>Total</span>
-            <span className="font-black" style={{ color: 'var(--color-primary)' }}>
+            <span className="font-black" style={{ color: 'var(--color-accent)' }}>
               ${parseFloat(totalParam).toFixed(2)}
             </span>
           </div>

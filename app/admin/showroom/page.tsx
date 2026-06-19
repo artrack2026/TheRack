@@ -5,6 +5,7 @@ import {
   RefreshCcw, Settings, Info, ExternalLink, Save, AlertCircle,
   Plus, Trash2, GripVertical, ToggleLeft, ToggleRight, DollarSign, Truck, CreditCard,
   Palette, Eye, RotateCcw, Check, MessageSquareMore, Package, ClipboardList,
+  ShieldCheck,
 } from 'lucide-react'
 import { motion, AnimatePresence, Reorder } from 'framer-motion'
 import { PaymentMethod, ThemeColors } from '@/lib/types'
@@ -38,6 +39,7 @@ interface ShowroomSettings {
   shipping_fee: number
   free_shipping_threshold: number
   payment_methods: PaymentMethod[]
+  two_factor_enabled: boolean
 }
 
 const DEFAULT: ShowroomSettings = {
@@ -45,6 +47,7 @@ const DEFAULT: ShowroomSettings = {
   instagram: null, facebook: null, x: null, tiktok: null, snapchat: null,
   youtube: null, linkedin: null, threads: null, bluesky: null, mastodon: null,
   tax_rate: 0, shipping_fee: 0, free_shipping_threshold: 0, payment_methods: [],
+  two_factor_enabled: false,
 }
 
 const PAYMENT_ICONS = ['💳', '📱', '💸', '🏦', '⚡', '🔵', '🟡', '🟢', '🟠', '⬜']
@@ -307,7 +310,7 @@ export default function ShowroomSettingsPage() {
           <>
             <div>
               <div className="flex items-center gap-2 mb-6">
-                <Palette size={16} style={{ color: 'var(--color-primary)' }} />
+                <Palette size={16} style={{ color: 'var(--color-accent)' }} />
                 <h2 className="text-sm tracking-widest uppercase font-bold" style={{ color: 'var(--color-text)' }}>
                   Presets
                 </h2>
@@ -377,7 +380,7 @@ export default function ShowroomSettingsPage() {
                         {label}
                       </p>
                       <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>{desc}</p>
-                      <p className="text-xs font-mono mt-1" style={{ color: 'var(--color-primary)' }}>
+                      <p className="text-xs font-mono mt-1" style={{ color: colors[key] }}>
                         {colors[key]}
                       </p>
                     </div>
@@ -482,9 +485,46 @@ export default function ShowroomSettingsPage() {
             </section>
 
             <section className="pt-6 border-t" style={{ borderColor: 'var(--color-border)' }}>
+              <div className="flex items-center justify-between gap-4 flex-wrap">
+                <div className="flex items-center gap-3">
+                  <div className="p-3 rounded-xl" style={{ background: 'rgba(58,184,112,0.12)' }}>
+                    <ShieldCheck size={18} style={{ color: 'var(--r-green)' }} />
+                  </div>
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.3em] font-semibold" style={{ color: 'var(--color-text-muted)' }}>Security</p>
+                    <h2 className="text-xl font-bold" style={{ color: 'var(--color-text)' }}>SMS login verification</h2>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setForm(f => ({ ...f, two_factor_enabled: !f.two_factor_enabled }))}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold"
+                  style={{
+                    background: form.two_factor_enabled ? 'rgba(58,184,112,0.12)' : 'var(--color-bg)',
+                    border: `1px solid ${form.two_factor_enabled ? 'var(--r-green)' : 'var(--color-border)'}`,
+                    color: form.two_factor_enabled ? 'var(--r-green)' : 'var(--color-text-muted)',
+                    cursor: 'pointer',
+                  }}
+                >
+                  {form.two_factor_enabled
+                    ? <><ToggleRight size={18} /> Live for all logins</>
+                    : <><ToggleLeft size={18} /> Off</>
+                  }
+                </button>
+              </div>
+              <p className="text-sm mt-3" style={{ color: 'var(--color-text-muted)' }}>
+                When enabled, every login is texted a 6-digit code via Textbelt after the password
+                step and must enter it to finish signing in. Codes are sent to the phone number on
+                each profile and expire after 5 minutes. Accounts without a phone on file (created
+                before this was turned on) skip the code rather than getting locked out — add their
+                number under Admin → Users to bring them under 2FA too. This setting saves with the
+                main &quot;Save All Changes&quot; button above.
+              </p>
+            </section>
+
+            <section className="pt-6 border-t" style={{ borderColor: 'var(--color-border)' }}>
               <div className="flex items-center gap-3 mb-4">
                 <div className="p-3 rounded-xl" style={{ background: 'rgba(200,144,42,0.12)' }}>
-                  <Info size={18} style={{ color: 'var(--color-primary)' }} />
+                  <Info size={18} style={{ color: 'var(--color-accent)' }} />
                 </div>
                 <div>
                   <p className="text-xs uppercase tracking-[0.3em] font-semibold" style={{ color: 'var(--color-text-muted)' }}>Message flow</p>
@@ -496,12 +536,12 @@ export default function ShowroomSettingsPage() {
                 <li>
                   <span className="font-semibold" style={{ color: 'var(--color-text)' }}>1.</span>{' '}
                   Visit the Textbelt purchase page:{' '}
-                  <a href="https://textbelt.com/purchase/" target="_blank" rel="noreferrer" className="underline" style={{ color: 'var(--color-primary)' }}>textbelt.com/purchase</a>.
+                  <a href="https://textbelt.com/purchase/" target="_blank" rel="noreferrer" className="underline" style={{ color: 'var(--color-accent)' }}>textbelt.com/purchase</a>.
                 </li>
                 <li>
                   <span className="font-semibold" style={{ color: 'var(--color-text)' }}>2.</span>{' '}
                   When adding credits, use your active API key:
-                  <div className="mt-2 px-3 py-2 rounded-lg text-xs font-mono" style={{ background: 'var(--color-bg)', border: '1px solid var(--color-border)', color: 'var(--color-primary)', wordBreak: 'break-all' }}>
+                  <div className="mt-2 px-3 py-2 rounded-lg text-xs font-mono" style={{ background: 'var(--color-bg)', border: '1px solid var(--color-border)', color: 'var(--color-accent)', wordBreak: 'break-all' }}>
                     {textbeltStatus.apiKey ?? 'Not configured'}
                   </div>
                 </li>
@@ -532,7 +572,7 @@ export default function ShowroomSettingsPage() {
 
               <a href="https://docs.textbelt.com/#checking-your-quota" target="_blank" rel="noreferrer"
                 className="inline-flex items-center gap-2 mt-6 text-sm font-semibold"
-                style={{ color: 'var(--color-primary)' }}>
+                style={{ color: 'var(--color-accent)' }}>
                 Learn more <ExternalLink size={14} />
               </a>
             </section>
@@ -544,7 +584,7 @@ export default function ShowroomSettingsPage() {
           <section>
             <div className="flex items-center gap-3 mb-4">
               <div className="p-3 rounded-xl" style={{ background: 'rgba(200,144,42,0.12)' }}>
-                <Settings size={18} style={{ color: 'var(--color-primary)' }} />
+                <Settings size={18} style={{ color: 'var(--color-accent)' }} />
               </div>
               <div>
                 <p className="text-xs uppercase tracking-[0.3em] font-semibold" style={{ color: 'var(--color-text-muted)' }}>Configure</p>

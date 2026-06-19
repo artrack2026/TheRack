@@ -36,10 +36,13 @@ export async function POST(req: NextRequest) {
   const email        = (body.email as string)?.toLowerCase().trim()
   const password     = body.password as string
   const display_name = (body.display_name as string) ?? null
+  const phone        = (body.phone as string)?.trim()
   const role         = (body.role as 'customer' | 'admin') ?? 'customer'
 
   if (!email || !password) return NextResponse.json({ error: 'email and password are required' }, { status: 400 })
   if (password.length < 6) return NextResponse.json({ error: 'Password must be at least 6 characters' }, { status: 400 })
+  // Required so every new account can receive its SMS login verification code
+  if (!phone) return NextResponse.json({ error: 'A phone number is required for new accounts' }, { status: 400 })
 
   const admin = createSupabaseAdminClient()
 
@@ -57,7 +60,7 @@ export async function POST(req: NextRequest) {
   /* Upsert the profile row (trigger may have created it already) */
   const { error: profileError } = await admin
     .from('profiles')
-    .upsert([{ id: authData.user.id, email, display_name, role }])
+    .upsert([{ id: authData.user.id, email, display_name, phone, role }])
 
   if (profileError) {
     /* Clean up the auth user if profile failed */

@@ -338,7 +338,7 @@ export default function SpinningRack({ products }: Props) {
           onClick={() => setIsAutoPlay(a => !a)}
           className="flex items-center gap-1.5 text-xs tracking-widest uppercase font-medium px-3 py-1 rounded-full transition-all"
           style={{
-            color: isAutoPlay ? 'var(--color-primary)' : 'var(--color-text-muted)',
+            color: isAutoPlay ? 'var(--color-accent)' : 'var(--color-text-muted)',
             background: isAutoPlay ? 'rgba(200,144,42,0.1)' : 'transparent',
             border: 'none',
             cursor: 'pointer',

@@ -40,7 +40,7 @@ export default function UsersPage() {
   const [saveErr, setSaveErr]       = useState<string | null>(null)
 
   // Create form state
-  const [createForm, setCreateForm] = useState({ email: '', password: '', display_name: '', role: 'customer' as 'customer' | 'admin' })
+  const [createForm, setCreateForm] = useState({ email: '', password: '', display_name: '', phone: '', role: 'customer' as 'customer' | 'admin' })
   const [showPass, setShowPass]     = useState(false)
   const [creating, setCreating]     = useState(false)
   const [createError, setCreateError] = useState<string | null>(null)
@@ -106,6 +106,7 @@ export default function UsersPage() {
         email:        createForm.email.toLowerCase().trim(),
         password:     createForm.password,
         display_name: createForm.display_name,
+        phone:        createForm.phone,
         role:         createForm.role,
       }),
     })
@@ -114,7 +115,7 @@ export default function UsersPage() {
       setCreateError(data.error ?? 'Failed to create user')
     } else {
       setCreateOk(true)
-      setCreateForm({ email: '', password: '', display_name: '', role: 'customer' })
+      setCreateForm({ email: '', password: '', display_name: '', phone: '', role: 'customer' })
       setTimeout(() => { setCreateOk(false); setShowCreate(false); load() }, 1800)
     }
     setCreating(false)
@@ -192,6 +193,12 @@ export default function UsersPage() {
                     value={createForm.display_name} onChange={e => setCreateForm(f => ({ ...f, display_name: formatName(e.target.value) }))} />
                 </div>
                 <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-semibold tracking-widest uppercase" style={{ color: 'var(--color-text-muted)' }}>Phone *</label>
+                  <input required type="tel" className="cyber-input" placeholder="(555) 555-0123"
+                    value={createForm.phone} onChange={e => setCreateForm(f => ({ ...f, phone: formatPhone(e.target.value) }))} />
+                  <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Required for SMS login verification</p>
+                </div>
+                <div className="flex flex-col gap-1.5">
                   <label className="text-xs font-semibold tracking-widest uppercase" style={{ color: 'var(--color-text-muted)' }}>Role</label>
                   <select className="cyber-input appearance-none cursor-pointer" value={createForm.role}
                     onChange={e => setCreateForm(f => ({ ...f, role: e.target.value as 'customer' | 'admin' }))}
@@ -225,7 +232,7 @@ export default function UsersPage() {
       {/* User list */}
       {loading ? (
         <div className="flex justify-center py-16">
-          <div className="w-6 h-6 rounded-full border-2 animate-spin" style={{ borderColor: 'var(--color-primary)', borderTopColor: 'transparent' }} />
+          <div className="w-6 h-6 rounded-full border-2 animate-spin" style={{ borderColor: 'var(--color-accent)', borderTopColor: 'transparent' }} />
         </div>
       ) : users.length === 0 ? (
         <div className="text-center py-20" style={{ color: 'var(--color-text-muted)' }}>

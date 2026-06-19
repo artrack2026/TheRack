@@ -92,14 +92,14 @@ export default function HomePage() {
             transition={{ duration: 0.5 }}
             className="flex items-center justify-center gap-3 mb-8"
           >
-            <span className="w-10 h-px" style={{ background: 'var(--color-primary)' }} />
+            <span className="w-10 h-px" style={{ background: 'var(--color-accent)' }} />
             <span
               className="text-xs tracking-[0.3em] uppercase font-semibold"
-              style={{ color: 'var(--color-primary)' }}
+              style={{ color: 'var(--color-accent)' }}
             >
               Curated Collections
             </span>
-            <span className="w-10 h-px" style={{ background: 'var(--color-primary)' }} />
+            <span className="w-10 h-px" style={{ background: 'var(--color-accent)' }} />
           </motion.div>
 
           {/* Logo */}
@@ -152,7 +152,7 @@ export default function HomePage() {
           >
             <div
               className="w-1 h-2 rounded-full"
-              style={{ background: 'var(--color-primary)' }}
+              style={{ background: 'var(--color-accent)' }}
             />
           </div>
         </motion.div>

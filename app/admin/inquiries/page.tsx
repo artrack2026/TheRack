@@ -44,7 +44,7 @@ export default function InquiriesPage() {
 
       {loading ? (
         <div className="flex justify-center py-16">
-          <div className="w-6 h-6 rounded-full border-2 animate-spin" style={{ borderColor: 'var(--color-primary)', borderTopColor: 'transparent' }} />
+          <div className="w-6 h-6 rounded-full border-2 animate-spin" style={{ borderColor: 'var(--color-accent)', borderTopColor: 'transparent' }} />
         </div>
       ) : inquiries.length === 0 ? (
         <div className="text-center py-20" style={{ color: 'var(--color-text-muted)' }}>

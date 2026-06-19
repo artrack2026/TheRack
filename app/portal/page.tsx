@@ -49,13 +49,13 @@ export default function PortalPage() {
         transition={{ duration: 0.5 }}
         className="mb-10"
       >
-        <p className="text-xs tracking-[0.3em] uppercase font-semibold mb-1" style={{ color: 'var(--color-primary)' }}>
+        <p className="text-xs tracking-[0.3em] uppercase font-semibold mb-1" style={{ color: 'var(--color-accent)' }}>
           Customer Portal
         </p>
         <h1 className="text-4xl font-black" style={{ color: 'var(--color-text)' }}>
           Welcome back, {name}
         </h1>
-        <div className="h-1 w-12 mt-2" style={{ background: 'var(--color-primary)', borderRadius: 0}} />
+        <div className="h-1 w-12 mt-2" style={{ background: 'var(--color-accent)', borderRadius: 0}} />
       </motion.div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

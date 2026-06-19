@@ -93,7 +93,7 @@ export default function Navbar() {
                 className="px-4 py-1.5 rounded-full text-sm font-medium tracking-wide transition-colors duration-200"
                 style={{
                   color:      isActive ? 'var(--color-bg)' : 'var(--color-text-muted)',
-                  background: isActive ? 'var(--color-primary)' : 'transparent',
+                  background: isActive ? 'var(--color-accent)' : 'transparent',
                 }}
               >
                 {label}
@@ -137,7 +137,7 @@ export default function Navbar() {
               >
                 <div
                   className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold"
-                  style={{ background: 'var(--color-primary)', color: 'var(--color-bg)' }}
+                  style={{ background: 'var(--color-accent)', color: 'var(--color-bg)' }}
                 >
                   {getAvatarInitial(profile, user)}
                 </div>
@@ -248,7 +248,7 @@ export default function Navbar() {
                   href={href}
                   className="px-4 py-2.5 rounded-lg text-sm font-medium transition-colors"
                   style={{
-                    color: pathname === href ? 'var(--color-primary)' : 'var(--color-text)',
+                    color: pathname === href ? 'var(--color-accent)' : 'var(--color-text)',
                     background: pathname === href ? 'rgba(200,144,42,0.1)' : 'transparent',
                   }}
                 >

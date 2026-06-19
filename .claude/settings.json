@@ -25,10 +25,12 @@
       "Bash(curl -sI \"http://localhost:3000/_next/static/chunks/%5Broot-of-the-server%5D__0wbwd_e._.css\")",
       "Bash(node test_btn2.mjs)",
       "Bash(curl -s -o /tmp/showroom.html -w \"%{http_code}\\\\n\" http://localhost:3000/admin/showroom)",
-      "Bash(curl -s -D - -o /dev/null http://localhost:3000/admin/showroom)"
+      "Bash(curl -s -D - -o /dev/null http://localhost:3000/admin/showroom)",
+      "Bash(sed -i '' \"s/var\\(--color-primary\\)/var\\(--color-accent\\)/g\" app/page.tsx \"app/shop/page.tsx\" \"app/shop/[id]/page.tsx\" && grep -n \"color-primary\" app/page.tsx \"app/shop/page.tsx\" \"app/shop/[id]/page.tsx\")"
     ],
     "additionalDirectories": [
-      "/tmp"
+      "/tmp",
+      "/Users/mypro/Desktop/Websites/ArtRAck/TheRAck/app/shop/[id]"
     ]
   }
 }

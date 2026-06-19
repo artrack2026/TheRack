@@ -42,7 +42,7 @@ export default function Footer() {
           <div>
             <p
               className="text-xs font-semibold tracking-widest uppercase mb-4"
-              style={{ color: 'var(--color-primary)' }}
+              style={{ color: 'var(--color-accent)' }}
             >
               Navigate
             </p>

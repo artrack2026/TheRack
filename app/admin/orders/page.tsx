@@ -47,8 +47,8 @@ function fmtMoney(n: number) { return `$${n.toFixed(2)}` }
 function SortIcon({ col, sort }: { col: SortKey; sort: { key: SortKey; dir: SortDir } }) {
   if (sort.key !== col) return <ChevronsUpDown size={12} style={{ color: 'var(--color-border)' }} />
   return sort.dir === 'asc'
-    ? <ChevronUp size={12} style={{ color: 'var(--color-primary)' }} />
-    : <ChevronDown size={12} style={{ color: 'var(--color-primary)' }} />
+    ? <ChevronUp size={12} style={{ color: 'var(--color-accent)' }} />
+    : <ChevronDown size={12} style={{ color: 'var(--color-accent)' }} />
 }
 
 /* ── Main Component ── */
@@ -265,9 +265,9 @@ export default function AdminOrdersPage() {
                 onClick={() => setStatus(s)}
                 className="text-xs font-semibold px-3 py-1.5 rounded-full transition-all duration-150"
                 style={{
-                  background: active ? (meta?.color ?? 'var(--color-primary)') + '20' : 'var(--color-surface)',
-                  border: `1.5px solid ${active ? (meta?.color ?? 'var(--color-primary)') : 'var(--color-border)'}`,
-                  color:  active ? (meta?.color ?? 'var(--color-primary)') : 'var(--color-text-muted)',
+                  background: active ? (meta?.color ?? 'var(--color-accent)') + '20' : 'var(--color-surface)',
+                  border: `1.5px solid ${active ? (meta?.color ?? 'var(--color-accent)') : 'var(--color-border)'}`,
+                  color:  active ? (meta?.color ?? 'var(--color-accent)') : 'var(--color-text-muted)',
                 }}
               >
                 {s === 'all' ? 'All' : STATUS_META[s].label}
@@ -375,7 +375,7 @@ export default function AdminOrdersPage() {
                           style={{ color: 'var(--color-text)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
                         >
                           {order.customer_name}
-                          <ChevronRight size={12} style={{ color: 'var(--color-primary)' }} />
+                          <ChevronRight size={12} style={{ color: 'var(--color-accent)' }} />
                         </button>
                       </td>
 
@@ -685,7 +685,7 @@ export default function AdminOrdersPage() {
                       <a
                         href={`/admin/users`}
                         className="flex items-center gap-2 text-sm font-semibold"
-                        style={{ color: 'var(--color-primary)', textDecoration: 'none' }}
+                        style={{ color: 'var(--color-accent)', textDecoration: 'none' }}
                         target="_blank" rel="noreferrer"
                       >
                         <ExternalLink size={14} /> View in User Management

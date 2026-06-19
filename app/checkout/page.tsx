@@ -439,7 +439,7 @@ export default function CheckoutPage() {
                 className="p-6 rounded-2xl"
                 style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}
               >
-                <h2 className="font-bold text-sm uppercase tracking-widest mb-5" style={{ color: 'var(--color-primary)' }}>
+                <h2 className="font-bold text-sm uppercase tracking-widest mb-5" style={{ color: 'var(--color-accent)' }}>
                   Order Summary
                 </h2>
 
@@ -494,7 +494,7 @@ export default function CheckoutPage() {
                     style={{ borderTop: '1px solid var(--color-border)' }}
                   >
                     <span className="font-bold text-sm" style={{ color: 'var(--color-text)' }}>Total</span>
-                    <span className="text-xl font-black" style={{ color: 'var(--color-primary)' }}>
+                    <span className="text-xl font-black" style={{ color: 'var(--color-accent)' }}>
                       ${total.toFixed(2)}
                     </span>
                   </div>

@@ -56,7 +56,7 @@ const demoProducts: Record<string, Product> = {
 }
 
 const categoryColors: Record<string, string> = {
-  artwork: 'var(--color-primary)',
+  artwork: 'var(--color-accent)',
   reclaimed: 'var(--color-accent)',
   goods: '#a855f7',
 }
@@ -91,7 +91,7 @@ export default function ProductDetailPage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-t-transparent rounded-full animate-spin"
-          style={{ borderColor: 'var(--color-primary)' }} />
+          style={{ borderColor: 'var(--color-accent)' }} />
       </div>
     )
   }
@@ -105,7 +105,7 @@ export default function ProductDetailPage() {
     )
   }
 
-  const catColor = categoryColors[product.category] || 'var(--color-primary)'
+  const catColor = categoryColors[product.category] || 'var(--color-accent)'
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-32">
@@ -195,7 +195,7 @@ export default function ProductDetailPage() {
           <div className="flex items-baseline gap-3">
             <span
               className="text-4xl font-black"
-              style={{ color: 'var(--color-primary)' }}
+              style={{ color: 'var(--color-accent)' }}
             >
               ${product.price.toFixed(2)}
             </span>

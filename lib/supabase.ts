@@ -291,6 +291,7 @@ export interface Database {
           shipping_fee: number
           free_shipping_threshold: number
           payment_methods: unknown
+          two_factor_enabled: boolean
           updated_at: string
         }
         Insert: {
@@ -312,6 +313,7 @@ export interface Database {
           shipping_fee?: number
           free_shipping_threshold?: number
           payment_methods?: unknown
+          two_factor_enabled?: boolean
           updated_at?: string
         }
         Update: {
@@ -332,7 +334,30 @@ export interface Database {
           shipping_fee?: number
           free_shipping_threshold?: number
           payment_methods?: unknown
+          two_factor_enabled?: boolean
           updated_at?: string
+        }
+        Relationships: Rel
+      }
+      login_otp_challenges: {
+        Row: {
+          id: string
+          user_id: string
+          code_hash: string
+          attempts: number
+          expires_at: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          code_hash: string
+          attempts?: number
+          expires_at: string
+          created_at?: string
+        }
+        Update: {
+          attempts?: number
         }
         Relationships: Rel
       }
@@ -518,8 +543,25 @@ create table if not exists showroom_settings (
   threads text,
   bluesky text,
   mastodon text,
+  tax_rate numeric default 0,
+  shipping_fee numeric default 0,
+  free_shipping_threshold numeric default 0,
+  payment_methods jsonb default '[]',
+  two_factor_enabled boolean default false,
   updated_at timestamptz default now(),
   constraint showroom_settings_id_check check (id = 1)
+);
+
+-- ── Login 2FA (Textbelt SMS) ─────────────────────────────────────
+-- One-time codes for the post-password verification step. Service-role
+-- only — no public/authenticated policies, so RLS denies all client access.
+create table if not exists login_otp_challenges (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  code_hash text not null,
+  attempts integer not null default 0,
+  expires_at timestamptz not null,
+  created_at timestamptz default now()
 );
 
 -- ── Row-Level Security ────────────────────────────────────────────
@@ -531,6 +573,7 @@ alter table cart_items  enable row level security;
 alter table orders      enable row level security;
 alter table order_items enable row level security;
 alter table showroom_settings enable row level security;
+alter table login_otp_challenges enable row level security;
 
 create policy "products_public_read"   on products for select using (true);
 create policy "products_admin_all"     on products for all using (

@@ -22,6 +22,7 @@ interface ShowroomSettings {
   shipping_fee: number
   free_shipping_threshold: number
   payment_methods: PaymentMethod[]
+  two_factor_enabled: boolean
 }
 
 const DEFAULT_SETTINGS: ShowroomSettings = {
@@ -34,6 +35,7 @@ const DEFAULT_SETTINGS: ShowroomSettings = {
   shipping_fee: 0,
   free_shipping_threshold: 0,
   payment_methods: [],
+  two_factor_enabled: false,
 }
 
 function mapRow(data: Record<string, unknown>): ShowroomSettings {
@@ -55,6 +57,7 @@ function mapRow(data: Record<string, unknown>): ShowroomSettings {
     shipping_fee:           Number(data.shipping_fee)           || 0,
     free_shipping_threshold:Number(data.free_shipping_threshold)|| 0,
     payment_methods:        Array.isArray(data.payment_methods) ? (data.payment_methods as PaymentMethod[]) : [],
+    two_factor_enabled:     Boolean(data.two_factor_enabled),
   }
 }
 
@@ -115,7 +118,7 @@ export async function POST(request: NextRequest) {
     const {
       products_per_row, rows_per_page, inquiry_email,
       instagram, facebook, x, tiktok, snapchat, youtube, linkedin, threads, bluesky, mastodon,
-      tax_rate, shipping_fee, free_shipping_threshold, payment_methods,
+      tax_rate, shipping_fee, free_shipping_threshold, payment_methods, two_factor_enabled,
     } = body
 
     if (typeof products_per_row !== 'number' || products_per_row < 1 || products_per_row > 12) {
@@ -148,6 +151,7 @@ export async function POST(request: NextRequest) {
       shipping_fee:            Number(shipping_fee)            || 0,
       free_shipping_threshold: Number(free_shipping_threshold) || 0,
       payment_methods:         Array.isArray(payment_methods) ? payment_methods : [],
+      two_factor_enabled:      Boolean(two_factor_enabled),
       updated_at: new Date().toISOString(),
     }
 

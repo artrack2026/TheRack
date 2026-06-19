@@ -59,14 +59,14 @@ export default function CartDrawer() {
               style={{ borderBottom: '1px solid var(--color-border)' }}
             >
               <div className="flex items-center gap-2">
-                <ShoppingBag size={18} style={{ color: 'var(--color-primary)' }} />
+                <ShoppingBag size={18} style={{ color: 'var(--color-accent)' }} />
                 <span className="font-bold text-base" style={{ color: 'var(--color-text)' }}>
                   Your Cart
                 </span>
                 {cart && cart.items.length > 0 && (
                   <span
                     className="text-xs font-bold px-2 py-0.5 rounded-full"
-                    style={{ background: 'var(--color-primary)', color: 'var(--color-bg)' }}
+                    style={{ background: 'var(--color-accent)', color: 'var(--color-bg)' }}
                   >
                     {cart.items.reduce((n, i) => n + i.quantity, 0)}
                   </span>

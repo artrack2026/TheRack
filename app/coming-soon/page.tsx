@@ -94,7 +94,7 @@ export default function ComingSoonPage() {
           <a
             href="mailto:hello@artrack.com"
             className="underline hover:opacity-80 transition-opacity"
-            style={{ color: 'var(--color-primary)' }}
+            style={{ color: 'var(--color-accent)' }}
           >
             hello@artrack.com
           </a>

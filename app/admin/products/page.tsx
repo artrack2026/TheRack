@@ -244,7 +244,7 @@ export default function AdminProductsPage() {
       {/* Product list */}
       {loading ? (
         <div className="flex justify-center py-16">
-          <div className="w-6 h-6 rounded-full border-2 animate-spin" style={{ borderColor: 'var(--color-primary)', borderTopColor: 'transparent' }} />
+          <div className="w-6 h-6 rounded-full border-2 animate-spin" style={{ borderColor: 'var(--color-accent)', borderTopColor: 'transparent' }} />
         </div>
       ) : (
         <div className="flex flex-col gap-3">

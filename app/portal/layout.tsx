@@ -24,7 +24,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
   if (loading || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="w-6 h-6 rounded-full border-2 animate-spin" style={{ borderColor: 'var(--color-primary)', borderTopColor: 'transparent' }} />
+        <div className="w-6 h-6 rounded-full border-2 animate-spin" style={{ borderColor: 'var(--color-accent)', borderTopColor: 'transparent' }} />
       </div>
     )
   }
@@ -46,7 +46,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
                 className="flex items-center gap-2.5 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 group"
                 style={{
                   color:      isActive ? 'var(--color-bg)' : 'var(--color-text-muted)',
-                  background: isActive ? 'var(--color-primary)' : 'transparent',
+                  background: isActive ? 'var(--color-accent)' : 'transparent',
                 }}
               >
                 <Icon size={15} />
