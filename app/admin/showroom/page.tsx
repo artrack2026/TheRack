@@ -356,9 +356,9 @@ export default function ShowroomSettingsPage() {
 
         {/* ── Branding tab ── */}
         {activeTab === 'branding' && (
-          <>
+          <div className="flex flex-col gap-4">
             <div>
-              <div className="flex items-center gap-2 mb-6">
+              <div className="flex items-center gap-2 mb-3">
                 <Palette size={16} style={{ color: 'var(--color-accent)' }} />
                 <h2 className="text-sm tracking-widest uppercase font-bold" style={{ color: 'var(--color-text)' }}>
                   Presets
@@ -395,14 +395,12 @@ export default function ShowroomSettingsPage() {
                       >
                         {preset.name}
                       </p>
-                      {active && (
-                        <p
-                          className="text-xs font-semibold mt-1 tracking-wide"
-                          style={{ color: preset.colors.primary }}
-                        >
-                          Current
-                        </p>
-                      )}
+                      <p
+                        className="text-xs font-semibold mt-1 tracking-wide"
+                        style={{ color: preset.colors.primary, visibility: active ? 'visible' : 'hidden' }}
+                      >
+                        Current
+                      </p>
                     </button>
                   )
                 })}
@@ -410,81 +408,38 @@ export default function ShowroomSettingsPage() {
             </div>
 
             <div>
-              <div className="flex items-center gap-2 mb-6">
+              <div className="flex items-center gap-2 mb-3">
                 <Eye size={16} style={{ color: 'var(--color-accent)' }} />
                 <h2 className="text-sm tracking-widest uppercase font-bold" style={{ color: 'var(--color-text)' }}>
                   Custom Colors
                 </h2>
               </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {COLOR_FIELDS.map(({ key, label, desc }) => (
-                  <div
+                  <label
                     key={key}
-                    className="flex items-center justify-between p-4 gap-4"
+                    className="relative flex flex-col items-center gap-1.5 p-2.5 cursor-pointer"
                     style={{ background: 'var(--color-bg)', border: '1px solid var(--color-border)' }}
+                    title={desc}
                   >
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold mb-0.5" style={{ color: 'var(--color-text)' }}>
-                        {label}
-                      </p>
-                      <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>{desc}</p>
-                      <p className="text-xs font-mono mt-1" style={{ color: colors[key] }}>
-                        {colors[key]}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <div
-                        className="w-8 h-8 border"
-                        style={{ background: colors[key], borderColor: 'var(--color-border)' }}
-                      />
-                      <input
-                        type="color"
-                        value={colors[key]}
-                        onChange={e => updateColor(key, e.target.value)}
-                        className="w-10 h-10 cursor-pointer border-0 bg-transparent p-0"
-                        title={`Pick ${label} color`}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <div className="flex items-center gap-2 mb-6">
-                <Settings size={16} style={{ color: 'var(--color-accent)' }} />
-                <h2 className="text-sm tracking-widest uppercase font-bold" style={{ color: 'var(--color-text)' }}>
-                  Social Media
-                </h2>
-              </div>
-              <p className="text-xs font-semibold uppercase tracking-widest mb-4" style={{ color: 'var(--color-text-muted)' }}>
-                Social media handles (leave empty to hide)
-              </p>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                {[
-                  { key: 'instagram', label: 'Instagram', placeholder: '@handle' },
-                  { key: 'facebook',  label: 'Facebook',  placeholder: 'username' },
-                  { key: 'x',         label: 'X',         placeholder: '@handle' },
-                  { key: 'tiktok',    label: 'TikTok',    placeholder: '@handle' },
-                  { key: 'snapchat',  label: 'Snapchat',  placeholder: 'username' },
-                  { key: 'youtube',   label: 'YouTube',   placeholder: '@channel' },
-                  { key: 'linkedin',  label: 'LinkedIn',  placeholder: 'username' },
-                  { key: 'threads',   label: 'Threads',   placeholder: '@handle' },
-                  { key: 'bluesky',   label: 'Bluesky',   placeholder: '@handle.bsky.social' },
-                  { key: 'mastodon',  label: 'Mastodon',  placeholder: '@handle@instance' },
-                ].map(({ key, label, placeholder }) => (
-                  <div key={key}>
-                    <label className="block text-xs font-semibold mb-1" style={{ color: 'var(--color-text-muted)' }}>{label}</label>
-                    <input
-                      type="text"
-                      value={(form[key as keyof ShowroomSettings] as string) || ''}
-                      onChange={e => setForm({ ...form, [key]: e.target.value || null })}
-                      className="cyber-input w-full"
-                      placeholder={placeholder}
-                      style={{ fontSize: '0.85rem' }}
+                    <div
+                      className="w-full h-9 rounded"
+                      style={{ background: colors[key], border: '1px solid var(--color-border)' }}
                     />
-                  </div>
+                    <p className="text-xs font-semibold text-center leading-tight" style={{ color: 'var(--color-text)' }}>
+                      {label}
+                    </p>
+                    <p className="text-[10px] font-mono leading-tight" style={{ color: 'var(--color-text-muted)' }}>
+                      {colors[key]}
+                    </p>
+                    <input
+                      type="color"
+                      value={colors[key]}
+                      onChange={e => updateColor(key, e.target.value)}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                      title={`Pick ${label} color`}
+                    />
+                  </label>
                 ))}
               </div>
             </div>
@@ -526,7 +481,45 @@ export default function ShowroomSettingsPage() {
                 <RotateCcw size={14} /> Reset to Default
               </button>
             </div>
-          </>
+
+            <section className="pt-6 border-t" style={{ borderColor: 'var(--color-border)' }}>
+              <div className="flex items-center gap-2 mb-2">
+                <Settings size={16} style={{ color: 'var(--color-accent)' }} />
+                <h2 className="text-sm tracking-widest uppercase font-bold" style={{ color: 'var(--color-text)' }}>
+                  Social Media
+                </h2>
+              </div>
+              <p className="text-xs mb-4" style={{ color: 'var(--color-text-muted)' }}>
+                Handles shown in the site footer (leave a field empty to hide it). Saves with the main &quot;Save All Changes&quot; button above.
+              </p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {[
+                  { key: 'instagram', label: 'Instagram', placeholder: '@handle' },
+                  { key: 'facebook',  label: 'Facebook',  placeholder: 'username' },
+                  { key: 'x',         label: 'X',         placeholder: '@handle' },
+                  { key: 'tiktok',    label: 'TikTok',    placeholder: '@handle' },
+                  { key: 'snapchat',  label: 'Snapchat',  placeholder: 'username' },
+                  { key: 'youtube',   label: 'YouTube',   placeholder: '@channel' },
+                  { key: 'linkedin',  label: 'LinkedIn',  placeholder: 'username' },
+                  { key: 'threads',   label: 'Threads',   placeholder: '@handle' },
+                  { key: 'bluesky',   label: 'Bluesky',   placeholder: '@handle.bsky.social' },
+                  { key: 'mastodon',  label: 'Mastodon',  placeholder: '@handle@instance' },
+                ].map(({ key, label, placeholder }) => (
+                  <div key={key}>
+                    <label className="block text-xs font-semibold mb-1" style={{ color: 'var(--color-text-muted)' }}>{label}</label>
+                    <input
+                      type="text"
+                      value={(form[key as keyof ShowroomSettings] as string) || ''}
+                      onChange={e => setForm({ ...form, [key]: e.target.value || null })}
+                      className="cyber-input w-full"
+                      placeholder={placeholder}
+                      style={{ fontSize: '0.85rem' }}
+                    />
+                  </div>
+                ))}
+              </div>
+            </section>
+          </div>
         )}
 
         {/* ── Messaging tab ── */}
