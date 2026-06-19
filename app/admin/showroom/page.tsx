@@ -65,6 +65,20 @@ function newPaymentMethod(order: number): PaymentMethod {
   }
 }
 
+/* ── Remaining-credits status color: green > 100, yellow 50-99, red < 50 ── */
+function creditsBlockStyle(remaining: number | null): React.CSSProperties {
+  if (remaining === null) {
+    return { background: 'var(--color-bg)', border: '1px solid var(--color-border)' }
+  }
+  if (remaining > 100) {
+    return { background: 'rgba(58,184,112,0.08)', border: '1px solid rgba(58,184,112,0.14)' }
+  }
+  if (remaining >= 50) {
+    return { background: 'rgba(212,176,48,0.08)', border: '1px solid rgba(212,176,48,0.14)' }
+  }
+  return { background: 'rgba(224,88,88,0.08)', border: '1px solid rgba(224,88,88,0.14)' }
+}
+
 /* ── Branding data ── */
 
 const COLOR_FIELDS: { key: keyof ThemeColors; label: string; desc: string }[] = [
@@ -463,16 +477,16 @@ export default function ShowroomSettingsPage() {
               </div>
 
               <div className="grid gap-3 mt-4 sm:grid-cols-3">
-                <div className="rounded-3xl p-5" style={{ background: 'rgba(58,184,112,0.08)', border: '1px solid rgba(58,184,112,0.14)' }}>
-                  <p className="text-xs uppercase tracking-[0.3em] font-semibold mb-2" style={{ color: 'var(--color-text-muted)' }}>Remaining credits</p>
-                  <p className="text-4xl font-black" style={{ color: 'var(--color-text)' }}>
-                    {textbeltStatus.remaining === null ? '—' : textbeltStatus.remaining}
-                  </p>
-                </div>
-                <div className="rounded-3xl p-5" style={{ background: 'rgba(224,88,88,0.08)', border: '1px solid rgba(224,88,88,0.14)' }}>
+                <div className="rounded-3xl p-5" style={{ background: 'var(--color-bg)', border: '1px solid var(--color-border)' }}>
                   <p className="text-xs uppercase tracking-[0.3em] font-semibold mb-2" style={{ color: 'var(--color-text-muted)' }}>Initially purchased</p>
                   <p className="text-4xl font-black" style={{ color: 'var(--color-text)' }}>
                     {textbeltStatus.initialPurchased === null ? 'Not configured' : textbeltStatus.initialPurchased}
+                  </p>
+                </div>
+                <div className="rounded-3xl p-5" style={creditsBlockStyle(textbeltStatus.remaining)}>
+                  <p className="text-xs uppercase tracking-[0.3em] font-semibold mb-2" style={{ color: 'var(--color-text-muted)' }}>Remaining credits</p>
+                  <p className="text-4xl font-black" style={{ color: 'var(--color-text)' }}>
+                    {textbeltStatus.remaining === null ? '—' : textbeltStatus.remaining}
                   </p>
                 </div>
                 <div className="rounded-3xl p-5" style={{ background: 'var(--color-bg)', border: '1px solid var(--color-border)' }}>
@@ -514,10 +528,16 @@ export default function ShowroomSettingsPage() {
               <p className="text-sm mt-3" style={{ color: 'var(--color-text-muted)' }}>
                 When enabled, every login is texted a 6-digit code via Textbelt after the password
                 step and must enter it to finish signing in. Codes are sent to the phone number on
-                each profile and expire after 5 minutes. Accounts without a phone on file (created
-                before this was turned on) skip the code rather than getting locked out — add their
-                number under Admin → Users to bring them under 2FA too. This setting saves with the
-                main &quot;Save All Changes&quot; button above.
+                each profile and expire after 5 minutes. This setting saves with the main &quot;Save
+                All Changes&quot; button above.
+              </p>
+              <p className="text-sm mt-2" style={{ color: 'var(--color-text-muted)' }}>
+                <strong style={{ color: 'var(--color-text)' }}>Email backup, built in:</strong> if a
+                profile has no phone on file, the Textbelt key is missing, or the Textbelt send fails
+                for any reason (including running out of credits), login automatically falls back to
+                emailing the code instead via Supabase — so this can never lock an admin out of fixing
+                it. Anyone on the text-code screen can also tap &quot;Email me a code&quot; to switch
+                channels themselves if their phone isn&apos;t receiving texts.
               </p>
             </section>
 

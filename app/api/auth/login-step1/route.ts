@@ -9,9 +9,13 @@ function hashCode(code: string): string {
 }
 
 /** Step 1 of login: verify email/password without creating a persisted
- *  session, then — if 2FA is enabled and the profile has a phone number —
- *  text a one-time code via Textbelt and hand back a challenge id.
- *  The real Supabase session is only established client-side in step 2
+ *  session, then — if 2FA is enabled — text a one-time code via Textbelt
+ *  and hand back a challenge id. If SMS can't be sent for any reason (no
+ *  phone on file, Textbelt not configured, quota exhausted, send error),
+ *  this falls back to emailing a code via Supabase Auth instead — so a
+ *  dead phone number or an empty Textbelt balance never locks anyone out,
+ *  including an admin who needs back in to fix it.
+ *  The real Supabase session is only established client-side, in step 2
  *  (or immediately here, if 2FA doesn't apply). */
 export async function POST(req: NextRequest) {
   if (!isSupabaseConfigured) {
@@ -23,6 +27,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Email and password are required' }, { status: 400 })
   }
 
+  const normalizedEmail = email.toLowerCase().trim()
   const supabaseUrl     = process.env.NEXT_PUBLIC_SUPABASE_URL!
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
@@ -33,7 +38,7 @@ export async function POST(req: NextRequest) {
   })
 
   const { data: signInData, error: signInError } = await probe.auth.signInWithPassword({
-    email: email.toLowerCase().trim(),
+    email: normalizedEmail,
     password,
   })
 
@@ -54,6 +59,24 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, requiresOtp: false })
   }
 
+  /* Email fallback — used whenever SMS isn't an option. Supabase Auth owns
+     the code generation/expiry/verification for this channel, so there's
+     nothing for us to store. shouldCreateUser:false since we already know
+     this account exists. */
+  const sendEmailFallback = async () => {
+    const { error: emailError } = await probe.auth.signInWithOtp({
+      email: normalizedEmail,
+      options: { shouldCreateUser: false },
+    })
+    if (emailError) {
+      return NextResponse.json(
+        { error: 'Unable to send a verification code by text or email. Please try again shortly or contact support.' },
+        { status: 502 }
+      )
+    }
+    return NextResponse.json({ ok: true, requiresOtp: true, channel: 'email' as const, maskedEmail: normalizedEmail })
+  }
+
   const { data: profile } = await admin
     .from('profiles')
     .select('phone')
@@ -61,20 +84,11 @@ export async function POST(req: NextRequest) {
     .single()
 
   const phone = profile?.phone as string | null | undefined
+  const key   = process.env.TEXTBELT_API_KEY
 
-  /* Legacy accounts created before 2FA shipped may not have a phone on
-     file yet — let them through rather than locking them out. New
-     accounts always require a phone (enforced at account creation). */
-  if (!phone) {
-    return NextResponse.json({ ok: true, requiresOtp: false })
-  }
-
-  const key = process.env.TEXTBELT_API_KEY
-  if (!key) {
-    return NextResponse.json(
-      { error: 'Two-factor login is enabled but Textbelt is not configured. Contact an administrator.' },
-      { status: 500 }
-    )
+  /* No phone on file, or Textbelt isn't configured — go straight to email. */
+  if (!phone || !key) {
+    return sendEmailFallback()
   }
 
   /* Invalidate any previous outstanding codes for this user */
@@ -107,19 +121,17 @@ export async function POST(req: NextRequest) {
 
     if (!sendData.success) {
       await admin.from('login_otp_challenges').delete().eq('id', challenge.id)
-      return NextResponse.json(
-        { error: sendData.error || 'Unable to send verification code. Please try again later.' },
-        { status: 502 }
-      )
+      return sendEmailFallback()
     }
   } catch {
     await admin.from('login_otp_challenges').delete().eq('id', challenge.id)
-    return NextResponse.json({ error: 'Unable to send verification code. Please try again later.' }, { status: 502 })
+    return sendEmailFallback()
   }
 
   return NextResponse.json({
     ok: true,
     requiresOtp: true,
+    channel: 'sms' as const,
     challengeId: challenge.id,
     maskedPhone: maskPhone(phone),
   })

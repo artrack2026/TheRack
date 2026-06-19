@@ -4,13 +4,14 @@ import { Suspense, useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
-import { CheckCircle, Package, ArrowRight, Home } from 'lucide-react'
+import { CheckCircle, Package, ArrowRight, Home, UserPlus } from 'lucide-react'
 import { useAuth } from '@/components/AuthProvider'
 
 function SuccessContent() {
   const params               = useSearchParams()
   const orderId              = params.get('id')
   const totalParam           = params.get('total')
+  const newAccount           = params.get('newAccount') === '1'
   const { user }             = useAuth()
   const [instructions, setInstructions] = useState<string | null>(null)
 
@@ -80,6 +81,25 @@ function SuccessContent() {
           </span>
         </div>
       </div>
+
+      {/* New account notice */}
+      {newAccount && (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.25 }}
+          className="w-full p-4 rounded-xl flex items-start gap-3 text-left"
+          style={{ background: 'rgba(56,120,224,0.08)', border: '1px solid rgba(56,120,224,0.2)' }}
+        >
+          <UserPlus size={18} className="shrink-0 mt-0.5" style={{ color: 'var(--r-blue)' }} />
+          <p className="text-sm leading-relaxed" style={{ color: 'var(--color-text)' }}>
+            We&apos;ve created an account for you with {' '}
+            <span className="font-semibold">{user?.email}</span> and signed you in — you&apos;re all
+            set to track this order and edit your details under{' '}
+            <Link href="/portal/profile" className="underline">My Profile</Link>.
+          </p>
+        </motion.div>
+      )}
 
       {/* Payment instructions */}
       {instructions && (

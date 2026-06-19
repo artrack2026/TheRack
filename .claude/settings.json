@@ -26,7 +26,8 @@
       "Bash(node test_btn2.mjs)",
       "Bash(curl -s -o /tmp/showroom.html -w \"%{http_code}\\\\n\" http://localhost:3000/admin/showroom)",
       "Bash(curl -s -D - -o /dev/null http://localhost:3000/admin/showroom)",
-      "Bash(sed -i '' \"s/var\\(--color-primary\\)/var\\(--color-accent\\)/g\" app/page.tsx \"app/shop/page.tsx\" \"app/shop/[id]/page.tsx\" && grep -n \"color-primary\" app/page.tsx \"app/shop/page.tsx\" \"app/shop/[id]/page.tsx\")"
+      "Bash(sed -i '' \"s/var\\(--color-primary\\)/var\\(--color-accent\\)/g\" app/page.tsx \"app/shop/page.tsx\" \"app/shop/[id]/page.tsx\" && grep -n \"color-primary\" app/page.tsx \"app/shop/page.tsx\" \"app/shop/[id]/page.tsx\")",
+      "WebSearch"
     ],
     "additionalDirectories": [
       "/tmp",

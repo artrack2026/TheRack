@@ -22,22 +22,17 @@ function LoginForm() {
   const [loading, setLoading]   = useState(false)
 
   /* ── 2FA step ── */
+  const [channel, setChannel]           = useState<'sms' | 'email' | null>(null)
   const [challengeId, setChallengeId]   = useState<string | null>(null)
   const [maskedPhone, setMaskedPhone]   = useState<string | null>(null)
   const [otp, setOtp]                   = useState('')
   const [verifying, setVerifying]       = useState(false)
   const [otpError, setOtpError]         = useState<string | null>(null)
+  const [switchingChannel, setSwitchingChannel] = useState(false)
 
-  /* Establishes the real, cookie-persisted Supabase session and redirects —
-     shared by the no-2FA path and the post-OTP path. */
-  const completeLogin = async () => {
-    const err = await signIn(form.email.toLowerCase().trim(), form.password)
-    if (err) {
-      setError('Something went wrong finishing sign-in. Please try again.')
-      setChallengeId(null)
-      return
-    }
-
+  /* Redirect after a session already exists — shared by every path that
+     successfully establishes auth (no-2FA, SMS-verified, email-verified). */
+  const redirectAfterAuth = async () => {
     // Small delay ensures cookies are written before navigation
     // Prevents race condition between client and server auth state
     await new Promise(resolve => setTimeout(resolve, 100))
@@ -58,6 +53,19 @@ function LoginForm() {
       }
     }
     router.push(destination)
+  }
+
+  /* SMS path: our own challenge is already verified server-side at this
+     point, so the password is re-run to establish the real session. */
+  const completeLogin = async () => {
+    const err = await signIn(form.email.toLowerCase().trim(), form.password)
+    if (err) {
+      setError('Something went wrong finishing sign-in. Please try again.')
+      setChannel(null)
+      setChallengeId(null)
+      return
+    }
+    await redirectAfterAuth()
   }
 
   const handleSubmit = async (e: FormEvent) => {
@@ -89,8 +97,9 @@ function LoginForm() {
         return
       }
 
-      setChallengeId(data.challengeId)
-      setMaskedPhone(data.maskedPhone)
+      setChannel(data.channel)
+      setChallengeId(data.challengeId ?? null)
+      setMaskedPhone(data.maskedPhone ?? null)
       setLoading(false)
     } catch {
       setError('Unable to sign in. Please try again.')
@@ -100,11 +109,29 @@ function LoginForm() {
 
   const handleVerify = async (e: FormEvent) => {
     e.preventDefault()
-    if (!challengeId) return
     setOtpError(null)
     setVerifying(true)
 
     try {
+      if (channel === 'email') {
+        const supabase = getSupabaseClient()
+        const { error: verifyError } = await supabase.auth.verifyOtp({
+          email: form.email.toLowerCase().trim(),
+          token: otp.trim(),
+          type: 'email',
+        })
+        if (verifyError) {
+          setOtpError('Incorrect or expired code. Please try again.')
+          setVerifying(false)
+          return
+        }
+        // Email OTP already establishes the real session — no password re-run needed
+        await redirectAfterAuth()
+        setVerifying(false)
+        return
+      }
+
+      if (!challengeId) return
       const res  = await fetch('/api/auth/login-step2', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -126,7 +153,35 @@ function LoginForm() {
     }
   }
 
+  /* Voluntary switch — lets someone on the SMS step bail out to email if
+     their phone isn't receiving texts, without waiting for the code to
+     time out first. */
+  const handleSwitchToEmail = async () => {
+    setSwitchingChannel(true)
+    setOtpError(null)
+    try {
+      const supabase = getSupabaseClient()
+      const { error: emailError } = await supabase.auth.signInWithOtp({
+        email: form.email.toLowerCase().trim(),
+        options: { shouldCreateUser: false },
+      })
+      if (emailError) {
+        setOtpError('Unable to send an email code. Please try again.')
+        setSwitchingChannel(false)
+        return
+      }
+      setChannel('email')
+      setChallengeId(null)
+      setOtp('')
+    } catch {
+      setOtpError('Unable to send an email code. Please try again.')
+    } finally {
+      setSwitchingChannel(false)
+    }
+  }
+
   const backToCredentials = () => {
+    setChannel(null)
     setChallengeId(null)
     setMaskedPhone(null)
     setOtp('')
@@ -173,7 +228,7 @@ function LoginForm() {
           </Link>
 
           <p className="mt-4 text-sm" style={{ color: 'var(--color-text-muted)' }}>
-            {challengeId ? 'Enter your verification code' : 'Sign in to your account'}
+            {channel ? 'Enter your verification code' : 'Sign in to your account'}
           </p>
         </div>
 
@@ -186,11 +241,14 @@ function LoginForm() {
             borderRadius: '18px',
           }}
         >
-          {challengeId ? (
+          {channel ? (
             <form onSubmit={handleVerify} className="flex flex-col gap-5">
               <div className="flex items-center gap-2 text-sm" style={{ color: 'var(--color-text-muted)' }}>
                 <ShieldCheck size={16} style={{ color: 'var(--color-accent)' }} />
-                We texted a 6-digit code to {maskedPhone ?? 'your phone'}.
+                {channel === 'sms'
+                  ? <>We texted a 6-digit code to {maskedPhone ?? 'your phone'}.</>
+                  : <>We emailed a 6-digit code to {form.email.toLowerCase().trim()}.</>
+                }
               </div>
 
               <div className="flex flex-col gap-1.5">
@@ -230,6 +288,18 @@ function LoginForm() {
               >
                 {verifying ? <><Loader size={15} className="animate-spin" /> Verifying…</> : 'Verify & Sign In'}
               </button>
+
+              {channel === 'sms' && (
+                <button
+                  type="button"
+                  onClick={handleSwitchToEmail}
+                  disabled={switchingChannel}
+                  className="flex items-center justify-center gap-1.5 text-xs tracking-widest uppercase"
+                  style={{ color: 'var(--color-accent)', background: 'none', border: 'none', cursor: 'pointer' }}
+                >
+                  <Mail size={12} /> {switchingChannel ? 'Sending…' : "Didn't get a text? Email me a code"}
+                </button>
+              )}
 
               <button
                 type="button"

@@ -55,7 +55,7 @@ function interpolateInstructions(text: string, detail?: string): string {
 
 export default function CheckoutPage() {
   const { cart, clearCart }   = useCart()
-  const { profile }           = useAuth()
+  const { user, profile }     = useAuth()
   const router                = useRouter()
 
   const [form, setForm]               = useState<Form>(EMPTY_FORM)
@@ -195,7 +195,45 @@ export default function CheckoutPage() {
         : null
       if (instructions) sessionStorage.setItem('order_instructions', instructions)
 
-      router.push(`/checkout/success?id=${data.orderId}&total=${data.total}`)
+      // Guests get an account auto-provisioned from their checkout details,
+      // then signed in immediately via a one-time magic link — no password
+      // to set, no extra step. Best-effort: checkout has already succeeded
+      // either way, so failures here are silently ignored.
+      let newAccount = false
+      if (!user) {
+        try {
+          const acctRes  = await fetch('/api/auth/guest-account', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              orderId: data.orderId,
+              email: form.email.trim(),
+              firstName: form.firstName.trim(),
+              lastName: form.lastName.trim(),
+              phone: form.phone.trim() || null,
+              address_line1: form.address_line1.trim(),
+              address_line2: form.address_line2.trim() || null,
+              city: form.city.trim(),
+              state: form.state,
+              zip: form.zip.trim(),
+            }),
+          })
+          const acctData = await acctRes.json()
+          if (acctData.created && acctData.tokenHash) {
+            const supabase = getSupabaseClient()
+            const { error: verifyError } = await supabase.auth.verifyOtp({
+              email: form.email.trim().toLowerCase(),
+              token_hash: acctData.tokenHash,
+              type: 'magiclink',
+            })
+            if (!verifyError) newAccount = true
+          }
+        } catch {
+          // Non-fatal — order already succeeded
+        }
+      }
+
+      router.push(`/checkout/success?id=${data.orderId}&total=${data.total}${newAccount ? '&newAccount=1' : ''}`)
     } catch {
       setError('Something went wrong. Please try again.')
     } finally {
