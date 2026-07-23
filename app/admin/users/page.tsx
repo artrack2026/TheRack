@@ -3,8 +3,9 @@
 import { useEffect, useState, FormEvent } from 'react'
 import { formatName, formatEmail, formatPhone, formatCity, formatState, formatZip } from '@/lib/format'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Users, Plus, X, Loader, CheckCircle, Shield, User, AlertCircle, Eye, EyeOff, Pencil, Save } from 'lucide-react'
+import { Users, Plus, X, Loader, CheckCircle, Shield, User, AlertCircle, Eye, EyeOff, Pencil, Save, ShieldCheck } from 'lucide-react'
 import PageHeader from '@/components/PageHeader'
+import { isSupabaseConfigured, getSupabaseClient } from '@/lib/supabase'
 
 interface UserRow {
   id: string
@@ -47,6 +48,16 @@ export default function UsersPage() {
   const [createError, setCreateError] = useState<string | null>(null)
   const [createOk, setCreateOk]       = useState(false)
 
+  /* Phone-change verification — only relevant while 2FA is enabled site-wide
+     (checked here so a wrong/typo'd number can never lock a customer out of
+     SMS-based 2FA login). */
+  const [twoFactorEnabled, setTwoFactorEnabled] = useState(false)
+  const [phoneChallenge, setPhoneChallenge] = useState<{ challengeId: string; maskedPhone: string } | null>(null)
+  const [phoneCode, setPhoneCode]           = useState('')
+  const [phoneRequesting, setPhoneRequesting] = useState(false)
+  const [phoneVerifying, setPhoneVerifying]   = useState(false)
+  const [phoneError, setPhoneError]           = useState<string | null>(null)
+
   const load = async () => {
     setLoading(true)
     const res = await fetch('/api/admin/users')
@@ -54,7 +65,16 @@ export default function UsersPage() {
     setLoading(false)
   }
 
-  useEffect(() => { load() }, [])
+  useEffect(() => {
+    load()
+    if (!isSupabaseConfigured) return
+    getSupabaseClient()
+      .from('showroom_settings')
+      .select('two_factor_enabled')
+      .eq('id', 1)
+      .single()
+      .then(({ data }) => setTwoFactorEnabled(!!data?.two_factor_enabled))
+  }, [])
 
   const openEdit = (u: UserRow) => {
     setEditUser(u)
@@ -71,29 +91,105 @@ export default function UsersPage() {
     })
     setSaveOk(false)
     setSaveErr(null)
+    setPhoneChallenge(null)
+    setPhoneCode('')
+    setPhoneError(null)
   }
 
-  const closeEdit = () => { setEditUser(null); setEditForm(EMPTY_EDIT) }
+  const closeEdit = () => {
+    setEditUser(null)
+    setEditForm(EMPTY_EDIT)
+    setPhoneChallenge(null)
+    setPhoneCode('')
+    setPhoneError(null)
+  }
 
   const handleSave = async (e: FormEvent) => {
     e.preventDefault()
     if (!editUser) return
     setSaving(true)
     setSaveErr(null)
+    setPhoneError(null)
+
+    const phoneChanged           = editForm.phone !== (editUser.phone ?? '')
+    const needsPhoneVerification = phoneChanged && twoFactorEnabled
+    const { phone, ...rest }     = editForm
+    // A changed, unverified phone is held back from this write — it only
+    // reaches the profile once /api/phone-verify/confirm accepts the code.
+    const payload = needsPhoneVerification ? rest : editForm
+
     const res = await fetch('/api/admin/users', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: editUser.id, ...editForm }),
+      body: JSON.stringify({ id: editUser.id, ...payload }),
     })
     if (!res.ok) {
       const d = await res.json()
       setSaveErr(d.error ?? 'Save failed')
-    } else {
-      setSaveOk(true)
-      setUsers(prev => prev.map(u => u.id === editUser.id ? { ...u, ...editForm } : u))
-      setTimeout(() => setSaveOk(false), 2500)
+      setSaving(false)
+      return
     }
+
+    setUsers(prev => prev.map(u => u.id === editUser.id ? { ...u, ...payload } : u))
+
+    if (needsPhoneVerification) {
+      setPhoneRequesting(true)
+      try {
+        const vRes = await fetch('/api/phone-verify/request', {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify({ userId: editUser.id, newPhone: phone }),
+        })
+        const vData = await vRes.json()
+        if (!vRes.ok) {
+          setPhoneError(vData.error ?? 'Failed to send verification code.')
+        } else if (vData.required) {
+          setPhoneChallenge({ challengeId: vData.challengeId, maskedPhone: vData.maskedPhone })
+        }
+      } catch {
+        setPhoneError('Failed to send verification code.')
+      } finally {
+        setPhoneRequesting(false)
+      }
+      setSaving(false)
+      return
+    }
+
+    setSaveOk(true)
+    setTimeout(() => setSaveOk(false), 2500)
     setSaving(false)
+  }
+
+  const handleVerifyPhone = async () => {
+    if (!phoneChallenge || !editUser || phoneCode.length !== 6) return
+    setPhoneVerifying(true)
+    setPhoneError(null)
+    try {
+      const res = await fetch('/api/phone-verify/confirm', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ challengeId: phoneChallenge.challengeId, code: phoneCode }),
+      })
+      const data = await res.json()
+      if (!res.ok) { setPhoneError(data.error ?? 'Verification failed.'); return }
+
+      setUsers(prev => prev.map(u => u.id === editUser.id ? { ...u, phone: data.phone } : u))
+      setPhoneChallenge(null)
+      setPhoneCode('')
+      setSaveOk(true)
+      setTimeout(() => setSaveOk(false), 2500)
+    } catch {
+      setPhoneError('Verification failed. Please try again.')
+    } finally {
+      setPhoneVerifying(false)
+    }
+  }
+
+  const cancelPhoneVerification = () => {
+    setPhoneChallenge(null)
+    setPhoneCode('')
+    setPhoneError(null)
+    if (editUser) setEditForm(f => ({ ...f, phone: editUser.phone ?? '' }))
   }
 
   const handleCreate = async (e: FormEvent) => {
@@ -130,6 +226,7 @@ export default function UsersPage() {
     formatter?: (v: string) => string,
     type = 'text',
     maxLength?: number,
+    disabled?: boolean,
   ) => (
     <div className="flex flex-col gap-1.5">
       <label className="text-xs font-semibold tracking-widest uppercase" style={{ color: 'var(--color-text-muted)' }}>
@@ -140,6 +237,7 @@ export default function UsersPage() {
         className="cyber-input"
         placeholder={placeholder}
         maxLength={maxLength}
+        disabled={disabled}
         value={(editForm[key] ?? '') as string}
         onChange={e => setEditForm(f => ({ ...f, [key]: formatter ? formatter(e.target.value) : e.target.value }))}
       />
@@ -317,8 +415,59 @@ export default function UsersPage() {
                         {/* Display name + phone */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           {ef('display_name', 'Display Name',  'How they appear', formatName)}
-                          {ef('phone',        'Phone',         '(555) 555-0123',  formatPhone, 'tel')}
+                          {ef('phone',        'Phone',         '(555) 555-0123',  formatPhone, 'tel', undefined, !!phoneChallenge)}
                         </div>
+
+                        {phoneRequesting && (
+                          <p className="text-xs flex items-center gap-1.5" style={{ color: 'var(--color-text-muted)' }}>
+                            <Loader size={12} className="animate-spin" /> Sending verification code…
+                          </p>
+                        )}
+                        {!phoneChallenge && phoneError && (
+                          <p className="text-xs flex items-center gap-1.5" style={{ color: 'var(--r-red)' }}>
+                            <AlertCircle size={12} /> {phoneError}
+                          </p>
+                        )}
+                        {phoneChallenge && (
+                          <div
+                            className="p-3 rounded-xl flex flex-col gap-2.5"
+                            style={{ background: 'rgba(212,176,48,0.08)', border: '1px solid rgba(212,176,48,0.25)' }}
+                          >
+                            <p className="text-xs leading-relaxed" style={{ color: 'var(--color-text)' }}>
+                              We texted a code to {phoneChallenge.maskedPhone} to confirm this number before it&apos;s saved.
+                            </p>
+                            <div className="flex gap-2">
+                              <input
+                                type="text"
+                                inputMode="numeric"
+                                maxLength={6}
+                                className="cyber-input"
+                                placeholder="123456"
+                                value={phoneCode}
+                                onChange={e => setPhoneCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                              />
+                              <button
+                                type="button"
+                                onClick={handleVerifyPhone}
+                                disabled={phoneVerifying || phoneCode.length !== 6}
+                                className="cyber-btn btn--violet btn--sm shrink-0"
+                              >
+                                {phoneVerifying ? <Loader size={13} className="animate-spin" /> : <ShieldCheck size={13} />} Verify
+                              </button>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={cancelPhoneVerification}
+                              className="text-xs self-start"
+                              style={{ color: 'var(--color-text-muted)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                            >
+                              Use a different number instead
+                            </button>
+                            {phoneError && (
+                              <p className="text-xs" style={{ color: 'var(--r-red)' }}>{phoneError}</p>
+                            )}
+                          </div>
+                        )}
 
                         {/* Address */}
                         <div style={{ borderTop: '1px solid var(--color-border)', paddingTop: '16px' }}>
@@ -338,7 +487,7 @@ export default function UsersPage() {
 
                         {/* Actions */}
                         <div className="flex items-center gap-3 pt-1">
-                          <button type="submit" disabled={saving} className="cyber-btn text-sm">
+                          <button type="submit" disabled={saving || !!phoneChallenge} className="cyber-btn text-sm">
                             {saving
                               ? <><Loader size={13} className="animate-spin" /> Saving…</>
                               : <><Save size={13} /> Save Changes</>}

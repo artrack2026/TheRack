@@ -2,7 +2,7 @@
 
 import { useState, useEffect, FormEvent } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Save, Loader, CheckCircle, Pencil, X, User, Phone, MapPin, Mail } from 'lucide-react'
+import { Save, Loader, CheckCircle, Pencil, X, User, Phone, MapPin, Mail, ShieldCheck, AlertCircle } from 'lucide-react'
 import { useAuth } from '@/components/AuthProvider'
 import { isSupabaseConfigured, getSupabaseClient } from '@/lib/supabase'
 import { formatPhone, formatName, formatState, formatCity, formatZip } from '@/lib/format'
@@ -44,6 +44,16 @@ export default function ProfilePage() {
   const [form, setForm]     = useState<Form>(EMPTY_FORM)
   const [status, setStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
 
+  /* Phone-change verification — only relevant while 2FA is enabled site-wide
+     (checked here so a wrong/typo'd number can never lock someone out of
+     SMS-based 2FA login). */
+  const [twoFactorEnabled, setTwoFactorEnabled] = useState(false)
+  const [phoneChallenge, setPhoneChallenge] = useState<{ challengeId: string; maskedPhone: string } | null>(null)
+  const [phoneCode, setPhoneCode]           = useState('')
+  const [phoneRequesting, setPhoneRequesting] = useState(false)
+  const [phoneVerifying, setPhoneVerifying]   = useState(false)
+  const [phoneError, setPhoneError]           = useState<string | null>(null)
+
   useEffect(() => {
     if (profile) {
       setForm(formFromProfile(profile))
@@ -51,6 +61,16 @@ export default function ProfilePage() {
       if (profile.display_name) setDisplayNameEdited(true)
     }
   }, [profile])
+
+  useEffect(() => {
+    if (!isSupabaseConfigured) return
+    getSupabaseClient()
+      .from('showroom_settings')
+      .select('two_factor_enabled')
+      .eq('id', 1)
+      .single()
+      .then(({ data }) => setTwoFactorEnabled(!!data?.two_factor_enabled))
+  }, [])
 
   const startEditing = () => {
     setForm(formFromProfile(profile))
@@ -62,6 +82,9 @@ export default function ProfilePage() {
     setForm(formFromProfile(profile))
     setStatus('idle')
     setIsEditing(false)
+    setPhoneChallenge(null)
+    setPhoneCode('')
+    setPhoneError(null)
   }
 
   /* When first name changes, auto-fill display name unless user edited it manually */
@@ -83,17 +106,80 @@ export default function ProfilePage() {
     e.preventDefault()
     if (!user || !isSupabaseConfigured) return
     setStatus('saving')
-    const supabase = getSupabaseClient()
-    const { error } = await supabase
-      .from('profiles')
-      .update({ ...form })
-      .eq('id', user.id)
+    setPhoneError(null)
 
+    const phoneChanged           = form.phone !== (profile?.phone ?? '')
+    const needsPhoneVerification = phoneChanged && twoFactorEnabled
+    const { phone, ...rest }     = form
+    // A changed, unverified phone is held back from this write — it only
+    // reaches the profile once /api/phone-verify/confirm accepts the code.
+    const payload = needsPhoneVerification ? rest : form
+
+    const supabase = getSupabaseClient()
+    const { error } = await supabase.from('profiles').update(payload).eq('id', user.id)
     if (error) { setStatus('error'); return }
+
+    if (needsPhoneVerification) {
+      setPhoneRequesting(true)
+      try {
+        const res = await fetch('/api/phone-verify/request', {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify({ newPhone: phone }),
+        })
+        const data = await res.json()
+        if (!res.ok) {
+          setPhoneError(data.error ?? 'Failed to send verification code.')
+        } else if (data.required) {
+          setPhoneChallenge({ challengeId: data.challengeId, maskedPhone: data.maskedPhone })
+        }
+      } catch {
+        setPhoneError('Failed to send verification code.')
+      } finally {
+        setPhoneRequesting(false)
+      }
+      await refreshProfile()
+      setStatus('idle')
+      return
+    }
+
     await refreshProfile()
     setIsEditing(false)
     setStatus('saved')
     setTimeout(() => setStatus('idle'), 2500)
+  }
+
+  const handleVerifyPhone = async () => {
+    if (!phoneChallenge || phoneCode.length !== 6) return
+    setPhoneVerifying(true)
+    setPhoneError(null)
+    try {
+      const res = await fetch('/api/phone-verify/confirm', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ challengeId: phoneChallenge.challengeId, code: phoneCode }),
+      })
+      const data = await res.json()
+      if (!res.ok) { setPhoneError(data.error ?? 'Verification failed.'); return }
+
+      setPhoneChallenge(null)
+      setPhoneCode('')
+      await refreshProfile()
+      setIsEditing(false)
+      setStatus('saved')
+      setTimeout(() => setStatus('idle'), 2500)
+    } catch {
+      setPhoneError('Verification failed. Please try again.')
+    } finally {
+      setPhoneVerifying(false)
+    }
+  }
+
+  const cancelPhoneVerification = () => {
+    setPhoneChallenge(null)
+    setPhoneCode('')
+    setPhoneError(null)
+    setForm(f => ({ ...f, phone: profile?.phone ?? '' }))
   }
 
   const fullName = [form.first_name, form.last_name].filter(Boolean).join(' ')
@@ -212,8 +298,59 @@ export default function ProfilePage() {
                   className="cyber-input"
                   placeholder="(555) 555-0123"
                   value={form.phone}
+                  disabled={!!phoneChallenge}
                   onChange={e => setForm(f => ({ ...f, phone: formatPhone(e.target.value) }))}
                 />
+                {phoneRequesting && (
+                  <p className="text-xs flex items-center gap-1.5" style={{ color: 'var(--color-text-muted)' }}>
+                    <Loader size={12} className="animate-spin" /> Sending verification code…
+                  </p>
+                )}
+                {!phoneChallenge && phoneError && (
+                  <p className="text-xs flex items-center gap-1.5" style={{ color: 'var(--r-red)' }}>
+                    <AlertCircle size={12} /> {phoneError}
+                  </p>
+                )}
+                {phoneChallenge && (
+                  <div
+                    className="p-3 rounded-xl flex flex-col gap-2.5"
+                    style={{ background: 'rgba(212,176,48,0.08)', border: '1px solid rgba(212,176,48,0.25)' }}
+                  >
+                    <p className="text-xs leading-relaxed" style={{ color: 'var(--color-text)' }}>
+                      We texted a code to {phoneChallenge.maskedPhone} to confirm this number. Enter it to save.
+                    </p>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        maxLength={6}
+                        className="cyber-input"
+                        placeholder="123456"
+                        value={phoneCode}
+                        onChange={e => setPhoneCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                      />
+                      <button
+                        type="button"
+                        onClick={handleVerifyPhone}
+                        disabled={phoneVerifying || phoneCode.length !== 6}
+                        className="cyber-btn btn--sm shrink-0"
+                      >
+                        {phoneVerifying ? <Loader size={13} className="animate-spin" /> : <ShieldCheck size={13} />} Verify
+                      </button>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={cancelPhoneVerification}
+                      className="text-xs self-start"
+                      style={{ color: 'var(--color-text-muted)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                    >
+                      Use a different number instead
+                    </button>
+                    {phoneError && (
+                      <p className="text-xs" style={{ color: 'var(--r-red)' }}>{phoneError}</p>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -280,7 +417,7 @@ export default function ProfilePage() {
             </div>
 
             <div className="flex items-center gap-3 mt-2">
-              <button type="submit" disabled={status === 'saving'} className="cyber-btn">
+              <button type="submit" disabled={status === 'saving' || !!phoneChallenge} className="cyber-btn">
                 {status === 'saving'
                   ? <><Loader size={14} className="animate-spin" /> Saving…</>
                   : <><Save size={14} /> Save Profile</>}

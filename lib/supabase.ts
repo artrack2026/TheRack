@@ -376,6 +376,32 @@ export interface Database {
         }
         Relationships: Rel
       }
+      phone_change_challenges: {
+        Row: {
+          id: string
+          user_id: string
+          requested_by: string | null
+          new_phone: string
+          code_hash: string
+          attempts: number
+          expires_at: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          requested_by?: string | null
+          new_phone: string
+          code_hash: string
+          attempts?: number
+          expires_at: string
+          created_at?: string
+        }
+        Update: {
+          attempts?: number
+        }
+        Relationships: Rel
+      }
     }
   }
 }
@@ -585,6 +611,23 @@ create table if not exists login_otp_challenges (
   created_at timestamptz default now()
 );
 
+-- ── Phone-change verification (Textbelt SMS) ─────────────────────
+-- Confirms a NEW phone number is reachable before it's written to profiles,
+-- so a typo or wrong number never locks someone out of SMS-based 2FA login.
+-- requested_by is null when a customer verifies their own number, and set
+-- to the admin's id when an admin changes it on a customer's behalf.
+-- Service-role only — no public/authenticated policies, so RLS denies all client access.
+create table if not exists phone_change_challenges (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  requested_by uuid references auth.users(id) on delete set null,
+  new_phone text not null,
+  code_hash text not null,
+  attempts integer not null default 0,
+  expires_at timestamptz not null,
+  created_at timestamptz default now()
+);
+
 -- ── Row-Level Security ────────────────────────────────────────────
 alter table products    enable row level security;
 alter table inquiries   enable row level security;
@@ -595,6 +638,7 @@ alter table orders      enable row level security;
 alter table order_items enable row level security;
 alter table showroom_settings enable row level security;
 alter table login_otp_challenges enable row level security;
+alter table phone_change_challenges enable row level security;
 
 create policy "products_public_read"   on products for select using (true);
 create policy "products_admin_all"     on products for all using (
