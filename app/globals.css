@@ -394,6 +394,36 @@ body::before {
 }
 
 /* ═══════════════════════════════════════
+   ACTIVE-SELECTION RING
+   Marks the currently active choice (e.g. the active branding preset) with
+   a moving rainbow ring — same gradient stops and rainbow-slide animation
+   as the logo, echoing it as the "this one's selected" signal.
+   Apply to a `position: relative` element with its own opaque background;
+   the ring is a ::before sitting just outside that element's edges.
+═══════════════════════════════════════ */
+.rainbow-ring {
+  position: relative;
+  z-index: 0;
+}
+.rainbow-ring::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  z-index: -1;
+  border-radius: inherit;
+  background: linear-gradient(
+    135deg,
+    #e05858, #e07838, #d4b030, #3ab870,
+    #1ab4c0, #3878e0, #8844d8, #d84490, #e05858
+  );
+  background-size: 300% auto;
+  animation: rainbow-slide 6s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .rainbow-ring::before { animation: none; }
+}
+
+/* ═══════════════════════════════════════
    ANIMATIONS
 ═══════════════════════════════════════ */
 

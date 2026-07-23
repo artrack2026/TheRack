@@ -367,11 +367,11 @@ export default function ShowroomSettingsPage() {
                     <button
                       key={preset.name}
                       onClick={() => applyPreset(preset.colors)}
-                      className="group p-3 text-left transition-all relative"
+                      className={`group p-3 text-left transition-all relative ${active ? 'rainbow-ring' : ''}`}
                       style={{
                         background: preset.colors.surface,
                         border: active
-                          ? `2px solid ${preset.colors.primary}`
+                          ? '2px solid transparent'
                           : `1px solid ${preset.colors.border}`,
                         borderRadius: '10px',
                       }}
