@@ -11,6 +11,7 @@ import {
 import { getSupabaseClient, isSupabaseConfigured } from '@/lib/supabase'
 import { Order, OrderItem, Profile } from '@/lib/types'
 import InvoiceModal from './InvoiceModal'
+import PageHeader from '@/components/PageHeader'
 
 /* ── Constants ── */
 
@@ -207,19 +208,17 @@ export default function AdminOrdersPage() {
 
   return (
     <div onClick={() => setStatusMenu(null)}>
-      {/* Page header */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45 }} className="mb-8">
-        <p className="text-xs tracking-[0.3em] uppercase font-semibold mb-1" style={{ color: 'var(--r-green)' }}>Admin</p>
-        <div className="flex items-end justify-between gap-4 flex-wrap">
-          <div>
-            <h1 className="text-4xl font-black" style={{ color: 'var(--color-text)' }}>Orders</h1>
-            <div className="h-1 w-12 mt-2" style={{ background: 'var(--r-green)', borderRadius: 0 }} />
-          </div>
-          <button onClick={load} className="cyber-btn btn--green btn--sm flex items-center gap-1.5">
+      <PageHeader
+        eyebrow="Admin"
+        title="Orders"
+        size="md"
+        accentColor="var(--r-violet)"
+        actions={
+          <button onClick={load} className="cyber-btn btn--violet btn--sm flex items-center gap-1.5">
             <RefreshCcw size={13} /> Refresh
           </button>
-        </div>
-      </motion.div>
+        }
+      />
 
       {/* Stats row */}
       <motion.div

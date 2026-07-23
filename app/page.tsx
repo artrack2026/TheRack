@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { ArrowRight, Package, Recycle, Palette } from 'lucide-react'
 import ParticleField from '@/components/ParticleField'
-import LogoText from '@/components/LogoText'
+import LogoLockup from '@/components/LogoLockup'
 import SpinningRack from '@/components/SpinningRack'
 import { useEffect, useState } from 'react'
 import { isSupabaseConfigured, getSupabaseClient } from '@/lib/supabase'
@@ -102,15 +102,18 @@ export default function HomePage() {
             <span className="w-10 h-px" style={{ background: 'var(--color-accent)' }} />
           </motion.div>
 
-          {/* Logo */}
-          <motion.h1
+          {/* Logo — the site's focal mark, full scale with its mirrored reflection.
+              Every other page carries a smaller version of this in the navbar. */}
+          <motion.div
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.1 }}
-            className="text-6xl md:text-8xl tracking-tight leading-none mb-6"
+            className="mb-8"
           >
-            <LogoText className="text-6xl md:text-8xl" />
-          </motion.h1>
+            <h1 className="tracking-tight leading-none">
+              <LogoLockup size="lg" />
+            </h1>
+          </motion.div>
 
           {/* Tagline */}
           <motion.p

@@ -10,6 +10,7 @@ import {
 import { motion, AnimatePresence, Reorder } from 'framer-motion'
 import { PaymentMethod, ThemeColors } from '@/lib/types'
 import { useTheme } from '@/components/ThemeProvider'
+import PageHeader from '@/components/PageHeader'
 
 /* ── Types ── */
 
@@ -281,22 +282,17 @@ export default function ShowroomSettingsPage() {
 
   return (
     <div>
-      {/* Header */}
-      <div className="mb-10">
-        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-          <div>
-            <p className="text-xs tracking-[0.3em] uppercase font-semibold mb-1" style={{ color: 'var(--r-violet)' }}>
-              Showroom Settings
-            </p>
-            <h1 className="text-4xl font-black" style={{ color: 'var(--color-text)' }}>
-              Configuration
-            </h1>
-          </div>
-          <button onClick={saveSettings} disabled={saving} className="cyber-btn btn--green flex items-center gap-1.5">
+      <PageHeader
+        eyebrow="Showroom Settings"
+        title="Configuration"
+        className="mb-10"
+        accentColor="var(--r-violet)"
+        actions={
+          <button onClick={saveSettings} disabled={saving} className="cyber-btn btn--violet flex items-center gap-1.5">
             <Save size={14} /> {saving ? 'Saving…' : 'Save All Changes'}
           </button>
-        </div>
-      </div>
+        }
+      />
 
       {/* ── Save feedback (shown regardless of active tab) ── */}
       <AnimatePresence>

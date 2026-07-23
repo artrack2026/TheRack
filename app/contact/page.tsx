@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion'
 import { Mail, AtSign, Clock } from 'lucide-react'
 import InquiryForm from '@/components/InquiryForm'
+import PageHeader from '@/components/PageHeader'
 
 const contactInfo = [
   {
@@ -35,31 +36,12 @@ export default function ContactPage() {
   return (
     <div className="max-w-5xl mx-auto px-6 py-32">
 
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: 24 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.55 }}
+      <PageHeader
+        eyebrow="Get in Touch"
+        title="Let's Talk"
         className="mb-14"
-      >
-        <p
-          className="text-xs tracking-[0.3em] uppercase font-semibold mb-3"
-          style={{ color: 'var(--r-pink)' }}
-        >
-          Get in Touch
-        </p>
-        <h1 className="text-5xl font-black mb-3" style={{ color: 'var(--color-text)' }}>
-          Let&apos;s Talk
-        </h1>
-        {/* Colored underline — contrast stripe */}
-        <div
-          className="h-1 w-14 mb-6"
-          style={{ background: 'var(--r-pink)', borderRadius: '0' }}
-        />
-        <p className="max-w-xl text-base leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
-          Questions about a specific piece? Interested in a custom order? Or just want to say hello? Send a message and I&apos;ll get back to you personally.
-        </p>
-      </motion.div>
+        description="Questions about a specific piece? Interested in a custom order? Or just want to say hello? Send a message and I'll get back to you personally."
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-10">
 

@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Mail, Lock, Eye, EyeOff, AlertCircle, Loader, ShieldCheck, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
-import LogoText from '@/components/LogoText'
+import ParticleField from '@/components/ParticleField'
 import { useAuth } from '@/components/AuthProvider'
 import { getSupabaseClient } from '@/lib/supabase'
 
@@ -189,7 +189,9 @@ function LoginForm() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-20">
+    <div className="relative min-h-screen flex items-center justify-center overflow-hidden px-4 py-20">
+      <ParticleField />
+
       {/* Background bloom */}
       <div
         className="absolute inset-0 pointer-events-none"
@@ -202,32 +204,14 @@ function LoginForm() {
         initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="relative w-full max-w-sm"
+        className="relative z-10 w-full max-w-sm"
       >
-        {/* Logo — Option B: logo → line → water reflection below */}
+        {/* Logo lives in the persistent navbar above — this page just needs the context line. */}
         <div className="text-center mb-8">
-          <Link href="/" className="inline-block" style={{ lineHeight: 1 }}>
-            <div>
-              <LogoText className="text-3xl" />
-            </div>
-            <div style={{
-              height: '1.5px',
-              margin: '5px 0 4px',
-              background: 'linear-gradient(90deg, transparent, #d4b030, #3ab870, #1ab4c0, transparent)',
-            }} />
-            <div style={{
-              transform: 'scaleY(-1)',
-              opacity: 0.45,
-              maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.75) 0%, transparent 90%)',
-              WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.75) 0%, transparent 90%)',
-              pointerEvents: 'none',
-              display: 'block',
-            }}>
-              <LogoText className="text-3xl" />
-            </div>
-          </Link>
-
-          <p className="mt-4 text-sm" style={{ color: 'var(--color-text-muted)' }}>
+          <p className="text-xs tracking-[0.3em] uppercase font-semibold" style={{ color: 'var(--color-accent)' }}>
+            Welcome Back
+          </p>
+          <p className="mt-2 text-sm" style={{ color: 'var(--color-text-muted)' }}>
             {channel ? 'Enter your verification code' : 'Sign in to your account'}
           </p>
         </div>

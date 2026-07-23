@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { ArrowRight, Zap, Heart, Globe } from 'lucide-react'
+import PageHeader from '@/components/PageHeader'
 
 const values = [
   {
@@ -32,35 +33,22 @@ export default function AboutPage() {
   return (
     <div className="max-w-5xl mx-auto px-6 py-32">
 
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: 24 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.55 }}
+      <PageHeader
+        eyebrow="Our Story"
+        title={<>What is<br /><span className="rainbow-text">Art-R-Ack?</span></>}
         className="mb-20"
-      >
-        <p
-          className="text-xs tracking-[0.3em] uppercase font-semibold mb-4"
-          style={{ color: 'var(--r-cyan)' }}
-        >
-          Our Story
-        </p>
-        <h1 className="text-5xl md:text-6xl font-black leading-tight mb-4" style={{ color: 'var(--color-text)' }}>
-          What is<br />
-          <span className="rainbow-text">Art-R-Ack?</span>
-        </h1>
-        {/* Sharp underline accent */}
-        <div className="h-1 w-14 mb-10" style={{ background: 'var(--r-cyan)', borderRadius: '0' }} />
-
-        <div className="max-w-2xl">
-          <p className="text-lg leading-relaxed mb-5" style={{ color: 'var(--color-text-muted)' }}>
-            ArtRAck started with a simple belief: the most interesting things in the world are usually the ones that don&apos;t fit neatly into a box. Original artwork that challenges, reclaimed materials given new life, and goods selected with purpose.
-          </p>
-          <p className="text-lg leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
-            This is a curated collection — not a mass marketplace. Every item is chosen or created by hand. When you buy from ArtRAck, you&apos;re getting something that exists nowhere else.
-          </p>
-        </div>
-      </motion.div>
+        descriptionClassName="max-w-2xl text-lg"
+        description={
+          <>
+            <p className="mb-5">
+              ArtRAck started with a simple belief: the most interesting things in the world are usually the ones that don&apos;t fit neatly into a box. Original artwork that challenges, reclaimed materials given new life, and goods selected with purpose.
+            </p>
+            <p>
+              This is a curated collection — not a mass marketplace. Every item is chosen or created by hand. When you buy from ArtRAck, you&apos;re getting something that exists nowhere else.
+            </p>
+          </>
+        }
+      />
 
       {/* Values */}
       <motion.div

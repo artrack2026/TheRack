@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { useAuth } from '@/components/AuthProvider'
 import { isSupabaseConfigured, getSupabaseClient } from '@/lib/supabase'
 import { Order } from '@/lib/types'
+import PageHeader from '@/components/PageHeader'
 
 const STATUS_STYLE: Record<string, { color: string; icon: typeof Clock }> = {
   pending:   { color: '#d4b030', icon: Clock },
@@ -34,11 +35,7 @@ export default function OrdersPage() {
 
   return (
     <div>
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45 }}>
-        <p className="text-xs tracking-[0.3em] uppercase font-semibold mb-1" style={{ color: 'var(--r-green)' }}>Purchase History</p>
-        <h2 className="text-3xl font-black mb-1" style={{ color: 'var(--color-text)' }}>My Orders</h2>
-        <div className="h-1 w-10 mb-8" style={{ background: 'var(--r-green)', borderRadius: 0 }} />
-      </motion.div>
+      <PageHeader eyebrow="Purchase History" title="My Orders" size="md" />
 
       {loading ? (
         <div className="flex justify-center py-16">

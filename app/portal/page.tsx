@@ -6,6 +6,7 @@ import { Package, User, ShoppingBag, ArrowRight } from 'lucide-react'
 import { useAuth } from '@/components/AuthProvider'
 import { useCart } from '@/components/CartProvider'
 import { getDisplayName } from '@/lib/format'
+import PageHeader from '@/components/PageHeader'
 
 const RAINBOW = ['#e05858','#e07838','#d4b030','#3ab870','#1ab4c0','#3878e0','#8844d8','#d84490']
 
@@ -43,20 +44,7 @@ export default function PortalPage() {
 
   return (
     <div>
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="mb-10"
-      >
-        <p className="text-xs tracking-[0.3em] uppercase font-semibold mb-1" style={{ color: 'var(--color-accent)' }}>
-          Customer Portal
-        </p>
-        <h1 className="text-4xl font-black" style={{ color: 'var(--color-text)' }}>
-          Welcome back, {name}
-        </h1>
-        <div className="h-1 w-12 mt-2" style={{ background: 'var(--color-accent)', borderRadius: 0}} />
-      </motion.div>
+      <PageHeader eyebrow="Customer Portal" title={`Welcome back, ${name}`} className="mb-10" />
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {cards.map(({ icon: Icon, label, desc, href, color, onClick }, i) => {

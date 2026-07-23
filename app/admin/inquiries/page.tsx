@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { MessageSquare, CheckCircle, MailOpen } from 'lucide-react'
 import { isSupabaseConfigured, getSupabaseClient } from '@/lib/supabase'
 import { Inquiry } from '@/lib/types'
+import PageHeader from '@/components/PageHeader'
 
 const STATUS_COLOR: Record<string, string> = {
   new:     '#e05858',
@@ -36,11 +37,7 @@ export default function InquiriesPage() {
 
   return (
     <div>
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45 }} className="mb-8">
-        <p className="text-xs tracking-[0.3em] uppercase font-semibold mb-1" style={{ color: 'var(--r-orange)' }}>Admin</p>
-        <h2 className="text-3xl font-black mb-1" style={{ color: 'var(--color-text)' }}>Inquiries</h2>
-        <div className="h-1 w-10" style={{ background: 'var(--r-orange)', borderRadius: 0 }} />
-      </motion.div>
+      <PageHeader eyebrow="Admin" title="Inquiries" size="md" accentColor="var(--r-violet)" />
 
       {loading ? (
         <div className="flex justify-center py-16">

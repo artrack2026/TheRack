@@ -7,6 +7,7 @@ import Image from 'next/image'
 import { isSupabaseConfigured, getSupabaseClient } from '@/lib/supabase'
 import { Product, ProductCategory } from '@/lib/types'
 import { compressImage } from '@/lib/image-compress'
+import PageHeader from '@/components/PageHeader'
 
 const EMPTY: Omit<Product, 'id' | 'created_at'> = {
   title: '', description: '', price: 0, category: 'artwork',
@@ -112,16 +113,17 @@ export default function AdminProductsPage() {
 
   return (
     <div>
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45 }} className="flex items-start justify-between mb-8">
-        <div>
-          <p className="text-xs tracking-[0.3em] uppercase font-semibold mb-1" style={{ color: 'var(--r-red)' }}>Admin</p>
-          <h2 className="text-3xl font-black mb-1" style={{ color: 'var(--color-text)' }}>Products</h2>
-          <div className="h-1 w-10" style={{ background: 'var(--r-red)', borderRadius: 0 }} />
-        </div>
-        <button onClick={openNew} className="cyber-btn btn--red text-sm">
-          <Plus size={14} /> Add Product
-        </button>
-      </motion.div>
+      <PageHeader
+        eyebrow="Admin"
+        title="Products"
+        size="md"
+        accentColor="var(--r-violet)"
+        actions={
+          <button onClick={openNew} className="cyber-btn btn--violet text-sm">
+            <Plus size={14} /> Add Product
+          </button>
+        }
+      />
 
       {/* Edit / Create modal */}
       <AnimatePresence>

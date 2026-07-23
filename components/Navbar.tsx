@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Menu, X, ShoppingBag, LogOut, User, LayoutDashboard, Shield } from 'lucide-react'
-import LogoText from '@/components/LogoText'
+import LogoLockup from '@/components/LogoLockup'
 import { useAuth } from '@/components/AuthProvider'
 import { useCart } from '@/components/CartProvider'
 import { getDisplayName, getAvatarInitial } from '@/lib/format'
@@ -64,22 +64,12 @@ export default function Navbar() {
       }}
       className="fixed top-0 left-0 right-0 z-50 transition-all duration-300"
     >
-      <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-6 py-2.5 min-h-16 flex items-center justify-between">
 
-        {/* Logo — admin-only pages get a "Studio Vault" sub-label underneath,
-            paired typographically (uppercase, wide tracking) but visually distinct
-            from the animated rainbow wordmark. Gated by route, not auth state, so it
-            never depends on whether the admin check has finished loading yet. */}
-        <Link href="/" className="flex flex-col items-center leading-none">
-          <LogoText className="text-3xl" />
-          {pathname.startsWith('/admin') && (
-            <span
-              className="text-[0.8rem] font-semibold tracking-[0.3em] uppercase mt-1"
-              style={{ color: 'var(--r-violet)' }}
-            >
-              Studio Vault
-            </span>
-          )}
+        {/* Persistent grounding mark — the wordmark + mirrored reflection lives here on
+            every page except the homepage, which gets its own large hero-scale moment. */}
+        <Link href="/" className="flex items-center">
+          <LogoLockup size="sm" />
         </Link>
 
         {/* Desktop nav links */}

@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation'
 import { motion } from 'framer-motion'
 import Image from 'next/image'
 import Link from 'next/link'
-import { ArrowLeft, Package, Ruler, Weight, MessageSquare } from 'lucide-react'
+import { ArrowLeft, ChevronRight, Package, Ruler, Weight, MessageSquare } from 'lucide-react'
 import InquiryForm from '@/components/InquiryForm'
 import { isSupabaseConfigured, getSupabaseClient } from '@/lib/supabase'
 import { Product } from '@/lib/types'
@@ -110,13 +110,26 @@ export default function ProductDetailPage() {
   return (
     <div className="max-w-7xl mx-auto px-6 py-32">
       {/* Breadcrumb */}
-      <Link
-        href="/shop"
-        className="inline-flex items-center gap-2 text-xs tracking-widest uppercase mb-12 transition-colors"
+      <div
+        className="flex items-center gap-2 text-xs tracking-widest uppercase mb-12"
         style={{ color: 'var(--color-text-muted)' }}
       >
-        <ArrowLeft size={12} /> Back to Shop
-      </Link>
+        <Link href="/shop" className="hover:underline transition-colors" style={{ color: 'var(--color-text-muted)' }}>
+          Shop
+        </Link>
+        <ChevronRight size={12} />
+        <Link
+          href={`/shop?category=${product.category}`}
+          className="capitalize hover:underline transition-colors"
+          style={{ color: 'var(--color-text-muted)' }}
+        >
+          {product.category}
+        </Link>
+        <ChevronRight size={12} />
+        <span className="normal-case truncate max-w-[16rem]" style={{ color: 'var(--color-text)' }}>
+          {product.title}
+        </span>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
         {/* Images */}

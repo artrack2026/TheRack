@@ -7,6 +7,7 @@ import { useAuth } from '@/components/AuthProvider'
 import { isSupabaseConfigured, getSupabaseClient } from '@/lib/supabase'
 import { formatPhone, formatName, formatState, formatCity, formatZip } from '@/lib/format'
 import { Profile } from '@/lib/types'
+import PageHeader from '@/components/PageHeader'
 
 const EMPTY_FORM = {
   first_name:    '',
@@ -103,33 +104,31 @@ export default function ProfilePage() {
     <div className="input-tint-blue">
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45 }}>
 
-        {/* Header */}
-        <div className="flex items-start justify-between gap-4 mb-8">
-          <div>
-            <p className="text-xs tracking-[0.3em] uppercase font-semibold mb-1" style={{ color: 'var(--r-blue)' }}>Account</p>
-            <h2 className="text-3xl font-black mb-1" style={{ color: 'var(--color-text)' }}>Profile</h2>
-            <div className="h-1 w-10" style={{ background: 'var(--r-blue)', borderRadius: 0 }} />
-          </div>
-
-          <div className="flex items-center gap-3 shrink-0">
-            <AnimatePresence>
-              {status === 'saved' && (
-                <motion.span
-                  initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }}
-                  className="flex items-center gap-1 text-sm"
-                  style={{ color: 'var(--r-green)' }}
-                >
-                  <CheckCircle size={15} /> Saved
-                </motion.span>
+        <PageHeader
+          eyebrow="Account"
+          title="Profile"
+          size="md"
+          actions={
+            <div className="flex items-center gap-3 shrink-0">
+              <AnimatePresence>
+                {status === 'saved' && (
+                  <motion.span
+                    initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }}
+                    className="flex items-center gap-1 text-sm"
+                    style={{ color: 'var(--r-green)' }}
+                  >
+                    <CheckCircle size={15} /> Saved
+                  </motion.span>
+                )}
+              </AnimatePresence>
+              {!isEditing && (
+                <button onClick={startEditing} className="cyber-btn">
+                  <Pencil size={14} /> Edit Profile
+                </button>
               )}
-            </AnimatePresence>
-            {!isEditing && (
-              <button onClick={startEditing} className="cyber-btn btn--blue">
-                <Pencil size={14} /> Edit Profile
-              </button>
-            )}
-          </div>
-        </div>
+            </div>
+          }
+        />
 
         {!isEditing ? (
           /* ── Read-only summary ── */

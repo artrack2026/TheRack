@@ -4,6 +4,7 @@ import { useEffect, useState, FormEvent } from 'react'
 import { formatName, formatEmail, formatPhone, formatCity, formatState, formatZip } from '@/lib/format'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Users, Plus, X, Loader, CheckCircle, Shield, User, AlertCircle, Eye, EyeOff, Pencil, Save } from 'lucide-react'
+import PageHeader from '@/components/PageHeader'
 
 interface UserRow {
   id: string
@@ -147,18 +148,17 @@ export default function UsersPage() {
 
   return (
     <div>
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45 }}
-        className="flex items-start justify-between mb-8">
-        <div>
-          <p className="text-xs tracking-[0.3em] uppercase font-semibold mb-1" style={{ color: 'var(--r-blue)' }}>Admin</p>
-          <h2 className="text-3xl font-black mb-1" style={{ color: 'var(--color-text)' }}>Users</h2>
-          <div className="h-1 w-10" style={{ background: 'var(--r-blue)', borderRadius: 0 }} />
-        </div>
-        <button onClick={() => setShowCreate(v => !v)} className="cyber-btn text-sm"
-          style={{ color: 'var(--r-blue)', borderColor: 'var(--r-blue)' }}>
-          <Plus size={14} /> New Account
-        </button>
-      </motion.div>
+      <PageHeader
+        eyebrow="Admin"
+        title="Users"
+        size="md"
+        accentColor="var(--r-violet)"
+        actions={
+          <button onClick={() => setShowCreate(v => !v)} className="cyber-btn btn--violet text-sm">
+            <Plus size={14} /> New Account
+          </button>
+        }
+      />
 
       {/* Create form */}
       <AnimatePresence>

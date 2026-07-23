@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { Package, MessageSquare, Users, ShoppingCart, ArrowRight, Settings } from 'lucide-react'
 import Link from 'next/link'
 import { isSupabaseConfigured, getSupabaseClient } from '@/lib/supabase'
+import PageHeader from '@/components/PageHeader'
 
 interface Stats { products: number; inquiries: number; newInquiries: number; orders: number; users: number }
 
@@ -50,11 +51,7 @@ export default function AdminDashboard() {
 
   return (
     <div>
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45 }} className="mb-10">
-        <p className="text-xs tracking-[0.3em] uppercase font-semibold mb-1" style={{ color: 'var(--r-violet)' }}>Admin</p>
-        <h1 className="text-4xl font-black" style={{ color: 'var(--color-text)' }}>Dashboard</h1>
-        <div className="h-1 w-12 mt-2" style={{ background: 'var(--r-violet)', borderRadius: 0 }} />
-      </motion.div>
+      <PageHeader eyebrow="Admin" title="Dashboard" accentColor="var(--r-violet)" className="mb-10" />
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
         {statCards.map(({ label, value, icon: Icon, color, href, badge }, i) => (

@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Search, SlidersHorizontal } from 'lucide-react'
 import ProductCard from '@/components/ProductCard'
+import PageHeader from '@/components/PageHeader'
 import { isSupabaseConfigured, getSupabaseClient } from '@/lib/supabase'
 import { Product, ProductCategory } from '@/lib/types'
 
@@ -76,25 +77,7 @@ function ShopContent() {
   return (
     <div className="max-w-7xl mx-auto px-6 py-32">
 
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: 24 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.55 }}
-        className="mb-12"
-      >
-        <p
-          className="text-xs tracking-[0.3em] uppercase font-semibold mb-2"
-          style={{ color: 'var(--r-blue)' }}
-        >
-          Browse
-        </p>
-        <h1 className="text-5xl font-black mb-3" style={{ color: 'var(--color-text)' }}>
-          The Shop
-        </h1>
-        {/* Sharp accent underline — contrasting element */}
-        <div className="h-1 w-14" style={{ background: 'var(--r-blue)', borderRadius: '0' }} />
-      </motion.div>
+      <PageHeader eyebrow="Browse" title="The Shop" />
 
       {/* Filter row — search gets blue tint */}
       <div className="flex flex-col md:flex-row gap-3 mb-8">
