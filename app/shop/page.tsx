@@ -38,7 +38,9 @@ function ShopContent() {
   const router        = useRouter()
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading]   = useState(true)
-  const [search, setSearch]     = useState('')
+  // Seeded from the header search's "See all results" link (?q=) — after
+  // that, search is purely local UI state like it always was.
+  const [search, setSearch]     = useState(() => searchParams.get('q') || '')
   const [sort, setSort]         = useState('newest')
   const { enabled: consignmentEnabled } = useConsignmentEnabled()
 
@@ -75,7 +77,8 @@ function ShopContent() {
   const filtered = products.filter(p =>
     search === '' ||
     p.title.toLowerCase().includes(search.toLowerCase()) ||
-    p.description?.toLowerCase().includes(search.toLowerCase())
+    p.description?.toLowerCase().includes(search.toLowerCase()) ||
+    p.sku?.toLowerCase().includes(search.toLowerCase())
   )
 
   return (

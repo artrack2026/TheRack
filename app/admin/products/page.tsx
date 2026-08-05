@@ -11,7 +11,7 @@ import PageHeader from '@/components/PageHeader'
 
 const EMPTY: Omit<Product, 'id' | 'created_at'> = {
   title: '', description: '', price: 0, category: 'artwork',
-  images: [], stock_count: 1, featured: false, dimensions: '', materials: '',
+  images: [], stock_count: 1, featured: false, dimensions: '', materials: '', sku: '',
 }
 
 const CAT_COLOR: Record<string, string> = { artwork: '#e05858', reclaimed: '#3ab870', goods: '#8844d8' }
@@ -147,6 +147,7 @@ export default function AdminProductsPage() {
               <form onSubmit={handleSave} className="p-6 flex flex-col gap-4 input-tint-rose">
                 {[
                   ['title', 'Title *', 'Product title', 'text'],
+                  ['sku', 'Product ID', 'e.g. ART-042', 'text'],
                   ['price', 'Price *', '0.00', 'number'],
                   ['stock_count', 'Stock Count', '1', 'number'],
                   ['dimensions', 'Dimensions', '12" × 16"', 'text'],
@@ -159,6 +160,11 @@ export default function AdminProductsPage() {
                       className="cyber-input" placeholder={placeholder}
                       value={(editing as Record<string, unknown>)[key] as string ?? ''}
                       onChange={e => setEditing(prev => ({ ...prev, [key]: type === 'number' ? parseFloat(e.target.value) || 0 : e.target.value }))} />
+                    {key === 'sku' && (
+                      <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                        Optional. Shown on the product page and searchable from the header search.
+                      </p>
+                    )}
                   </div>
                 ))}
 
@@ -278,7 +284,10 @@ export default function AdminProductsPage() {
                     {product.title}
                     {product.featured && <Star size={11} className="inline ml-1.5" style={{ color: '#d4b030' }} fill="#d4b030" />}
                   </p>
-                  <p className="text-xs" style={{ color: c }}>{product.category} · ${product.price.toFixed(2)} · {product.stock_count} in stock</p>
+                  <p className="text-xs" style={{ color: c }}>
+                    {product.category} · ${product.price.toFixed(2)} · {product.stock_count} in stock
+                    {product.sku && <span style={{ color: 'var(--color-text-muted)' }}> · {product.sku}</span>}
+                  </p>
                 </div>
 
                 <div className="flex items-center gap-1.5 shrink-0">

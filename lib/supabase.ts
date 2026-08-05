@@ -29,6 +29,7 @@ export interface Database {
           dimensions: string | null
           materials: string | null
           weight_oz: number | null
+          sku: string | null
           created_at: string
         }
         Insert: {
@@ -43,6 +44,7 @@ export interface Database {
           dimensions?: string | null
           materials?: string | null
           weight_oz?: number | null
+          sku?: string | null
           created_at?: string
         }
         Update: {
@@ -57,6 +59,7 @@ export interface Database {
           dimensions?: string | null
           materials?: string | null
           weight_oz?: number | null
+          sku?: string | null
           created_at?: string
         }
         Relationships: Rel
@@ -524,6 +527,7 @@ create table if not exists products (
   dimensions text,
   materials text,
   weight_oz numeric(8,2),
+  sku text,
   created_at timestamptz default now()
 );
 

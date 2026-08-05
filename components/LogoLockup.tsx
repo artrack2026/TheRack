@@ -11,7 +11,10 @@ interface Props {
 }
 
 export default function LogoLockup({ size = 'lg', reflection = true, className = '' }: Props) {
-  const textClass = size === 'lg' ? 'text-6xl md:text-8xl' : 'text-2xl'
+  // "lg" starts small enough to stay on one line even on narrow phones — the
+  // reflection is a mirror of this exact block, so if the wordmark wraps to
+  // two lines the reflection wraps too and the mirror effect breaks.
+  const textClass = size === 'lg' ? 'text-3xl sm:text-5xl md:text-8xl' : 'text-2xl'
 
   return (
     <div className={className} style={{ lineHeight: 1, textAlign: 'center' }}>

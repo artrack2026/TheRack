@@ -6,6 +6,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Menu, X, ShoppingBag, LogOut, User, LayoutDashboard, Shield } from 'lucide-react'
 import LogoLockup from '@/components/LogoLockup'
+import HeaderSearch from '@/components/HeaderSearch'
 import { useAuth } from '@/components/AuthProvider'
 import { useCart } from '@/components/CartProvider'
 import { getDisplayName, getAvatarInitial } from '@/lib/format'
@@ -226,6 +227,12 @@ export default function Navbar() {
         </div>
       </div>
 
+      {/* Search — its own centered row below the main nav, desktop only
+          (mobile gets it inside the hamburger menu instead). */}
+      <div className="hidden md:flex justify-center px-6 pb-3">
+        <HeaderSearch className="w-full max-w-md" />
+      </div>
+
       {/* Mobile menu */}
       <AnimatePresence>
         {open && (
@@ -238,6 +245,10 @@ export default function Navbar() {
             style={{ background: 'rgba(28,28,26,0.97)', borderBottom: '1px solid var(--color-border)' }}
           >
             <div className="px-6 py-5 flex flex-col gap-1">
+              <div className="mb-3">
+                <HeaderSearch onNavigate={() => setOpen(false)} />
+              </div>
+
               {navLinks.map(({ href, label }) => (
                 <Link
                   key={href}

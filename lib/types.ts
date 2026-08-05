@@ -12,6 +12,8 @@ export interface Product {
   dimensions?: string | null
   materials?: string | null
   weight_oz?: number | null
+  /** Admin-set product identifier (e.g. "ART-042") — optional, free text, searchable. */
+  sku?: string | null
   created_at: string
 }
 

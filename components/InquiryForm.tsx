@@ -135,7 +135,7 @@ export default function InquiryForm({ productId, productTitle, onClose }: Props)
           required
           rows={4}
           className="cyber-input resize-none"
-          placeholder="Ask about availability, shipping, custom orders..."
+          placeholder="Ask about availability, shipping, custom orders, and more..."
           value={form.message}
           onChange={e => setForm(f => ({ ...f, message: e.target.value }))}
         />

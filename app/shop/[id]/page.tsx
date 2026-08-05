@@ -203,6 +203,11 @@ export default function ProductDetailPage() {
             >
               {product.title}
             </h1>
+            {product.sku && (
+              <p className="text-xs mt-1.5 tracking-widest" style={{ color: 'var(--color-text-muted)' }}>
+                Item #{product.sku}
+              </p>
+            )}
           </div>
 
           <div className="flex items-baseline gap-3">
