@@ -29,6 +29,7 @@
 | Payment system | `showroom_settings.payment_methods` manual/instruction-based system |
 | Stripe | Placeholder type only; not an implemented integration |
 | Validation | Hand-written per route; Zod not installed |
+| Rate limiting / spam protection | DB-backed fixed-window limiter (`rate_limit_windows` table + `increment_rate_limit()` Postgres function, called via `lib/rate-limit.ts`); a honeypot field on the inquiry form. No third-party service. |
 | Deployment | Vercel |
 | Source control | GitHub |
 | Transactional email | Resend where configured in the repository; otherwise verify before use |
@@ -45,6 +46,7 @@
 6. **Do not claim Stripe exists.** The current payment model is configurable manual/instruction-based payment methods.
 7. **Treat CloudFront and KMS as optional future hardening.** Direct S3 is the current implementation unless repository inspection confirms otherwise.
 8. **Avoid large rewrites.** New work should be incremental, testable, and compatible with the live application.
+9. **Preserve the DB-backed rate-limiting pattern.** Extend `lib/rate-limit.ts` and `rate_limit_windows` for new public routes rather than introducing Upstash, Cloudflare Turnstile, reCAPTCHA, or another third-party abuse-prevention service without explicit approval.
 
 ---
 
@@ -83,6 +85,7 @@ Do not rely on hidden buttons or browser-supplied role values.
 - Product detail at `/shop/[id]`
 - Existing cart drawer
 - About/contact content already present in the live scope
+- Inquiry form (general contact and per-product) has honeypot and rate-limit protection — see §8
 
 ### Customer portal
 
@@ -177,7 +180,31 @@ A future Zod migration should be incremental and should not mix incompatible val
 
 ---
 
-## 8. Dependencies and Ownership
+## 8. Rate Limiting and Spam Protection
+
+Public, unauthenticated write routes are protected without any third-party service:
+
+- **Mechanism:** `rate_limit_windows` table + `increment_rate_limit()` Postgres function (`security definer`, execute revoked from `anon`/`authenticated`, granted only to `service_role`). A fixed-window counter keyed by `(bucket, identifier, window)`, incremented atomically in one round trip — safe under concurrent serverless requests. Called from route handlers via `lib/rate-limit.ts` (`checkRateLimit`, `getClientIp`).
+- **Identifier:** best-effort client IP from `x-forwarded-for` (client-influenceable, not spoof-proof, but raises the bar for casual scripted abuse).
+- **Fail-open by design:** if the rate-limit check itself errors (e.g. the migration hasn't been run in an environment yet), the request is allowed through. A broken limiter must never be the reason a genuine customer's inquiry or order fails.
+
+Current limits:
+
+| Route | Bucket | Limit |
+|---|---|---|
+| `/api/inquiries` | `inquiry` | 4 requests / 10 minutes per IP |
+| `/api/orders` (guest checkout) | `guest_checkout` | 5 requests / 30 minutes per IP |
+| `/api/auth/guest-account` | `guest_account` | 5 requests / 60 minutes per IP |
+
+`/api/inquiries` additionally has a honeypot field (`company`) on the client form (`components/InquiryForm.tsx`) — invisible to real visitors, commonly auto-filled by bots. A non-empty value causes the server to return a normal success response without inserting anything, so scripted spam gets no signal to adapt on.
+
+**Known, accepted gap:** `rate_limit_windows` rows are never purged. Each unique IP × bucket × window creates a permanent row. Negligible at current scale; revisit with a periodic cleanup (or `pg_cron`) if the table grows enough to matter.
+
+Extending this pattern to a new public route: pick a bucket name, choose a limit appropriate to abuse risk vs. legitimate retry behavior, and call `checkRateLimit` early in the handler — before any expensive work or DB writes.
+
+---
+
+## 9. Dependencies and Ownership
 
 | Service | Purpose | Source of truth |
 |---|---|---|
@@ -194,7 +221,7 @@ Never place live credentials in this document or the repository. Record account 
 
 ---
 
-## 9. Current Maintenance Priorities
+## 10. Current Maintenance Priorities
 
 ### Weekly
 
@@ -224,7 +251,7 @@ Never place live credentials in this document or the repository. Record account 
 
 ---
 
-## 10. Explicit Roadmap - Not Current Production
+## 11. Explicit Roadmap - Not Current Production
 
 The following are valid ideas but must remain labeled as backlog until approved and implemented:
 
@@ -250,13 +277,13 @@ Each roadmap item requires repository review, schema design, RLS policies, tests
 
 ---
 
-## 11. Claude Operating Directive
+## 12. Claude Operating Directive
 
 > Treat this document as the current-state source of truth for TheRack.
 >
-> Inspect the repository before proposing changes. Preserve Next.js, Supabase Postgres, `supabase-js`, Supabase Auth, RLS, the `/portal` route, `/shop/[id]`, the `customer | admin` role model, the direct S3 implementation, and the Textbelt/Supabase OTP system.
+> Inspect the repository before proposing changes. Preserve Next.js, Supabase Postgres, `supabase-js`, Supabase Auth, RLS, the `/portal` route, `/shop/[id]`, the `customer | admin` role model, the direct S3 implementation, the Textbelt/Supabase OTP system, and the DB-backed rate-limiting pattern (`rate_limit_windows` / `lib/rate-limit.ts`).
 >
-> Do not add Prisma, Cognito, Auth.js, Stripe, CloudFront, KMS, product slugs, an Editor role, or replacement route conventions unless the task explicitly authorizes that change.
+> Do not add Prisma, Cognito, Auth.js, Stripe, CloudFront, KMS, product slugs, an Editor role, a third-party rate-limiting/CAPTCHA service, or replacement route conventions unless the task explicitly authorizes that change.
 >
 > Separate every recommendation into one of three categories:
 >
