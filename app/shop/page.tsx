@@ -2,11 +2,14 @@
 
 import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { Search, SlidersHorizontal } from 'lucide-react'
+import { Search, SlidersHorizontal, ArrowRight } from 'lucide-react'
 import ProductCard from '@/components/ProductCard'
 import PageHeader from '@/components/PageHeader'
+import ReversedRWordmark from '@/components/ReversedRWordmark'
 import { isSupabaseConfigured, getSupabaseClient } from '@/lib/supabase'
+import { useConsignmentEnabled } from '@/lib/useConsignmentEnabled'
 import { Product, ProductCategory } from '@/lib/types'
 
 const CATEGORIES: { value: ProductCategory | 'all'; label: string }[] = [
@@ -37,6 +40,7 @@ function ShopContent() {
   const [loading, setLoading]   = useState(true)
   const [search, setSearch]     = useState('')
   const [sort, setSort]         = useState('newest')
+  const { enabled: consignmentEnabled } = useConsignmentEnabled()
 
   const activeCategory = (searchParams.get('category') || 'all') as ProductCategory | 'all'
 
@@ -78,6 +82,34 @@ function ShopContent() {
     <div className="max-w-7xl mx-auto px-6 py-32">
 
       <PageHeader eyebrow="Browse" title="The Shop" />
+
+      {consignmentEnabled && (
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="mb-8"
+        >
+          <Link
+            href="/shop/custome-r-curations"
+            className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-xl transition-colors"
+            style={{ background: 'rgba(136,68,216,0.06)', border: '1px solid rgba(136,68,216,0.2)' }}
+          >
+            <div className="flex items-center gap-3">
+              <span className="text-xs tracking-widest uppercase font-semibold" style={{ color: 'var(--color-text-muted)' }}>
+                Also browse
+              </span>
+              <ReversedRWordmark before="Custome-" after="-Curations" className="text-lg" />
+            </div>
+            <span
+              className="inline-flex items-center gap-1.5 text-xs font-semibold tracking-widest uppercase"
+              style={{ color: 'var(--r-violet)' }}
+            >
+              View Collection <ArrowRight size={12} />
+            </span>
+          </Link>
+        </motion.div>
+      )}
 
       {/* Filter row — search gets blue tint */}
       <div className="flex flex-col md:flex-row gap-3 mb-8">

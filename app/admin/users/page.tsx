@@ -19,7 +19,7 @@ interface UserRow {
   city: string | null
   state: string | null
   zip: string | null
-  role: 'customer' | 'admin'
+  role: 'customer' | 'admin' | 'consignor'
   created_at: string
 }
 
@@ -44,7 +44,7 @@ export default function UsersPage() {
   // Create form state
   const [createForm, setCreateForm] = useState({
     email: '', password: '', first_name: '', last_name: '', display_name: '', phone: '',
-    role: 'customer' as 'customer' | 'admin',
+    role: 'customer' as 'customer' | 'admin' | 'consignor',
   })
   const [showPass, setShowPass]     = useState(false)
   const [creating, setCreating]     = useState(false)
@@ -314,9 +314,10 @@ export default function UsersPage() {
                 <div className="flex flex-col gap-1.5">
                   <label className="text-xs font-semibold tracking-widest uppercase" style={{ color: 'var(--color-text-muted)' }}>Role</label>
                   <select className="cyber-input appearance-none cursor-pointer" value={createForm.role}
-                    onChange={e => setCreateForm(f => ({ ...f, role: e.target.value as 'customer' | 'admin' }))}
+                    onChange={e => setCreateForm(f => ({ ...f, role: e.target.value as 'customer' | 'admin' | 'consignor' }))}
                     style={{ background: 'var(--color-surface)' }}>
                     <option value="customer">Customer</option>
+                    <option value="consignor">Consignor</option>
                     <option value="admin">Admin</option>
                   </select>
                 </div>
@@ -374,11 +375,18 @@ export default function UsersPage() {
                   {((u.first_name?.[0] ?? u.display_name?.[0] ?? u.email[0]) || 'U').toUpperCase()}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-sm" style={{ color: 'var(--color-text)' }}>
-                    {u.first_name && u.last_name
-                      ? `${u.first_name} ${u.last_name}`
-                      : u.display_name ?? '—'}
-                  </p>
+                  <div className="flex items-center gap-2">
+                    <p className="font-semibold text-sm" style={{ color: 'var(--color-text)' }}>
+                      {u.first_name && u.last_name
+                        ? `${u.first_name} ${u.last_name}`
+                        : u.display_name ?? '—'}
+                    </p>
+                    {u.role === 'consignor' && (
+                      <span className="category-badge text-xs shrink-0" style={{ color: 'var(--r-violet)', borderColor: 'var(--r-violet)' }}>
+                        Consignor
+                      </span>
+                    )}
+                  </div>
                   <p className="text-xs truncate" style={{ color: 'var(--color-text-muted)' }}>{u.email}</p>
                   {u.phone && (
                     <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>{u.phone}</p>

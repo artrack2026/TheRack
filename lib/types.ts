@@ -51,7 +51,10 @@ export interface Profile {
   city: string | null
   state: string | null
   zip: string | null
-  role: 'customer' | 'admin'
+  /** consignor: a user submitting/managing items for consignment sale — the
+   *  enrollment/approval workflow and consignor-specific data model are not
+   *  built yet; this is currently just a recognized role value. */
+  role: 'customer' | 'admin' | 'consignor'
   birthday: string | null
   created_at: string
 }

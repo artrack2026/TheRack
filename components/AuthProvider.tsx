@@ -10,6 +10,7 @@ interface AuthContextValue {
   profile: Profile | null
   loading: boolean
   isAdmin: boolean
+  isConsignor: boolean
   signIn:  (email: string, password: string) => Promise<string | null>
   signOut: () => Promise<void>
   refreshProfile: () => Promise<void>
@@ -17,7 +18,7 @@ interface AuthContextValue {
 }
 
 const AuthContext = createContext<AuthContextValue>({
-  user: null, profile: null, loading: true, isAdmin: false,
+  user: null, profile: null, loading: true, isAdmin: false, isConsignor: false,
   signIn: async () => null,
   signOut: async () => {},
   refreshProfile: async () => {},
@@ -126,6 +127,7 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
     <AuthContext.Provider value={{
       user, profile, loading,
       isAdmin: profile?.role === 'admin',
+      isConsignor: profile?.role === 'consignor',
       signIn, signOut, refreshProfile, refreshSession,
     }}>
       {children}

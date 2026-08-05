@@ -5,7 +5,7 @@ import {
   RefreshCcw, Settings, Info, Save, AlertCircle,
   Plus, Trash2, GripVertical, ToggleLeft, ToggleRight, DollarSign, Truck, CreditCard,
   Palette, Eye, EyeOff, RotateCcw, Check, MessageSquareMore, Package, ClipboardList,
-  ShieldCheck, Search, Key, Loader,
+  ShieldCheck, Search, Key, Loader, Handshake,
 } from 'lucide-react'
 import { motion, AnimatePresence, Reorder } from 'framer-motion'
 import { SiStripe, SiSquare } from 'react-icons/si'
@@ -45,6 +45,7 @@ interface ShowroomSettings {
   free_shipping_threshold: number
   payment_methods: PaymentMethod[]
   two_factor_enabled: boolean
+  consignment_enabled: boolean
 }
 
 const DEFAULT: ShowroomSettings = {
@@ -53,6 +54,7 @@ const DEFAULT: ShowroomSettings = {
   youtube: null, linkedin: null, threads: null, bluesky: null, mastodon: null,
   tax_rate: 0, shipping_fee: 0, free_shipping_threshold: 0, payment_methods: [],
   two_factor_enabled: false,
+  consignment_enabled: false,
 }
 
 function newPaymentMethod(order: number): PaymentMethod {
@@ -175,14 +177,15 @@ function isActivePreset(preset: ThemeColors, current: ThemeColors): boolean {
 
 /* ── Tabs ── */
 
-type TabKey = 'branding' | 'messaging' | 'products' | 'orders' | 'vendors'
+type TabKey = 'branding' | 'messaging' | 'products' | 'orders' | 'vendors' | 'consignment'
 
 const TABS: { key: TabKey; label: string; icon: typeof Palette }[] = [
-  { key: 'branding',  label: 'Branding',   icon: Palette },
-  { key: 'messaging', label: 'Messaging',  icon: MessageSquareMore },
-  { key: 'products',  label: 'Products',   icon: Package },
-  { key: 'orders',    label: 'Orders',     icon: ClipboardList },
-  { key: 'vendors',   label: 'CC Vendors', icon: CreditCard },
+  { key: 'branding',     label: 'Branding',     icon: Palette },
+  { key: 'messaging',    label: 'Messaging',    icon: MessageSquareMore },
+  { key: 'products',     label: 'Products',     icon: Package },
+  { key: 'orders',       label: 'Orders',       icon: ClipboardList },
+  { key: 'vendors',      label: 'CC Vendors',   icon: CreditCard },
+  { key: 'consignment',  label: 'Consignment',  icon: Handshake },
 ]
 
 /* ── CC Vendors ──
@@ -1115,6 +1118,52 @@ export default function ShowroomSettingsPage() {
               These are stored for future use once a payment integration is actually built — saving a
               key here secures it in place but does not yet enable live charges. See the payment +
               tax project notes in the project docs before wiring one up.
+            </div>
+          </section>
+        )}
+
+        {/* ── Consignment tab ── */}
+        {activeTab === 'consignment' && (
+          <section>
+            <div className="flex items-center justify-between gap-4 flex-wrap">
+              <div className="flex items-center gap-3">
+                <div className="p-3 rounded-xl" style={{ background: 'rgba(138,64,216,0.12)' }}>
+                  <Handshake size={18} style={{ color: 'var(--r-violet)' }} />
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-[0.3em] font-semibold" style={{ color: 'var(--color-text-muted)' }}>Storefront Feature</p>
+                  <h2 className="text-xl font-bold" style={{ color: 'var(--color-text)' }}>Consignment</h2>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-semibold" style={{ color: form.consignment_enabled ? 'var(--r-violet)' : 'var(--color-text-muted)' }}>
+                  {form.consignment_enabled ? 'Live on the site' : 'Off'}
+                </span>
+                <ToggleSwitch
+                  checked={form.consignment_enabled}
+                  onChange={() => setForm(f => ({ ...f, consignment_enabled: !f.consignment_enabled }))}
+                  activeColor="var(--r-violet)"
+                  label="Consignment feature"
+                />
+              </div>
+            </div>
+
+            <p className="text-sm mt-3" style={{ color: 'var(--color-text-muted)' }}>
+              When on, a &quot;Consignment&quot; link appears in the site navigation, pointing to{' '}
+              <code>/consignment</code> — an explainer page covering what consignment is, how to
+              enroll, the fee split, payment timing, shipping responsibility, and the by-approval-only
+              disclaimer. A &quot;Custome-R-Curations&quot; sub-page at{' '}
+              <code>/shop/custome-r-curations</code> is also linked from the Shop page once enabled.
+              When off, the nav link and Shop callout are hidden, and both pages show a
+              not-currently-available message instead of 404ing outright. This setting saves with the
+              main &quot;Save All Changes&quot; button above.
+            </p>
+
+            <div className="mt-4 p-3 rounded-lg text-xs" style={{ background: 'rgba(138,64,216,0.08)', border: '1px solid rgba(138,64,216,0.2)', color: 'var(--color-text-muted)' }}>
+              This only controls visibility of the informational pages. The full enrollment workflow —
+              application form, photo uploads, contracts/waivers, the <code>consignor</code> account
+              role, admin approve/reject/pend review, and consignor product management — is separate,
+              larger work not built yet.
             </div>
           </section>
         )}

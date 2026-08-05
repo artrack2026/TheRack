@@ -109,7 +109,7 @@ export interface Database {
           city: string | null
           state: string | null
           zip: string | null
-          role: 'customer' | 'admin'
+          role: 'customer' | 'admin' | 'consignor'
           birthday: string | null
           created_at: string
         }
@@ -125,7 +125,7 @@ export interface Database {
           city?: string | null
           state?: string | null
           zip?: string | null
-          role?: 'customer' | 'admin'
+          role?: 'customer' | 'admin' | 'consignor'
           birthday?: string | null
           created_at?: string
         }
@@ -140,7 +140,7 @@ export interface Database {
           city?: string | null
           state?: string | null
           zip?: string | null
-          role?: 'customer' | 'admin'
+          role?: 'customer' | 'admin' | 'consignor'
           birthday?: string | null
           created_at?: string
         }
@@ -308,6 +308,7 @@ export interface Database {
           payment_methods: unknown
           two_factor_enabled: boolean
           textbelt_low_balance_alert_at: string | null
+          consignment_enabled: boolean
           updated_at: string
         }
         Insert: {
@@ -331,6 +332,7 @@ export interface Database {
           payment_methods?: unknown
           two_factor_enabled?: boolean
           textbelt_low_balance_alert_at?: string | null
+          consignment_enabled?: boolean
           updated_at?: string
         }
         Update: {
@@ -353,6 +355,7 @@ export interface Database {
           payment_methods?: unknown
           two_factor_enabled?: boolean
           textbelt_low_balance_alert_at?: string | null
+          consignment_enabled?: boolean
           updated_at?: string
         }
         Relationships: Rel
@@ -547,7 +550,7 @@ create table if not exists profiles (
   city text,
   state text,
   zip text,
-  role text check (role in ('customer','admin')) not null default 'customer',
+  role text check (role in ('customer','admin','consignor')) not null default 'customer',
   created_at timestamptz default now()
 );
 
@@ -642,6 +645,7 @@ create table if not exists showroom_settings (
   payment_methods jsonb default '[]',
   two_factor_enabled boolean default false,
   textbelt_low_balance_alert_at timestamptz,
+  consignment_enabled boolean default false,
   updated_at timestamptz default now(),
   constraint showroom_settings_id_check check (id = 1)
 );

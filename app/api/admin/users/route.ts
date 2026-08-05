@@ -15,7 +15,7 @@ export async function GET() {
   const { data, error } = await supabase
     .from('profiles')
     .select('id, email, first_name, last_name, display_name, phone, address_line1, address_line2, city, state, zip, role, created_at')
-    .eq('role', 'customer')
+    .neq('role', 'admin')
     .order('created_at', { ascending: false })
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
   const last_name    = (body.last_name as string)?.trim() || null
   const display_name = (body.display_name as string) ?? null
   const phone        = (body.phone as string)?.trim()
-  const role         = (body.role as 'customer' | 'admin') ?? 'customer'
+  const role         = (body.role as 'customer' | 'admin' | 'consignor') ?? 'customer'
 
   if (!email || !password) return NextResponse.json({ error: 'email and password are required' }, { status: 400 })
   if (password.length < 6) return NextResponse.json({ error: 'Password must be at least 6 characters' }, { status: 400 })

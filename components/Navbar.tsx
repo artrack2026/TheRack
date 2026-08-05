@@ -9,8 +9,9 @@ import LogoLockup from '@/components/LogoLockup'
 import { useAuth } from '@/components/AuthProvider'
 import { useCart } from '@/components/CartProvider'
 import { getDisplayName, getAvatarInitial } from '@/lib/format'
+import { useConsignmentEnabled } from '@/lib/useConsignmentEnabled'
 
-const navLinks = [
+const BASE_NAV_LINKS = [
   { href: '/',        label: 'Home' },
   { href: '/shop',    label: 'Shop' },
   { href: '/about',   label: 'About' },
@@ -26,6 +27,11 @@ export default function Navbar() {
   const { user, profile, isAdmin } = useAuth()
   const { itemCount, openCart }   = useCart()
   const menuRef                   = useRef<HTMLDivElement>(null)
+  const { enabled: consignmentEnabled } = useConsignmentEnabled()
+
+  const navLinks = consignmentEnabled
+    ? [...BASE_NAV_LINKS.slice(0, 2), { href: '/consignment', label: 'Consignment' }, ...BASE_NAV_LINKS.slice(2)]
+    : BASE_NAV_LINKS
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24)
