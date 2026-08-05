@@ -35,6 +35,8 @@ export async function POST(req: NextRequest) {
   const body = await req.json()
   const email        = (body.email as string)?.toLowerCase().trim()
   const password     = body.password as string
+  const first_name   = (body.first_name as string)?.trim() || null
+  const last_name    = (body.last_name as string)?.trim() || null
   const display_name = (body.display_name as string) ?? null
   const phone        = (body.phone as string)?.trim()
   const role         = (body.role as 'customer' | 'admin') ?? 'customer'
@@ -60,7 +62,7 @@ export async function POST(req: NextRequest) {
   /* Upsert the profile row (trigger may have created it already) */
   const { error: profileError } = await admin
     .from('profiles')
-    .upsert([{ id: authData.user.id, email, display_name, phone, role }])
+    .upsert([{ id: authData.user.id, email, first_name, last_name, display_name, phone, role }])
 
   if (profileError) {
     /* Clean up the auth user if profile failed */

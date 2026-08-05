@@ -42,7 +42,10 @@ export default function UsersPage() {
   const [saveErr, setSaveErr]       = useState<string | null>(null)
 
   // Create form state
-  const [createForm, setCreateForm] = useState({ email: '', password: '', display_name: '', phone: '', role: 'customer' as 'customer' | 'admin' })
+  const [createForm, setCreateForm] = useState({
+    email: '', password: '', first_name: '', last_name: '', display_name: '', phone: '',
+    role: 'customer' as 'customer' | 'admin',
+  })
   const [showPass, setShowPass]     = useState(false)
   const [creating, setCreating]     = useState(false)
   const [createError, setCreateError] = useState<string | null>(null)
@@ -202,6 +205,8 @@ export default function UsersPage() {
       body: JSON.stringify({
         email:        createForm.email.toLowerCase().trim(),
         password:     createForm.password,
+        first_name:   createForm.first_name,
+        last_name:    createForm.last_name,
         display_name: createForm.display_name,
         phone:        createForm.phone,
         role:         createForm.role,
@@ -212,7 +217,7 @@ export default function UsersPage() {
       setCreateError(data.error ?? 'Failed to create user')
     } else {
       setCreateOk(true)
-      setCreateForm({ email: '', password: '', display_name: '', phone: '', role: 'customer' })
+      setCreateForm({ email: '', password: '', first_name: '', last_name: '', display_name: '', phone: '', role: 'customer' })
       setTimeout(() => { setCreateOk(false); setShowCreate(false); load() }, 1800)
     }
     setCreating(false)
@@ -286,8 +291,18 @@ export default function UsersPage() {
                   </div>
                 </div>
                 <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-semibold tracking-widest uppercase" style={{ color: 'var(--color-text-muted)' }}>First Name</label>
+                  <input type="text" className="cyber-input" placeholder="Jane"
+                    value={createForm.first_name} onChange={e => setCreateForm(f => ({ ...f, first_name: formatName(e.target.value) }))} />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-semibold tracking-widest uppercase" style={{ color: 'var(--color-text-muted)' }}>Last Name</label>
+                  <input type="text" className="cyber-input" placeholder="McGann"
+                    value={createForm.last_name} onChange={e => setCreateForm(f => ({ ...f, last_name: formatName(e.target.value) }))} />
+                </div>
+                <div className="flex flex-col gap-1.5">
                   <label className="text-xs font-semibold tracking-widest uppercase" style={{ color: 'var(--color-text-muted)' }}>Display Name</label>
-                  <input type="text" className="cyber-input" placeholder="Customer Name"
+                  <input type="text" className="cyber-input" placeholder="How they appear"
                     value={createForm.display_name} onChange={e => setCreateForm(f => ({ ...f, display_name: formatName(e.target.value) }))} />
                 </div>
                 <div className="flex flex-col gap-1.5">

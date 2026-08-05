@@ -58,7 +58,7 @@ export interface Profile {
 
 /* ── Payment ── */
 
-export type PaymentMethodType = 'instruction' | 'stripe' | 'square'
+export type PaymentMethodType = 'instruction' | 'redirect' | 'stripe' | 'square'
 
 export interface PaymentMethod {
   id: string
@@ -68,6 +68,9 @@ export interface PaymentMethod {
   icon: string
   detail?: string
   instructions?: string
+  /** Only used when type === 'redirect' — the customer is sent here to pay
+   *  (e.g. a paypal.me/venmo.com/cash.app payment link). */
+  redirect_url?: string
   sort_order: number
 }
 

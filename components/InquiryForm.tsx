@@ -43,7 +43,7 @@ export default function InquiryForm({ productId, productTitle, onClose }: Props)
         animate={{ opacity: 1, scale: 1 }}
         className="flex flex-col items-center gap-4 py-8 text-center"
       >
-        <CheckCircle size={48} style={{ color: 'var(--color-accent)' }} />
+        <CheckCircle size={48} style={{ color: 'var(--r-green)' }} />
         <div>
           <p className="text-lg font-bold" style={{ color: 'var(--color-text)' }}>Message Sent!</p>
           <p className="text-sm mt-1" style={{ color: 'var(--color-text-muted)' }}>

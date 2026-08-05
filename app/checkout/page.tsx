@@ -7,22 +7,15 @@ import Image from 'next/image'
 import Link from 'next/link'
 import {
   ShoppingBag, ChevronRight, AlertCircle, Loader, Check,
-  Smartphone, Globe, FileText, CreditCard, Package,
 } from 'lucide-react'
 import { useCart } from '@/components/CartProvider'
 import { useAuth } from '@/components/AuthProvider'
 import { getSupabaseClient, isSupabaseConfigured } from '@/lib/supabase'
 import { PaymentMethod, CheckoutSettings } from '@/lib/types'
+import { getPaymentIcon } from '@/lib/payment-icons'
 
 const RAINBOW = ['#e05858','#e07838','#d4b030','#3ab870','#1ab4c0','#3878e0','#8844d8','#d84490']
 const rc = (i: number) => RAINBOW[i % RAINBOW.length]
-
-const METHOD_ICONS: Record<string, React.ElementType> = {
-  smartphone: Smartphone,
-  globe:      Globe,
-  'file-text':FileText,
-  'credit-card': CreditCard,
-}
 
 const US_STATES = [
   'AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA',
@@ -391,7 +384,7 @@ export default function CheckoutPage() {
                 ) : (
                   <div className="flex flex-col gap-3">
                     {config?.payment_methods.map(method => {
-                      const Icon = METHOD_ICONS[method.icon] ?? Package
+                      const { Icon, color: iconColor } = getPaymentIcon(method.icon)
                       const active = selectedMethod === method.id
                       return (
                         <label key={method.id} className="cursor-pointer">
@@ -408,7 +401,7 @@ export default function CheckoutPage() {
                             }}
                           >
                             <div className="p-2 rounded-lg shrink-0 mt-0.5" style={{ background: active ? 'rgba(136,68,216,0.15)' : 'var(--color-surface)' }}>
-                              <Icon size={16} style={{ color: active ? 'var(--r-violet)' : 'var(--color-text-muted)' }} />
+                              <Icon size={16} style={{ color: iconColor }} />
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2">
@@ -428,6 +421,31 @@ export default function CheckoutPage() {
                                   >
                                     {interpolateInstructions(method.instructions, method.detail)}
                                   </motion.p>
+                                )}
+                                {active && method.type === 'redirect' && (
+                                  <motion.div
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: 'auto' }}
+                                    exit={{ opacity: 0, height: 0 }}
+                                    className="mt-2 flex flex-col gap-2"
+                                  >
+                                    {method.instructions && (
+                                      <p className="text-xs leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
+                                        {interpolateInstructions(method.instructions, method.detail)}
+                                      </p>
+                                    )}
+                                    {method.redirect_url && (
+                                      <a
+                                        href={method.redirect_url}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        onClick={e => e.stopPropagation()}
+                                        className="cyber-btn btn--sm w-fit"
+                                      >
+                                        Continue to {method.name || 'payment'} to Pay
+                                      </a>
+                                    )}
+                                  </motion.div>
                                 )}
                                 {active && method.type === 'stripe' && (
                                   <motion.p

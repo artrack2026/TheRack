@@ -307,6 +307,7 @@ export interface Database {
           free_shipping_threshold: number
           payment_methods: unknown
           two_factor_enabled: boolean
+          textbelt_low_balance_alert_at: string | null
           updated_at: string
         }
         Insert: {
@@ -329,6 +330,7 @@ export interface Database {
           free_shipping_threshold?: number
           payment_methods?: unknown
           two_factor_enabled?: boolean
+          textbelt_low_balance_alert_at?: string | null
           updated_at?: string
         }
         Update: {
@@ -350,6 +352,7 @@ export interface Database {
           free_shipping_threshold?: number
           payment_methods?: unknown
           two_factor_enabled?: boolean
+          textbelt_low_balance_alert_at?: string | null
           updated_at?: string
         }
         Relationships: Rel
@@ -417,6 +420,31 @@ export interface Database {
         }
         Update: {
           count?: number
+        }
+        Relationships: Rel
+      }
+      vendor_credentials: {
+        Row: {
+          vendor: string
+          credential_key: string
+          encrypted_value: string
+          last_four: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          vendor: string
+          credential_key: string
+          encrypted_value: string
+          last_four?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          encrypted_value?: string
+          last_four?: string | null
+          updated_at?: string
+          updated_by?: string | null
         }
         Relationships: Rel
       }
@@ -613,6 +641,7 @@ create table if not exists showroom_settings (
   free_shipping_threshold numeric default 0,
   payment_methods jsonb default '[]',
   two_factor_enabled boolean default false,
+  textbelt_low_balance_alert_at timestamptz,
   updated_at timestamptz default now(),
   constraint showroom_settings_id_check check (id = 1)
 );
@@ -690,6 +719,25 @@ revoke execute on function increment_rate_limit(text, text, timestamptz) from an
 revoke execute on function increment_rate_limit(text, text, timestamptz) from authenticated;
 grant execute on function increment_rate_limit(text, text, timestamptz) to service_role;
 
+-- ── Vendor credentials (encrypted payment-processor secrets) ──────
+-- Stores payment-processor API keys (Stripe, Square, ...) entered via the
+-- admin "CC Vendors" tab. Values are AES-256-GCM encrypted with
+-- VENDOR_CREDENTIALS_ENCRYPTION_KEY (lib/vendor-credentials.ts) before being
+-- written here — the admin panel only ever sees last_four, never the
+-- plaintext or ciphertext again after saving.
+-- Service-role only — no public/authenticated policies, so RLS denies all
+-- client access; only server code with the encryption key can make use of
+-- what's stored here even if it were somehow read directly.
+create table if not exists vendor_credentials (
+  vendor text not null,
+  credential_key text not null,
+  encrypted_value text not null,
+  last_four text,
+  updated_at timestamptz not null default now(),
+  updated_by uuid references auth.users(id) on delete set null,
+  primary key (vendor, credential_key)
+);
+
 -- ── Row-Level Security ────────────────────────────────────────────
 alter table products    enable row level security;
 alter table inquiries   enable row level security;
@@ -702,6 +750,7 @@ alter table showroom_settings enable row level security;
 alter table login_otp_challenges enable row level security;
 alter table phone_change_challenges enable row level security;
 alter table rate_limit_windows enable row level security;
+alter table vendor_credentials enable row level security;
 
 create policy "products_public_read"   on products for select using (true);
 create policy "products_admin_all"     on products for all using (

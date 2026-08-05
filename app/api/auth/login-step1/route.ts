@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js'
 import crypto from 'crypto'
 import { createSupabaseAdminClient, isSupabaseConfigured } from '@/lib/supabase'
 import { toTextbeltPhone, maskPhone } from '@/lib/format'
+import { maybeAlertLowTextbeltBalance } from '@/lib/textbelt-alert'
 
 function hashCode(code: string): string {
   return crypto.createHash('sha256').update(code).digest('hex')
@@ -123,6 +124,11 @@ export async function POST(req: NextRequest) {
       await admin.from('login_otp_challenges').delete().eq('id', challenge.id)
       return sendEmailFallback()
     }
+
+    const quotaRemaining = typeof sendData.quotaRemaining === 'number'
+      ? sendData.quotaRemaining
+      : typeof sendData.quota_remaining === 'number' ? sendData.quota_remaining : null
+    await maybeAlertLowTextbeltBalance(quotaRemaining)
   } catch {
     await admin.from('login_otp_challenges').delete().eq('id', challenge.id)
     return sendEmailFallback()

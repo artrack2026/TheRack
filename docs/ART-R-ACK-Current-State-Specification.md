@@ -129,6 +129,37 @@ If Stripe or another processor is approved later, create a dedicated design that
 - Inventory reservation and release
 - Failure and dispute handling
 - Environment-secret management
+- Address/ZIP-based tax calculation (see below — scope together, not separately)
+
+### Combined project: payment processor + tax calculation
+
+These two are deliberately one project, not two, because the tax mechanism depends on which
+processor gets picked:
+
+- **If Stripe is chosen:** Stripe Tax can calculate jurisdiction-correct tax as part of the same
+  Checkout session — no separate tax vendor needed. Cheapest path if Stripe is the answer anyway.
+- **If Square, PayPal, or a non-Stripe processor is chosen:** tax calculation needs its own vendor
+  (TaxJar or Avalara are the standard choices), called separately from the payment step.
+- **Do not build a standalone tax integration before the processor decision is made.** Building
+  TaxJar/Avalara first and then choosing Stripe would mean paying for and maintaining a redundant
+  tax vendor Stripe already includes.
+
+Why not a static ZIP→rate table: ZIP codes don't align with tax jurisdictions (one ZIP can span
+multiple counties/districts with different combined rates), and rates change quarterly in many
+states. A hand-maintained table goes stale fast and creates real compliance exposure — this is a
+"call a real tax API" problem, not a "load a data file" problem.
+
+Current-codebase integration points this will touch, once scoped:
+
+- `showroom_settings.tax_rate` — today a single flat manual rate; superseded (not just extended) by
+  per-order calculated tax.
+- `app/checkout/page.tsx` and `/api/orders` — tax is currently `subtotal * tax_rate`, calculated
+  and trusted from `showroom_settings`; will need a server-side call to the processor's tax API
+  using the shipping address before order total is finalized.
+- Full shipping address is required for accurate calculation — ZIP alone is a fallback, not the
+  primary input, when available.
+- Admin Orders tab's Tax Rate field either goes away or becomes a fallback/override rather than
+  the source of truth.
 
 ---
 
@@ -268,7 +299,7 @@ The following are valid ideas but must remain labeled as backlog until approved 
 - Product slugs and SKUs
 - Draft/scheduled/archived product states
 - Compare-at pricing
-- Stripe or another integrated processor
+- Stripe or another integrated processor — scoped together with tax calculation, see §5
 - CloudFront and KMS hardening
 - Central Zod validation
 - Dedicated service/data-access abstraction layers

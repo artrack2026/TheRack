@@ -3,6 +3,7 @@ import { cookies } from 'next/headers'
 import crypto from 'crypto'
 import { createSupabaseServerClient, createSupabaseAdminClient, isSupabaseConfigured } from '@/lib/supabase'
 import { toTextbeltPhone, maskPhone } from '@/lib/format'
+import { maybeAlertLowTextbeltBalance } from '@/lib/textbelt-alert'
 
 function hashCode(code: string): string {
   return crypto.createHash('sha256').update(code).digest('hex')
@@ -116,6 +117,11 @@ export async function POST(req: NextRequest) {
         { status: 502 }
       )
     }
+
+    const quotaRemaining = typeof sendData.quotaRemaining === 'number'
+      ? sendData.quotaRemaining
+      : typeof sendData.quota_remaining === 'number' ? sendData.quota_remaining : null
+    await maybeAlertLowTextbeltBalance(quotaRemaining)
   } catch {
     await admin.from('phone_change_challenges').delete().eq('id', challenge.id)
     return NextResponse.json({ error: 'Unable to send a verification text. Please try again shortly.' }, { status: 502 })

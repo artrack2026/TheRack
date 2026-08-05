@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/api-auth'
+import { maybeAlertLowTextbeltBalance } from '@/lib/textbelt-alert'
 
 export async function GET() {
   const check = await requireAdmin()
@@ -37,6 +38,8 @@ export async function GET() {
       : typeof data.quota_remaining === 'number'
         ? data.quota_remaining
         : null
+
+    await maybeAlertLowTextbeltBalance(remaining)
 
     return NextResponse.json({
       success: true,

@@ -2,15 +2,19 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import {
-  RefreshCcw, Settings, Info, ExternalLink, Save, AlertCircle,
+  RefreshCcw, Settings, Info, Save, AlertCircle,
   Plus, Trash2, GripVertical, ToggleLeft, ToggleRight, DollarSign, Truck, CreditCard,
-  Palette, Eye, RotateCcw, Check, MessageSquareMore, Package, ClipboardList,
-  ShieldCheck,
+  Palette, Eye, EyeOff, RotateCcw, Check, MessageSquareMore, Package, ClipboardList,
+  ShieldCheck, Search, Key, Loader,
 } from 'lucide-react'
 import { motion, AnimatePresence, Reorder } from 'framer-motion'
+import { SiStripe, SiSquare } from 'react-icons/si'
 import { PaymentMethod, ThemeColors } from '@/lib/types'
 import { useTheme } from '@/components/ThemeProvider'
 import PageHeader from '@/components/PageHeader'
+import ToggleSwitch from '@/components/ToggleSwitch'
+import TextbeltInfoModal, { TextbeltTopic } from '@/components/TextbeltInfoModal'
+import PaymentIconPicker from '@/components/PaymentIconPicker'
 
 /* ── Types ── */
 
@@ -51,15 +55,13 @@ const DEFAULT: ShowroomSettings = {
   two_factor_enabled: false,
 }
 
-const PAYMENT_ICONS = ['💳', '📱', '💸', '🏦', '⚡', '🔵', '🟡', '🟢', '🟠', '⬜']
-
 function newPaymentMethod(order: number): PaymentMethod {
   return {
     id: crypto.randomUUID(),
     name: '',
     enabled: true,
     type: 'instruction',
-    icon: '💳',
+    icon: 'card',
     detail: '',
     instructions: '',
     sort_order: order,
@@ -173,13 +175,30 @@ function isActivePreset(preset: ThemeColors, current: ThemeColors): boolean {
 
 /* ── Tabs ── */
 
-type TabKey = 'branding' | 'messaging' | 'products' | 'orders'
+type TabKey = 'branding' | 'messaging' | 'products' | 'orders' | 'vendors'
 
 const TABS: { key: TabKey; label: string; icon: typeof Palette }[] = [
-  { key: 'branding',  label: 'Branding',  icon: Palette },
-  { key: 'messaging', label: 'Messaging', icon: MessageSquareMore },
-  { key: 'products',  label: 'Products',  icon: Package },
-  { key: 'orders',    label: 'Orders',    icon: ClipboardList },
+  { key: 'branding',  label: 'Branding',   icon: Palette },
+  { key: 'messaging', label: 'Messaging',  icon: MessageSquareMore },
+  { key: 'products',  label: 'Products',   icon: Package },
+  { key: 'orders',    label: 'Orders',     icon: ClipboardList },
+  { key: 'vendors',   label: 'CC Vendors', icon: CreditCard },
+]
+
+/* ── CC Vendors ──
+   Credentials are encrypted server-side (lib/vendor-credentials.ts) and
+   stored in Supabase — this list is just the UI catalog of which vendors
+   have a slot, not the credentials themselves. */
+const VENDORS: {
+  vendor: string
+  credentialKey: string
+  label: string
+  credentialLabel: string
+  Icon: React.ElementType
+  color: string
+}[] = [
+  { vendor: 'stripe', credentialKey: 'secret_key',   label: 'Stripe', credentialLabel: 'Secret Key',    Icon: SiStripe, color: '#635BFF' },
+  { vendor: 'square', credentialKey: 'access_token', label: 'Square', credentialLabel: 'Access Token',  Icon: SiSquare, color: '#3E4348' },
 ]
 
 /* ── Main Component ── */
@@ -195,11 +214,26 @@ export default function ShowroomSettingsPage() {
   })
   const [settings, setSettings] = useState<ShowroomSettings>(DEFAULT)
   const [form, setForm]         = useState<ShowroomSettings>(DEFAULT)
+  const [textbeltModal, setTextbeltModal] = useState<TextbeltTopic | null>(null)
   const [loadingTextbelt, setLoadingTextbelt] = useState(true)
   const [loadingSettings, setLoadingSettings] = useState(true)
   const [saving, setSaving]     = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [saveSuccess, setSaveSuccess] = useState(false)
+
+  /* Unsaved-changes guard — only the main form (Messaging/Products/Orders/CC
+     Vendors) is tracked. Branding colors save instantly on every pick
+     (useTheme's setColors writes to localStorage immediately), so there's
+     never an "unsaved" branding state to warn about. */
+  const hasUnsavedChanges = JSON.stringify(form) !== JSON.stringify(settings)
+
+  /* ── CC Vendors ── */
+  const [vendorStatus, setVendorStatus] = useState<Record<string, { configured: boolean; lastFour: string | null; updatedAt: string | null }>>({})
+  const [vendorInputs, setVendorInputs] = useState<Record<string, string>>({})
+  const [vendorShow, setVendorShow]     = useState<Record<string, boolean>>({})
+  const [vendorSaving, setVendorSaving] = useState<string | null>(null)
+  const [vendorError, setVendorError]   = useState<Record<string, string | null>>({})
+  const [vendorSaved, setVendorSaved]   = useState<Record<string, boolean>>({})
 
   /* ── Loaders ── */
 
@@ -234,7 +268,44 @@ export default function ShowroomSettingsPage() {
     finally { setLoadingSettings(false) }
   }, [])
 
-  useEffect(() => { loadTextbeltStatus(); loadSettings() }, [loadTextbeltStatus, loadSettings])
+  const loadVendorStatus = useCallback(async () => {
+    try {
+      const res  = await fetch('/api/admin/vendor-credentials')
+      const data = await res.json()
+      if (res.ok) setVendorStatus(data.status ?? {})
+    } catch (e) { console.error('Failed to load vendor credential status:', e) }
+  }, [])
+
+  useEffect(() => { loadTextbeltStatus(); loadSettings(); loadVendorStatus() }, [loadTextbeltStatus, loadSettings, loadVendorStatus])
+
+  /* ── Unsaved-changes guard ──
+     Tab close / refresh / URL-bar navigation: */
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (!hasUnsavedChanges) return
+      e.preventDefault()
+      e.returnValue = ''
+    }
+    window.addEventListener('beforeunload', handler)
+    return () => window.removeEventListener('beforeunload', handler)
+  }, [hasUnsavedChanges])
+
+  /* In-app navigation (sidebar links, breadcrumbs, etc.) — capture phase so
+     this runs before Next.js's own Link click handler, letting a cancel
+     actually block the navigation instead of just reacting to it. */
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (!hasUnsavedChanges) return
+      const link = (e.target as HTMLElement)?.closest('a')
+      if (!link) return
+      const href = link.getAttribute('href')
+      if (!href || href.startsWith('#') || href === window.location.pathname) return
+      const proceed = window.confirm('You have unsaved settings changes. Leave without saving?')
+      if (!proceed) { e.preventDefault(); e.stopPropagation() }
+    }
+    document.addEventListener('click', handler, true)
+    return () => document.removeEventListener('click', handler, true)
+  }, [hasUnsavedChanges])
 
   /* ── Save ── */
 
@@ -271,6 +342,50 @@ export default function ShowroomSettingsPage() {
 
   const updateMethod = (id: string, patch: Partial<PaymentMethod>) =>
     setForm(f => ({ ...f, payment_methods: f.payment_methods.map(m => m.id === id ? { ...m, ...patch } : m) }))
+
+  /* ── CC Vendor credential helpers ──
+     These save immediately on their own — they're not part of the main
+     form/"Save All Changes" flow, since the secret is encrypted server-side
+     the moment it's submitted rather than held in page state. */
+
+  const saveVendorCredential = async (vendorKey: string, vendor: string, credentialKey: string) => {
+    const value = vendorInputs[vendorKey]
+    if (!value?.trim()) return
+    setVendorSaving(vendorKey)
+    setVendorError(e => ({ ...e, [vendorKey]: null }))
+    try {
+      const res  = await fetch('/api/admin/vendor-credentials', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ vendor, credentialKey, value }),
+      })
+      const data = await res.json()
+      if (!res.ok) { setVendorError(e => ({ ...e, [vendorKey]: data.error ?? 'Failed to save' })); return }
+      setVendorStatus(s => ({ ...s, [vendorKey]: { configured: true, lastFour: data.lastFour, updatedAt: new Date().toISOString() } }))
+      setVendorInputs(v => ({ ...v, [vendorKey]: '' }))
+      setVendorSaved(s => ({ ...s, [vendorKey]: true }))
+      setTimeout(() => setVendorSaved(s => ({ ...s, [vendorKey]: false })), 2500)
+    } catch {
+      setVendorError(e => ({ ...e, [vendorKey]: 'Failed to save' }))
+    } finally {
+      setVendorSaving(null)
+    }
+  }
+
+  const removeVendorCredential = async (vendorKey: string, vendor: string, credentialKey: string) => {
+    if (!window.confirm('Remove this credential? Any integration using it will stop working until a new one is added.')) return
+    setVendorSaving(vendorKey)
+    try {
+      await fetch('/api/admin/vendor-credentials', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ vendor, credentialKey }),
+      })
+      setVendorStatus(s => ({ ...s, [vendorKey]: { configured: false, lastFour: null, updatedAt: null } }))
+    } finally {
+      setVendorSaving(null)
+    }
+  }
 
   /* ── Branding helpers ── */
 
@@ -522,45 +637,6 @@ export default function ShowroomSettingsPage() {
         {activeTab === 'messaging' && (
           <>
             <section>
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-3 rounded-xl" style={{ background: 'rgba(138,64,216,0.12)' }}>
-                    <Settings size={18} style={{ color: 'var(--r-violet)' }} />
-                  </div>
-                  <div>
-                    <p className="text-xs uppercase tracking-[0.3em] font-semibold" style={{ color: 'var(--color-text-muted)' }}>Auto tracking</p>
-                    <h2 className="text-xl font-bold" style={{ color: 'var(--color-text)' }}>Textbelt message package</h2>
-                  </div>
-                </div>
-                <button onClick={loadTextbeltStatus} disabled={loadingTextbelt}
-                  className="cyber-btn btn--violet btn--sm flex items-center gap-1">
-                  <RefreshCcw size={12} /> {loadingTextbelt ? 'Refreshing…' : 'Refresh'}
-                </button>
-              </div>
-
-              <div className="grid gap-3 mt-4 sm:grid-cols-3">
-                <div className="rounded-3xl p-5" style={{ background: 'var(--color-bg)', border: '1px solid var(--color-border)' }}>
-                  <p className="text-xs uppercase tracking-[0.3em] font-semibold mb-2" style={{ color: 'var(--color-text-muted)' }}>Initially purchased</p>
-                  <p className="text-4xl font-black" style={{ color: 'var(--color-text)' }}>
-                    {textbeltStatus.initialPurchased === null ? 'Not configured' : textbeltStatus.initialPurchased}
-                  </p>
-                </div>
-                <div className="rounded-3xl p-5" style={creditsBlockStyle(textbeltStatus.remaining)}>
-                  <p className="text-xs uppercase tracking-[0.3em] font-semibold mb-2" style={{ color: 'var(--color-text-muted)' }}>Remaining credits</p>
-                  <p className="text-4xl font-black" style={{ color: 'var(--color-text)' }}>
-                    {textbeltStatus.remaining === null ? '—' : textbeltStatus.remaining}
-                  </p>
-                </div>
-                <div className="rounded-3xl p-5" style={{ background: 'var(--color-bg)', border: '1px solid var(--color-border)' }}>
-                  <p className="text-xs uppercase tracking-[0.3em] font-semibold mb-2" style={{ color: 'var(--color-text-muted)' }}>Status</p>
-                  <p className="text-sm font-medium" style={{ color: textbeltStatus.success ? 'var(--color-text)' : 'var(--r-red)' }}>
-                    {textbeltStatus.message ?? (textbeltStatus.success ? 'Connected and tracking quota successfully.' : 'Unable to load Textbelt quota.')}
-                  </p>
-                </div>
-              </div>
-            </section>
-
-            <section className="pt-6 border-t" style={{ borderColor: 'var(--color-border)' }}>
               <div className="flex items-center justify-between gap-4 flex-wrap">
                 <div className="flex items-center gap-3">
                   <div className="p-3 rounded-xl" style={{ background: 'rgba(58,184,112,0.12)' }}>
@@ -571,21 +647,16 @@ export default function ShowroomSettingsPage() {
                     <h2 className="text-xl font-bold" style={{ color: 'var(--color-text)' }}>SMS login verification</h2>
                   </div>
                 </div>
-                <button
-                  onClick={() => setForm(f => ({ ...f, two_factor_enabled: !f.two_factor_enabled }))}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold"
-                  style={{
-                    background: form.two_factor_enabled ? 'rgba(58,184,112,0.12)' : 'var(--color-bg)',
-                    border: `1px solid ${form.two_factor_enabled ? 'var(--r-green)' : 'var(--color-border)'}`,
-                    color: form.two_factor_enabled ? 'var(--r-green)' : 'var(--color-text-muted)',
-                    cursor: 'pointer',
-                  }}
-                >
-                  {form.two_factor_enabled
-                    ? <><ToggleRight size={18} /> Live for all logins</>
-                    : <><ToggleLeft size={18} /> Off</>
-                  }
-                </button>
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-semibold" style={{ color: form.two_factor_enabled ? 'var(--r-green)' : 'var(--color-text-muted)' }}>
+                    {form.two_factor_enabled ? 'Live for all logins' : 'Off'}
+                  </span>
+                  <ToggleSwitch
+                    checked={form.two_factor_enabled}
+                    onChange={() => setForm(f => ({ ...f, two_factor_enabled: !f.two_factor_enabled }))}
+                    label="SMS login verification"
+                  />
+                </div>
               </div>
               <p className="text-sm mt-3" style={{ color: 'var(--color-text-muted)' }}>
                 When enabled, every login is texted a 6-digit code via Textbelt after the password
@@ -604,60 +675,62 @@ export default function ShowroomSettingsPage() {
             </section>
 
             <section className="pt-6 border-t" style={{ borderColor: 'var(--color-border)' }}>
-              <div className="flex items-center gap-3 mb-4">
-                <div className="p-3 rounded-xl" style={{ background: 'rgba(200,144,42,0.12)' }}>
-                  <Info size={18} style={{ color: 'var(--color-accent)' }} />
-                </div>
-                <div>
-                  <p className="text-xs uppercase tracking-[0.3em] font-semibold" style={{ color: 'var(--color-text-muted)' }}>Message flow</p>
-                  <h2 className="text-xl font-bold" style={{ color: 'var(--color-text)' }}>Load more Textbelt credits</h2>
-                </div>
-              </div>
-
-              <ol className="space-y-4 text-sm" style={{ color: 'var(--color-text-muted)' }}>
-                <li>
-                  <span className="font-semibold" style={{ color: 'var(--color-text)' }}>1.</span>{' '}
-                  Visit the Textbelt purchase page:{' '}
-                  <a href="https://textbelt.com/purchase/" target="_blank" rel="noreferrer" className="underline" style={{ color: 'var(--color-accent)' }}>textbelt.com/purchase</a>.
-                </li>
-                <li>
-                  <span className="font-semibold" style={{ color: 'var(--color-text)' }}>2.</span>{' '}
-                  When adding credits, use your active API key:
-                  <div className="mt-2 px-3 py-2 rounded-lg text-xs font-mono" style={{ background: 'var(--color-bg)', border: '1px solid var(--color-border)', color: 'var(--color-accent)', wordBreak: 'break-all' }}>
-                    {textbeltStatus.apiKey ?? 'Not configured'}
+              <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="p-3 rounded-xl" style={{ background: 'rgba(138,64,216,0.12)' }}>
+                    <Settings size={18} style={{ color: 'var(--r-violet)' }} />
                   </div>
-                </li>
-                <li>
-                  <span className="font-semibold" style={{ color: 'var(--color-text)' }}>3.</span>{' '}
-                  Keep this same key in Vercel and <code>.env.local</code> so you do not need a new whitelist after purchasing credits.
-                </li>
-                <li>
-                  <span className="font-semibold" style={{ color: 'var(--color-text)' }}>4.</span>{' '}
-                  After purchase, refresh this page to auto-update the remaining quota.
-                </li>
-                <li>
-                  <span className="font-semibold" style={{ color: 'var(--color-text)' }}>5.</span>{' '}
-                  For receipts, 2FA, promo alerts, and order updates, continue sending with the same paid key so links work without extra whitelisting.
-                </li>
-                <li>
-                  <span className="font-semibold" style={{ color: 'var(--color-text)' }}>6.</span>{' '}
-                  If you want to verify the key without consuming quota, use <code>_test</code> appended to your key on the <code>/text</code> endpoint.
-                </li>
-              </ol>
-
-              <div className="mt-6 p-4 rounded-3xl" style={{ background: 'rgba(58,184,112,0.08)', border: '1px solid rgba(58,184,112,0.14)' }}>
-                <p className="text-xs uppercase tracking-[0.3em] font-semibold" style={{ color: 'var(--color-text-muted)' }}>Helpful note</p>
-                <p className="text-sm" style={{ color: 'var(--color-text)' }}>
-                  The page automatically refreshes the remaining quota whenever you click refresh, so you can quickly confirm your current package status.
-                </p>
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.3em] font-semibold" style={{ color: 'var(--color-text-muted)' }}>Auto tracking</p>
+                    <h2 className="text-xl font-bold" style={{ color: 'var(--color-text)' }}>Textbelt message package</h2>
+                  </div>
+                </div>
+                <button onClick={loadTextbeltStatus} disabled={loadingTextbelt}
+                  className="cyber-btn btn--violet btn--sm flex items-center gap-1">
+                  <RefreshCcw size={12} /> {loadingTextbelt ? 'Refreshing…' : 'Refresh'}
+                </button>
               </div>
 
-              <a href="https://docs.textbelt.com/#checking-your-quota" target="_blank" rel="noreferrer"
-                className="inline-flex items-center gap-2 mt-6 text-sm font-semibold"
-                style={{ color: 'var(--color-accent)' }}>
-                Learn more <ExternalLink size={14} />
-              </a>
+              {/* Condensed — just the numbers, no longer the loudest thing on the page */}
+              <div className="grid gap-2 sm:grid-cols-3">
+                <div className="rounded-xl px-4 py-2.5" style={{ background: 'var(--color-bg)', border: '1px solid var(--color-border)' }}>
+                  <p className="text-[10px] uppercase tracking-[0.2em] font-semibold" style={{ color: 'var(--color-text-muted)' }}>Initial balance</p>
+                  <p className="text-lg font-bold" style={{ color: 'var(--color-text)' }}>
+                    {textbeltStatus.initialPurchased === null ? '—' : textbeltStatus.initialPurchased}
+                  </p>
+                </div>
+                <div className="rounded-xl px-4 py-2.5" style={creditsBlockStyle(textbeltStatus.remaining)}>
+                  <p className="text-[10px] uppercase tracking-[0.2em] font-semibold" style={{ color: 'var(--color-text-muted)' }}>Remaining credits</p>
+                  <p className="text-lg font-bold" style={{ color: 'var(--color-text)' }}>
+                    {textbeltStatus.remaining === null ? '—' : textbeltStatus.remaining}
+                  </p>
+                </div>
+                <div className="rounded-xl px-4 py-2.5" style={{ background: 'var(--color-bg)', border: '1px solid var(--color-border)' }}>
+                  <p className="text-[10px] uppercase tracking-[0.2em] font-semibold" style={{ color: 'var(--color-text-muted)' }}>Status</p>
+                  <p className="text-xs font-medium leading-snug mt-0.5" style={{ color: textbeltStatus.success ? 'var(--color-text)' : 'var(--r-red)' }}>
+                    {textbeltStatus.message ?? (textbeltStatus.success ? 'Connected and tracking quota.' : 'Unable to load quota.')}
+                  </p>
+                </div>
+              </div>
+
+              {/* Everything else lives behind these — same steps as before, just not all on screen at once */}
+              <div className="flex flex-wrap gap-2 mt-4">
+                <button onClick={() => setTextbeltModal('about')} className="cyber-btn text-xs flex items-center gap-1.5">
+                  <Info size={13} /> About
+                </button>
+                <button onClick={() => setTextbeltModal('balance')} className="cyber-btn btn--blue text-xs flex items-center gap-1.5">
+                  <Search size={13} /> Check Balance
+                </button>
+                <button onClick={() => setTextbeltModal('reload')} className="cyber-btn btn--green text-xs flex items-center gap-1.5">
+                  <RefreshCcw size={13} /> Reload
+                </button>
+                <button onClick={() => setTextbeltModal('api')} className="cyber-btn btn--violet text-xs flex items-center gap-1.5">
+                  <Key size={13} /> Change API
+                </button>
+              </div>
             </section>
+
+            <TextbeltInfoModal topic={textbeltModal} apiKey={textbeltStatus.apiKey} onClose={() => setTextbeltModal(null)} />
           </>
         )}
 
@@ -804,28 +877,34 @@ export default function ShowroomSettingsPage() {
                       exit={{ opacity: 0, y: -10 }}
                       transition={{ duration: 0.15 }}
                     >
-                      {/* Method header row */}
-                      <div className="flex items-center gap-3 mb-3">
+                      {/* Method header row — name, detail, type, and controls all in one compact row */}
+                      <div className="flex items-center gap-2 mb-3">
                         {/* Drag handle */}
                         <GripVertical size={16} style={{ color: 'var(--color-border)', cursor: 'grab', flexShrink: 0 }} />
 
                         {/* Icon picker */}
-                        <select
-                          value={method.icon}
-                          onChange={e => updateMethod(method.id, { icon: e.target.value })}
-                          className="cyber-input text-center"
-                          style={{ width: '3.5rem', padding: '0.35rem 0.3rem', fontSize: '1.1rem' }}
-                        >
-                          {PAYMENT_ICONS.map(i => <option key={i} value={i}>{i}</option>)}
-                        </select>
+                        <PaymentIconPicker value={method.icon} onChange={icon => updateMethod(method.id, { icon })} />
 
-                        {/* Name */}
+                        {/* Name — capped short so it can't crowd out Detail */}
                         <input
                           type="text"
                           value={method.name}
+                          maxLength={25}
                           onChange={e => updateMethod(method.id, { name: e.target.value })}
-                          placeholder="Method name (e.g. Zelle, Apple Pay, Stripe)"
-                          className="cyber-input flex-1 font-semibold"
+                          placeholder="Name"
+                          title="Method name (25 characters max)"
+                          className="cyber-input font-semibold text-sm"
+                          style={{ width: '9rem', flexShrink: 0 }}
+                        />
+
+                        {/* Detail — now inline with Name instead of its own row below */}
+                        <input
+                          type="text"
+                          value={method.detail || ''}
+                          onChange={e => updateMethod(method.id, { detail: e.target.value })}
+                          placeholder="Detail — e.g. @username or payments@example.com"
+                          title="Shown to the customer to know where to send payment"
+                          className="cyber-input flex-1 text-sm"
                         />
 
                         {/* Type */}
@@ -833,9 +912,10 @@ export default function ShowroomSettingsPage() {
                           value={method.type}
                           onChange={e => updateMethod(method.id, { type: e.target.value as PaymentMethod['type'] })}
                           className="cyber-input text-xs"
-                          style={{ width: '110px' }}
+                          style={{ width: '108px', flexShrink: 0 }}
                         >
-                          <option value="instruction">Instruction</option>
+                          <option value="instruction">Instructions</option>
+                          <option value="redirect">Redirect Link</option>
                           <option value="stripe">Stripe</option>
                           <option value="square">Square</option>
                         </select>
@@ -844,7 +924,7 @@ export default function ShowroomSettingsPage() {
                         <button
                           onClick={() => updateMethod(method.id, { enabled: !method.enabled })}
                           title={method.enabled ? 'Disable' : 'Enable'}
-                          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, flexShrink: 0 }}
                         >
                           {method.enabled
                             ? <ToggleRight size={22} style={{ color: 'var(--r-green)' }} />
@@ -856,55 +936,71 @@ export default function ShowroomSettingsPage() {
                         <button
                           onClick={() => removeMethod(method.id)}
                           className="p-1.5 rounded-lg hover:bg-red-500/10 transition-colors"
-                          style={{ color: 'var(--r-red)', background: 'none', border: 'none', cursor: 'pointer' }}
+                          style={{ color: 'var(--r-red)', background: 'none', border: 'none', cursor: 'pointer', flexShrink: 0 }}
                         >
                           <Trash2 size={15} />
                         </button>
                       </div>
 
-                      {/* Detail + Instructions */}
-                      <div className="grid gap-3 pl-[calc(16px+0.75rem+3.5rem+0.75rem)]">
+                      {/* Instructions / redirect / processor note — only the type-specific bit remains below */}
+                      <div className="pl-[calc(16px+0.5rem+3.5rem+0.5rem)]">
                         {method.type === 'instruction' && (
-                          <>
+                          <div>
+                            <label className="block text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: 'var(--color-text-muted)' }}>
+                              Customer Instructions
+                            </label>
+                            <textarea
+                              value={method.instructions || ''}
+                              onChange={e => updateMethod(method.id, { instructions: e.target.value })}
+                              placeholder={`Send ${method.name || 'payment'} to {detail}. Include your order number in the memo. We'll ship within 1 business day of confirming payment.`}
+                              className="cyber-input w-full text-sm"
+                              rows={3}
+                              style={{ resize: 'vertical' }}
+                            />
+                            <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
+                              Use <code style={{ color: 'var(--r-blue)' }}>{'{detail}'}</code> to insert the detail value above
+                            </p>
+                          </div>
+                        )}
+
+                        {method.type === 'redirect' && (
+                          <div className="flex flex-col gap-3">
                             <div>
                               <label className="block text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: 'var(--color-text-muted)' }}>
-                                Detail
+                                Redirect URL
                               </label>
                               <input
-                                type="text"
-                                value={method.detail || ''}
-                                onChange={e => updateMethod(method.id, { detail: e.target.value })}
-                                placeholder="e.g. payments@example.com  or  @username  or  +1 555-555-0123"
+                                type="url"
+                                value={method.redirect_url || ''}
+                                onChange={e => updateMethod(method.id, { redirect_url: e.target.value })}
+                                placeholder="e.g. https://venmo.com/u/yourname or https://paypal.me/yourname"
                                 className="cyber-input w-full text-sm"
                               />
                               <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
-                                Shown to the customer to know where to send payment
+                                At checkout, the customer gets a button that opens this link in a new tab to complete payment on {method.name || 'the'}&apos;s own site.
                               </p>
                             </div>
                             <div>
                               <label className="block text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: 'var(--color-text-muted)' }}>
-                                Customer Instructions
+                                Instructions (optional)
                               </label>
                               <textarea
                                 value={method.instructions || ''}
                                 onChange={e => updateMethod(method.id, { instructions: e.target.value })}
-                                placeholder={`Send ${method.name || 'payment'} to {detail}. Include your order number in the memo. We'll ship within 1 business day of confirming payment.`}
+                                placeholder="Include your order number in the payment note."
                                 className="cyber-input w-full text-sm"
-                                rows={3}
+                                rows={2}
                                 style={{ resize: 'vertical' }}
                               />
-                              <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
-                                Use <code style={{ color: 'var(--r-blue)' }}>{'{detail}'}</code> to insert the detail value above
-                              </p>
                             </div>
-                          </>
+                          </div>
                         )}
 
                         {(method.type === 'stripe' || method.type === 'square') && (
                           <div className="p-3 rounded-lg text-sm" style={{ background: 'rgba(56,120,224,0.06)', border: '1px solid rgba(56,120,224,0.15)', color: 'var(--color-text-muted)' }}>
                             {method.type === 'stripe'
-                              ? 'Configure Stripe via STRIPE_SECRET_KEY in your environment variables. The checkout will redirect to Stripe Checkout.'
-                              : 'Configure Square via SQUARE_ACCESS_TOKEN in your environment variables. The checkout will use Square Web Payments SDK.'
+                              ? 'Add your Stripe Secret Key under the CC Vendors tab above. Live checkout integration is separate future work — see the payment + tax project notes in the docs.'
+                              : 'Add your Square Access Token under the CC Vendors tab above. Live checkout integration is separate future work — see the payment + tax project notes in the docs.'
                             }
                           </div>
                         )}
@@ -923,6 +1019,119 @@ export default function ShowroomSettingsPage() {
           </>
         )}
 
+        {/* ── CC Vendors tab ── */}
+        {activeTab === 'vendors' && (
+          <section>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-3 rounded-xl" style={{ background: 'rgba(200,144,42,0.12)' }}>
+                <CreditCard size={18} style={{ color: 'var(--color-accent)' }} />
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-[0.3em] font-semibold" style={{ color: 'var(--color-text-muted)' }}>Payment Processors</p>
+                <h2 className="text-xl font-bold" style={{ color: 'var(--color-text)' }}>CC Vendors</h2>
+              </div>
+            </div>
+            <p className="text-sm mb-6" style={{ color: 'var(--color-text-muted)' }}>
+              Enter each processor&apos;s credential here instead of Vercel&apos;s environment variables.
+              It&apos;s encrypted before being stored and never shown again after saving — only the last
+              4 characters stay visible so you can confirm which key is active. Each field saves on its
+              own the moment you click Save, separately from the main &quot;Save All Changes&quot; button.
+            </p>
+
+            <div className="flex flex-col gap-4">
+              {VENDORS.map(v => {
+                const vendorKey = `${v.vendor}:${v.credentialKey}`
+                const status  = vendorStatus[vendorKey]
+                const busy    = vendorSaving === vendorKey
+                const showing = !!vendorShow[vendorKey]
+                return (
+                  <div key={vendorKey} className="rounded-xl p-4" style={{ background: 'var(--color-bg)', border: '1px solid var(--color-border)' }}>
+                    <div className="flex items-center gap-3 mb-3">
+                      <v.Icon size={22} style={{ color: v.color }} />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-bold text-sm" style={{ color: 'var(--color-text)' }}>{v.label}</p>
+                        <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                          {status?.configured
+                            ? `Configured — ending •••• ${status.lastFour}${status.updatedAt ? ` · updated ${new Date(status.updatedAt).toLocaleDateString()}` : ''}`
+                            : 'Not configured'}
+                        </p>
+                      </div>
+                      {status?.configured && (
+                        <button
+                          onClick={() => removeVendorCredential(vendorKey, v.vendor, v.credentialKey)}
+                          disabled={busy}
+                          className="text-xs flex items-center gap-1"
+                          style={{ color: 'var(--r-red)', background: 'none', border: 'none', cursor: 'pointer' }}
+                        >
+                          <Trash2 size={13} /> Remove
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <div className="relative flex-1">
+                        <input
+                          type={showing ? 'text' : 'password'}
+                          value={vendorInputs[vendorKey] ?? ''}
+                          onChange={e => setVendorInputs(i => ({ ...i, [vendorKey]: e.target.value }))}
+                          placeholder={status?.configured ? `New ${v.credentialLabel} (replaces current)` : v.credentialLabel}
+                          className="cyber-input w-full pr-10 text-sm"
+                          autoComplete="off"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setVendorShow(s => ({ ...s, [vendorKey]: !s[vendorKey] }))}
+                          className="absolute right-3 top-1/2 -translate-y-1/2"
+                          style={{ color: 'var(--color-text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}
+                        >
+                          {showing ? <EyeOff size={14} /> : <Eye size={14} />}
+                        </button>
+                      </div>
+                      <button
+                        onClick={() => saveVendorCredential(vendorKey, v.vendor, v.credentialKey)}
+                        disabled={busy || !vendorInputs[vendorKey]?.trim()}
+                        className="cyber-btn btn--sm"
+                      >
+                        {busy ? <Loader size={13} className="animate-spin" /> : <Save size={13} />}
+                      </button>
+                    </div>
+
+                    {vendorError[vendorKey] && (
+                      <p className="text-xs mt-1.5 flex items-center gap-1" style={{ color: 'var(--r-red)' }}>
+                        <AlertCircle size={12} /> {vendorError[vendorKey]}
+                      </p>
+                    )}
+                    {vendorSaved[vendorKey] && (
+                      <p className="text-xs mt-1.5 flex items-center gap-1" style={{ color: 'var(--r-green)' }}>
+                        <Check size={12} /> Saved and encrypted
+                      </p>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+
+            <div className="mt-6 p-3 rounded-lg text-xs" style={{ background: 'rgba(212,176,48,0.08)', border: '1px solid rgba(212,176,48,0.2)', color: 'var(--color-text-muted)' }}>
+              These are stored for future use once a payment integration is actually built — saving a
+              key here secures it in place but does not yet enable live charges. See the payment +
+              tax project notes in the project docs before wiring one up.
+            </div>
+          </section>
+        )}
+
+      </div>
+
+      {/* Duplicate Save — the tab panel above can get tall enough that the header's
+          button scrolls out of view, and it shouldn't look like changes auto-save. */}
+      <div className="flex items-center gap-3 mt-6">
+        <button onClick={saveSettings} disabled={saving} className="cyber-btn btn--violet flex items-center gap-1.5">
+          <Save size={14} /> {saving ? 'Saving…' : 'Save All Changes'}
+        </button>
+        {hasUnsavedChanges && !saving && (
+          <span className="text-xs flex items-center gap-1.5" style={{ color: 'var(--r-yellow)' }}>
+            <AlertCircle size={13} /> Unsaved changes
+          </span>
+        )}
       </div>
     </div>
   )
