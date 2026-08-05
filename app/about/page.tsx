@@ -44,7 +44,7 @@ export default function AboutPage() {
               ArtRAck started with a simple belief: the most interesting things in the world are usually the ones that don&apos;t fit neatly into a box. Original artwork that challenges, reclaimed materials given new life, and goods selected with purpose.
             </p>
             <p>
-              This is a curated collection — not a mass marketplace. Every item is chosen or created by hand. When you buy from ArtRAck, you&apos;re getting something that exists nowhere else.
+              This is a curated collection — not a mass marketplace. Every item is chosen or created by hand. When you buy from Art-R-Ack, you&apos;re getting something that exists nowhere else.
             </p>
           </>
         }
