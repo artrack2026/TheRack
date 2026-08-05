@@ -14,6 +14,10 @@ interface Props {
 export default function InquiryForm({ productId, productTitle, onClose }: Props) {
   const [form, setForm] = useState({ name: '', email: '', phone: '', message: '' })
   const [status, setStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle')
+  // Honeypot — invisible to real visitors, commonly auto-filled by bots.
+  // Left non-empty on submit, the server accepts the request but silently
+  // drops it, so scripted spam gets no signal to adapt on.
+  const [honeypot, setHoneypot] = useState('')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -22,7 +26,7 @@ export default function InquiryForm({ productId, productTitle, onClose }: Props)
       const res = await fetch('/api/inquiries', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, product_id: productId, product_title: productTitle }),
+        body: JSON.stringify({ ...form, product_id: productId, product_title: productTitle, company: honeypot }),
       })
       if (!res.ok) throw new Error()
       setStatus('success')
@@ -55,6 +59,20 @@ export default function InquiryForm({ productId, productTitle, onClose }: Props)
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      {/* Honeypot — real visitors never see or fill this in */}
+      <div style={{ position: 'absolute', left: '-9999px', width: 1, height: 1, overflow: 'hidden' }} aria-hidden="true">
+        <label htmlFor="company">Company</label>
+        <input
+          id="company"
+          name="company"
+          type="text"
+          tabIndex={-1}
+          autoComplete="off"
+          value={honeypot}
+          onChange={e => setHoneypot(e.target.value)}
+        />
+      </div>
+
       {productTitle && (
         <div
           className="text-xs tracking-widest uppercase px-3 py-2 mb-1"

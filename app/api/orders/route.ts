@@ -1,10 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { createSupabaseAdminClient, createSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase'
+import { checkRateLimit, getClientIp } from '@/lib/rate-limit'
 
 export async function POST(req: NextRequest) {
   if (!isSupabaseConfigured) {
     return NextResponse.json({ error: 'Not configured' }, { status: 503 })
+  }
+
+  const { allowed } = await checkRateLimit('guest_checkout', getClientIp(req), { limit: 5, windowMs: 30 * 60 * 1000 })
+  if (!allowed) {
+    return NextResponse.json({ error: 'Too many requests. Please try again in a bit.' }, { status: 429 })
   }
 
   try {

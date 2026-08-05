@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
 import { createSupabaseAdminClient, isSupabaseConfigured } from '@/lib/supabase'
+import { checkRateLimit, getClientIp } from '@/lib/rate-limit'
 
 const MAX_ORDER_AGE_MS = 10 * 60 * 1000
 
@@ -13,6 +14,11 @@ const MAX_ORDER_AGE_MS = 10 * 60 * 1000
 export async function POST(req: NextRequest) {
   if (!isSupabaseConfigured) {
     return NextResponse.json({ error: 'Supabase not configured' }, { status: 503 })
+  }
+
+  const { allowed } = await checkRateLimit('guest_account', getClientIp(req), { limit: 5, windowMs: 60 * 60 * 1000 })
+  if (!allowed) {
+    return NextResponse.json({ error: 'Too many requests. Please try again later.' }, { status: 429 })
   }
 
   const body = await req.json()
