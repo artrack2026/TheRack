@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
-import { createSupabaseServerClient, createSupabaseAdminClient, isSupabaseConfigured } from '@/lib/supabase'
+import { createSupabaseAdminClient, isSupabaseConfigured } from '@/lib/supabase'
 import { requireAdmin } from '@/lib/api-auth'
 
 /* GET /api/admin/users — list all profiles */
@@ -10,9 +9,11 @@ export async function GET() {
   const check = await requireAdmin()
   if ('error' in check) return NextResponse.json({ error: check.error }, { status: check.status })
 
-  const cookieStore = await cookies()
-  const supabase    = createSupabaseServerClient(cookieStore)
-  const { data, error } = await supabase
+  // Service-role client: requireAdmin() above already gates this route, and
+  // profiles' own RLS admin-select policy self-references profiles (recursive),
+  // so a cookie-bound client here would error rather than return all rows.
+  const admin = createSupabaseAdminClient()
+  const { data, error } = await admin
     .from('profiles')
     .select('id, email, first_name, last_name, display_name, phone, address_line1, address_line2, city, state, zip, role, created_at')
     .neq('role', 'admin')
