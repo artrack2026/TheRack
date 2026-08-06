@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createSupabaseAdminClient, isSupabaseConfigured } from '@/lib/supabase'
 import { requireAdmin } from '@/lib/api-auth'
+import { PROTECTED_ADMIN_EMAIL } from '@/lib/constants'
+
+/* Supabase's admin API takes a ban duration, not a boolean — there's no
+   literal "forever," so a 100-year span stands in for a permanent ban.
+   'none' lifts it. */
+const PERMANENT_BAN_DURATION = '876000h'
 
 /* GET /api/admin/users — list all profiles */
 export async function GET() {
@@ -15,7 +21,7 @@ export async function GET() {
   const admin = createSupabaseAdminClient()
   const { data, error } = await admin
     .from('profiles')
-    .select('id, email, first_name, last_name, display_name, phone, address_line1, address_line2, city, state, zip, role, created_at')
+    .select('id, email, first_name, last_name, display_name, phone, address_line1, address_line2, city, state, zip, role, status, created_at')
     .order('created_at', { ascending: false })
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
@@ -87,6 +93,46 @@ export async function PATCH(req: NextRequest) {
 
   const admin = createSupabaseAdminClient()
   const { error } = await admin.from('profiles').update(fields).eq('id', id)
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  // Deactivating/reactivating a profile also has to flip the real login gate —
+  // this column alone is just a record, Supabase Auth is what actually blocks
+  // sign-in. Done after the profile write so the protected-admin role trigger
+  // (see profile_lifecycle_safeguards.sql) still guards against sneaking a
+  // status change through if the update above were ever broadened to it.
+  if (fields.status === 'active' || fields.status === 'inactive') {
+    const { error: banError } = await admin.auth.admin.updateUserById(id, {
+      ban_duration: fields.status === 'inactive' ? PERMANENT_BAN_DURATION : 'none',
+    })
+    if (banError) return NextResponse.json({ error: banError.message }, { status: 500 })
+  }
+
+  return NextResponse.json({ ok: true })
+}
+
+/* DELETE /api/admin/users — permanently remove an account
+   Body: { id }
+   Deletes the Supabase Auth user, which cascades to its profile row.
+   Transactional records (orders, refunds, store credit) are kept —
+   they reference the user with `on delete set null`, not cascade.
+*/
+export async function DELETE(req: NextRequest) {
+  if (!isSupabaseConfigured) return NextResponse.json({ error: 'Supabase not configured' }, { status: 503 })
+
+  const check = await requireAdmin()
+  if ('error' in check) return NextResponse.json({ error: check.error }, { status: check.status })
+
+  const { id } = await req.json()
+  if (!id) return NextResponse.json({ error: 'id is required' }, { status: 400 })
+
+  const admin = createSupabaseAdminClient()
+
+  const { data: profile } = await admin.from('profiles').select('email').eq('id', id).single()
+  if (profile?.email?.toLowerCase() === PROTECTED_ADMIN_EMAIL) {
+    return NextResponse.json({ error: 'This account is protected and cannot be deleted.' }, { status: 403 })
+  }
+
+  const { error } = await admin.auth.admin.deleteUser(id)
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
   return NextResponse.json({ ok: true })

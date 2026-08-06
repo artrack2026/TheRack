@@ -3,9 +3,10 @@
 import { useEffect, useState, FormEvent } from 'react'
 import { formatName, formatEmail, formatPhone, formatCity, formatState, formatZip } from '@/lib/format'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Users, Plus, X, Loader, CheckCircle, Shield, User, AlertCircle, Eye, EyeOff, Pencil, Save, ShieldCheck, Handshake } from 'lucide-react'
+import { Users, Plus, X, Loader, CheckCircle, Shield, User, AlertCircle, Eye, EyeOff, Pencil, Save, ShieldCheck, Handshake, UserX, UserCheck, Trash2 } from 'lucide-react'
 import PageHeader from '@/components/PageHeader'
 import { isSupabaseConfigured, getSupabaseClient } from '@/lib/supabase'
+import { PROTECTED_ADMIN_EMAIL } from '@/lib/constants'
 
 interface UserRow {
   id: string
@@ -20,10 +21,11 @@ interface UserRow {
   state: string | null
   zip: string | null
   role: 'customer' | 'admin' | 'consignor'
+  status: 'active' | 'inactive'
   created_at: string
 }
 
-type EditForm = Omit<UserRow, 'id' | 'email' | 'created_at' | 'role'>
+type EditForm = Omit<UserRow, 'id' | 'email' | 'created_at' | 'role' | 'status'>
 
 const ROLE_TABS: { key: UserRow['role']; label: string; icon: typeof User }[] = [
   { key: 'customer',  label: 'Customers',  icon: User },
@@ -47,6 +49,12 @@ export default function UsersPage() {
   const [saving, setSaving]         = useState(false)
   const [saveOk, setSaveOk]         = useState(false)
   const [saveErr, setSaveErr]       = useState<string | null>(null)
+
+  // Deactivate / delete
+  const [statusUpdating, setStatusUpdating]   = useState(false)
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
+  const [deleting, setDeleting]               = useState(false)
+  const [deleteErr, setDeleteErr]             = useState<string | null>(null)
 
   // Create form state
   const [createForm, setCreateForm] = useState({
@@ -107,6 +115,8 @@ export default function UsersPage() {
     setPhoneChallenge(null)
     setPhoneCode('')
     setPhoneError(null)
+    setConfirmDeleteId(null)
+    setDeleteErr(null)
   }
 
   const closeEdit = () => {
@@ -115,6 +125,8 @@ export default function UsersPage() {
     setPhoneChallenge(null)
     setPhoneCode('')
     setPhoneError(null)
+    setConfirmDeleteId(null)
+    setDeleteErr(null)
   }
 
   const handleSave = async (e: FormEvent) => {
@@ -171,6 +183,46 @@ export default function UsersPage() {
     setSaveOk(true)
     setTimeout(() => setSaveOk(false), 2500)
     setSaving(false)
+  }
+
+  const handleToggleStatus = async (u: UserRow) => {
+    const nextStatus = u.status === 'inactive' ? 'active' : 'inactive'
+    setStatusUpdating(true)
+    setSaveErr(null)
+    const res = await fetch('/api/admin/users', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: u.id, status: nextStatus }),
+    })
+    if (!res.ok) {
+      const d = await res.json()
+      setSaveErr(d.error ?? 'Failed to update status')
+      setStatusUpdating(false)
+      return
+    }
+    setUsers(prev => prev.map(x => x.id === u.id ? { ...x, status: nextStatus } : x))
+    setEditUser(prev => prev && prev.id === u.id ? { ...prev, status: nextStatus } : prev)
+    setStatusUpdating(false)
+  }
+
+  const handleDelete = async (u: UserRow) => {
+    setDeleting(true)
+    setDeleteErr(null)
+    const res = await fetch('/api/admin/users', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: u.id }),
+    })
+    if (!res.ok) {
+      const d = await res.json()
+      setDeleteErr(d.error ?? 'Failed to delete account')
+      setDeleting(false)
+      return
+    }
+    setUsers(prev => prev.filter(x => x.id !== u.id))
+    setConfirmDeleteId(null)
+    setDeleting(false)
+    closeEdit()
   }
 
   const handleVerifyPhone = async () => {
@@ -414,9 +466,10 @@ export default function UsersPage() {
                 style={{
                   background: editUser?.id === u.id ? 'var(--color-surface-2)' : 'var(--color-surface)',
                   border: `1px solid ${editUser?.id === u.id ? 'var(--r-blue)' : 'var(--color-border)'}`,
-                  borderLeft: `3px solid var(--r-blue)`,
+                  borderLeft: `3px solid ${u.status === 'inactive' ? 'var(--r-red)' : 'var(--r-blue)'}`,
                   borderRadius: '0 12px 12px 0',
                   cursor: 'pointer',
+                  opacity: u.status === 'inactive' ? 0.6 : 1,
                 }}
               >
                 <div className="w-9 h-9 rounded-full flex items-center justify-center font-bold shrink-0"
@@ -433,6 +486,11 @@ export default function UsersPage() {
                     {u.role === 'consignor' && (
                       <span className="category-badge text-xs shrink-0" style={{ color: 'var(--r-violet)', borderColor: 'var(--r-violet)' }}>
                         Consignor
+                      </span>
+                    )}
+                    {u.status === 'inactive' && (
+                      <span className="category-badge text-xs shrink-0" style={{ color: 'var(--r-red)', borderColor: 'var(--r-red)' }}>
+                        Inactive
                       </span>
                     )}
                   </div>
@@ -580,6 +638,70 @@ export default function UsersPage() {
                           )}
                         </div>
                       </form>
+
+                      {/* Account lifecycle — deactivate (reversible, blocks login) or delete (permanent) */}
+                      <div style={{ borderTop: '1px solid var(--color-border)', marginTop: '20px', paddingTop: '16px' }}>
+                        <p className="text-xs font-semibold tracking-widest uppercase mb-3" style={{ color: 'var(--color-text-muted)' }}>
+                          Account Status
+                        </p>
+                        <div className="flex flex-wrap items-center gap-3">
+                          <button
+                            type="button"
+                            onClick={() => handleToggleStatus(u)}
+                            disabled={statusUpdating}
+                            className="cyber-btn art-btn-ghost text-sm"
+                            style={{
+                              color:       u.status === 'inactive' ? 'var(--r-green)' : 'var(--r-orange)',
+                              borderColor: u.status === 'inactive' ? 'var(--r-green)' : 'var(--r-orange)',
+                            }}
+                          >
+                            {statusUpdating
+                              ? <Loader size={13} className="animate-spin" />
+                              : u.status === 'inactive' ? <UserCheck size={13} /> : <UserX size={13} />}
+                            {u.status === 'inactive' ? 'Reactivate Account' : 'Deactivate Account'}
+                          </button>
+
+                          {u.email.toLowerCase() === PROTECTED_ADMIN_EMAIL ? (
+                            <span className="text-xs flex items-center gap-1.5" style={{ color: 'var(--color-text-muted)' }}>
+                              <Shield size={12} /> Protected account — cannot be deleted
+                            </span>
+                          ) : confirmDeleteId === u.id ? (
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs" style={{ color: 'var(--r-red)' }}>Delete forever?</span>
+                              <button
+                                type="button"
+                                onClick={() => handleDelete(u)}
+                                disabled={deleting}
+                                className="cyber-btn text-sm"
+                                style={{ color: 'var(--r-red)', borderColor: 'var(--r-red)' }}
+                              >
+                                {deleting ? <Loader size={13} className="animate-spin" /> : <Trash2 size={13} />} Confirm Delete
+                              </button>
+                              <button type="button" onClick={() => setConfirmDeleteId(null)} className="cyber-btn art-btn-ghost text-sm">
+                                Cancel
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => setConfirmDeleteId(u.id)}
+                              className="cyber-btn art-btn-ghost text-sm"
+                              style={{ color: 'var(--r-red)', borderColor: 'var(--r-red)' }}
+                            >
+                              <Trash2 size={13} /> Delete Permanently
+                            </button>
+                          )}
+                        </div>
+                        <p className="text-xs mt-2" style={{ color: 'var(--color-text-muted)' }}>
+                          Deactivating blocks login but keeps the profile and all order/payment history — reversible any time.
+                          Deleting removes the account and its login entirely; past orders, refunds, and store credit stay on record.
+                        </p>
+                        {deleteErr && (
+                          <p className="text-xs mt-2 flex items-center gap-1.5" style={{ color: 'var(--r-red)' }}>
+                            <AlertCircle size={12} /> {deleteErr}
+                          </p>
+                        )}
+                      </div>
                     </div>
                   </motion.div>
                 )}
