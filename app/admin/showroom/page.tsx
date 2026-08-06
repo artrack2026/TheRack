@@ -209,6 +209,12 @@ const PRESETS: { name: string; colors: ThemeColors }[] = [
   },
 ]
 
+/* Stronger, more visible section divider than the default hairline border —
+   used to break up the Branding tab's subsections at a glance. */
+const SECTION_DIVIDER_STYLE = {
+  borderColor: 'color-mix(in srgb, var(--color-border) 50%, var(--color-text-muted) 50%)',
+}
+
 function isActivePreset(preset: ThemeColors, current: ThemeColors): boolean {
   return (Object.keys(preset) as (keyof ThemeColors)[]).every(
     k => preset[k].toLowerCase() === current[k]?.toLowerCase()
@@ -510,14 +516,17 @@ export default function ShowroomSettingsPage() {
 
         {/* ── Branding tab ── */}
         {activeTab === 'branding' && (
-          <div className="flex flex-col gap-4">
-            <div>
-              <div className="flex items-center gap-2 mb-3">
+          <div className="flex flex-col gap-6">
+            <section>
+              <div className="flex items-center gap-2 mb-1">
                 <Palette size={16} style={{ color: 'var(--color-accent)' }} />
                 <h2 className="text-sm tracking-widest uppercase font-bold" style={{ color: 'var(--color-text)' }}>
                   Presets
                 </h2>
               </div>
+              <p className="text-xs mb-3" style={{ color: 'var(--color-text-muted)' }}>
+                One click swaps every site color below to a coordinated palette — background, buttons, text, and borders across the whole site.
+              </p>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
                 {PRESETS.map(preset => {
                   const active = isActivePreset(preset.colors, colors)
@@ -559,15 +568,18 @@ export default function ShowroomSettingsPage() {
                   )
                 })}
               </div>
-            </div>
+            </section>
 
-            <div>
-              <div className="flex items-center gap-2 mb-3">
+            <section className="pt-6 border-t-2" style={SECTION_DIVIDER_STYLE}>
+              <div className="flex items-center gap-2 mb-1">
                 <Eye size={16} style={{ color: 'var(--color-accent)' }} />
                 <h2 className="text-sm tracking-widest uppercase font-bold" style={{ color: 'var(--color-text)' }}>
                   Custom Colors
                 </h2>
               </div>
+              <p className="text-xs mb-3" style={{ color: 'var(--color-text-muted)' }}>
+                Fine-tune each color role individually. Hover a swatch for what it controls, or click it to pick a new shade.
+              </p>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {COLOR_FIELDS.map(({ key, label, desc }) => (
                   <label
@@ -596,32 +608,42 @@ export default function ShowroomSettingsPage() {
                   </label>
                 ))}
               </div>
-            </div>
+            </section>
 
-            <div
-              className="p-6"
-              style={{ background: colors.background, border: `1px solid ${colors.border}` }}
-            >
-              <p className="text-xs tracking-widest uppercase mb-4" style={{ color: colors.primary }}>
-                Preview
-              </p>
-              <div className="flex flex-wrap gap-3 items-center">
-                <button
-                  className="cyber-btn text-xs"
-                  style={{ color: colors.primary, borderColor: colors.primary }}
-                >
-                  Primary Button
-                </button>
-                <button
-                  className="cyber-btn cyber-btn-accent text-xs"
-                  style={{ color: colors.accent, borderColor: colors.accent }}
-                >
-                  Accent Button
-                </button>
-                <span className="text-sm font-bold" style={{ color: colors.text }}>Body Text</span>
-                <span className="text-sm" style={{ color: colors.textMuted }}>Muted Text</span>
+            <section className="pt-6 border-t-2" style={SECTION_DIVIDER_STYLE}>
+              <div className="flex items-center justify-between flex-wrap gap-2 mb-1">
+                <p className="text-xs tracking-widest uppercase" style={{ color: colors.primary }}>
+                  Preview
+                </p>
+                <span className="text-[10px] tracking-wide" style={{ color: 'var(--color-text-muted)' }}>
+                  Reference only — not clickable
+                </span>
               </div>
-            </div>
+              <p className="text-xs mb-4" style={{ color: 'var(--color-text-muted)' }}>
+                Shows how the colors above will render on the site if you save them. Nothing in this box responds to clicks.
+              </p>
+              <div
+                className="p-6"
+                style={{ background: colors.background, border: `1px solid ${colors.border}` }}
+              >
+                <div className="flex flex-wrap gap-3 items-center" style={{ pointerEvents: 'none' }}>
+                  <div
+                    className="cyber-btn text-xs"
+                    style={{ color: colors.primary, borderColor: colors.primary, cursor: 'default' }}
+                  >
+                    Primary Button
+                  </div>
+                  <div
+                    className="cyber-btn cyber-btn-accent text-xs"
+                    style={{ color: colors.accent, borderColor: colors.accent, cursor: 'default' }}
+                  >
+                    Accent Button
+                  </div>
+                  <span className="text-sm font-bold" style={{ color: colors.text }}>Body Text</span>
+                  <span className="text-sm" style={{ color: colors.textMuted }}>Muted Text</span>
+                </div>
+              </div>
+            </section>
 
             <div className="flex gap-4">
               <button onClick={handleBrandSave} className="cyber-btn">
@@ -636,7 +658,7 @@ export default function ShowroomSettingsPage() {
               </button>
             </div>
 
-            <section className="pt-6 border-t" style={{ borderColor: 'var(--color-border)' }}>
+            <section className="pt-6 border-t-2" style={SECTION_DIVIDER_STYLE}>
               <div className="flex items-center gap-2 mb-2">
                 <Smartphone size={16} style={{ color: 'var(--color-accent)' }} />
                 <h2 className="text-sm tracking-widest uppercase font-bold" style={{ color: 'var(--color-text)' }}>
@@ -655,7 +677,7 @@ export default function ShowroomSettingsPage() {
               />
             </section>
 
-            <section className="pt-6 border-t" style={{ borderColor: 'var(--color-border)' }}>
+            <section className="pt-6 border-t-2" style={SECTION_DIVIDER_STYLE}>
               <div className="flex items-center gap-2 mb-2">
                 <Globe size={16} style={{ color: 'var(--color-accent)' }} />
                 <h2 className="text-sm tracking-widest uppercase font-bold" style={{ color: 'var(--color-text)' }}>
@@ -673,7 +695,7 @@ export default function ShowroomSettingsPage() {
               />
             </section>
 
-            <section className="pt-6 border-t" style={{ borderColor: 'var(--color-border)' }}>
+            <section className="pt-6 border-t-2" style={SECTION_DIVIDER_STYLE}>
               <div className="flex items-center gap-2 mb-2">
                 <Settings size={16} style={{ color: 'var(--color-accent)' }} />
                 <h2 className="text-sm tracking-widest uppercase font-bold" style={{ color: 'var(--color-text)' }}>

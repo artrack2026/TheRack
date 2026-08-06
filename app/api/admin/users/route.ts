@@ -16,7 +16,6 @@ export async function GET() {
   const { data, error } = await admin
     .from('profiles')
     .select('id, email, first_name, last_name, display_name, phone, address_line1, address_line2, city, state, zip, role, created_at')
-    .neq('role', 'admin')
     .order('created_at', { ascending: false })
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })

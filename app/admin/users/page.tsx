@@ -3,7 +3,7 @@
 import { useEffect, useState, FormEvent } from 'react'
 import { formatName, formatEmail, formatPhone, formatCity, formatState, formatZip } from '@/lib/format'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Users, Plus, X, Loader, CheckCircle, Shield, User, AlertCircle, Eye, EyeOff, Pencil, Save, ShieldCheck } from 'lucide-react'
+import { Users, Plus, X, Loader, CheckCircle, Shield, User, AlertCircle, Eye, EyeOff, Pencil, Save, ShieldCheck, Handshake } from 'lucide-react'
 import PageHeader from '@/components/PageHeader'
 import { isSupabaseConfigured, getSupabaseClient } from '@/lib/supabase'
 
@@ -25,6 +25,12 @@ interface UserRow {
 
 type EditForm = Omit<UserRow, 'id' | 'email' | 'created_at' | 'role'>
 
+const ROLE_TABS: { key: UserRow['role']; label: string; icon: typeof User }[] = [
+  { key: 'customer',  label: 'Customers',  icon: User },
+  { key: 'admin',     label: 'Admins',     icon: Shield },
+  { key: 'consignor', label: 'Consignors', icon: Handshake },
+]
+
 const EMPTY_EDIT: EditForm = {
   first_name: '', last_name: '', display_name: '',
   phone: '', address_line1: '', address_line2: '',
@@ -34,6 +40,7 @@ const EMPTY_EDIT: EditForm = {
 export default function UsersPage() {
   const [users, setUsers]           = useState<UserRow[]>([])
   const [loading, setLoading]       = useState(true)
+  const [activeTab, setActiveTab]   = useState<UserRow['role']>('customer')
   const [showCreate, setShowCreate] = useState(false)
   const [editUser, setEditUser]     = useState<UserRow | null>(null)
   const [editForm, setEditForm]     = useState<EditForm>(EMPTY_EDIT)
@@ -60,6 +67,9 @@ export default function UsersPage() {
   const [phoneRequesting, setPhoneRequesting] = useState(false)
   const [phoneVerifying, setPhoneVerifying]   = useState(false)
   const [phoneError, setPhoneError]           = useState<string | null>(null)
+
+  const visibleUsers = users.filter(u => u.role === activeTab)
+  const activeTabLabel = ROLE_TABS.find(t => t.key === activeTab)?.label ?? 'users'
 
   const load = async () => {
     setLoading(true)
@@ -257,11 +267,50 @@ export default function UsersPage() {
         size="md"
         accentColor="var(--r-violet)"
         actions={
-          <button onClick={() => setShowCreate(v => !v)} className="cyber-btn btn--violet text-sm">
+          <button
+            onClick={() => {
+              setShowCreate(v => !v)
+              if (!showCreate) setCreateForm(f => ({ ...f, role: activeTab }))
+            }}
+            className="cyber-btn btn--violet text-sm"
+          >
             <Plus size={14} /> New Account
           </button>
         }
       />
+
+      {/* Role tabs */}
+      <div className="flex gap-2 mb-6">
+        {ROLE_TABS.map(({ key, label, icon: Icon }) => {
+          const active = activeTab === key
+          const count  = users.filter(u => u.role === key).length
+          return (
+            <button
+              key={key}
+              onClick={() => setActiveTab(key)}
+              className="flex items-center gap-2 px-4 py-2.5 text-sm font-semibold transition-colors"
+              style={{
+                background: active ? 'var(--color-surface)' : 'transparent',
+                color:      active ? 'var(--color-text)' : 'var(--color-text-muted)',
+                border:     `1px solid ${active ? 'var(--r-violet)' : 'var(--color-border)'}`,
+                borderRadius: '10px',
+              }}
+            >
+              <Icon size={14} style={{ color: active ? 'var(--r-violet)' : 'var(--color-text-muted)' }} />
+              {label}
+              <span
+                className="text-xs font-mono px-1.5 rounded-full"
+                style={{
+                  background: active ? 'var(--color-surface-2)' : 'transparent',
+                  color: 'var(--color-text-muted)',
+                }}
+              >
+                {count}
+              </span>
+            </button>
+          )
+        })}
+      </div>
 
       {/* Create form */}
       <AnimatePresence>
@@ -348,14 +397,14 @@ export default function UsersPage() {
         <div className="flex justify-center py-16">
           <div className="w-6 h-6 rounded-full border-2 animate-spin" style={{ borderColor: 'var(--color-accent)', borderTopColor: 'transparent' }} />
         </div>
-      ) : users.length === 0 ? (
+      ) : visibleUsers.length === 0 ? (
         <div className="text-center py-20" style={{ color: 'var(--color-text-muted)' }}>
           <Users size={48} className="mx-auto mb-3 opacity-30" />
-          <p>No users yet.</p>
+          <p>No {activeTabLabel.toLowerCase()} yet.</p>
         </div>
       ) : (
         <div className="flex flex-col gap-3">
-          {users.map((u, i) => (
+          {visibleUsers.map((u, i) => (
             <motion.div key={u.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.35, delay: i * 0.04 }}>
               {/* Card — clickable to edit */}
@@ -539,9 +588,6 @@ export default function UsersPage() {
           ))}
         </div>
       )}
-
-      {/* Shield icon kept for potential admin badge use */}
-      <span className="hidden"><Shield size={0} /><User size={0} /></span>
     </div>
   )
 }
