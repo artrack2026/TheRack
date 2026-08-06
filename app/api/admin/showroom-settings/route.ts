@@ -24,6 +24,8 @@ interface ShowroomSettings {
   payment_methods: PaymentMethod[]
   two_factor_enabled: boolean
   consignment_enabled: boolean
+  apple_icon_choice: string
+  tab_icon_choice: string
 }
 
 const DEFAULT_SETTINGS: ShowroomSettings = {
@@ -38,6 +40,8 @@ const DEFAULT_SETTINGS: ShowroomSettings = {
   payment_methods: [],
   two_factor_enabled: false,
   consignment_enabled: false,
+  apple_icon_choice: '1',
+  tab_icon_choice: '1',
 }
 
 function mapRow(data: Record<string, unknown>): ShowroomSettings {
@@ -61,6 +65,8 @@ function mapRow(data: Record<string, unknown>): ShowroomSettings {
     payment_methods:        Array.isArray(data.payment_methods) ? (data.payment_methods as PaymentMethod[]) : [],
     two_factor_enabled:     Boolean(data.two_factor_enabled),
     consignment_enabled:    Boolean(data.consignment_enabled),
+    apple_icon_choice:      (data.apple_icon_choice as string) === '2' ? '2' : '1',
+    tab_icon_choice:        (data.tab_icon_choice as string) === '2' ? '2' : '1',
   }
 }
 
@@ -122,7 +128,7 @@ export async function POST(request: NextRequest) {
       products_per_row, rows_per_page, inquiry_email,
       instagram, facebook, x, tiktok, snapchat, youtube, linkedin, threads, bluesky, mastodon,
       tax_rate, shipping_fee, free_shipping_threshold, payment_methods, two_factor_enabled,
-      consignment_enabled,
+      consignment_enabled, apple_icon_choice, tab_icon_choice,
     } = body
 
     if (typeof products_per_row !== 'number' || products_per_row < 1 || products_per_row > 12) {
@@ -157,6 +163,8 @@ export async function POST(request: NextRequest) {
       payment_methods:         Array.isArray(payment_methods) ? payment_methods : [],
       two_factor_enabled:      Boolean(two_factor_enabled),
       consignment_enabled:     Boolean(consignment_enabled),
+      apple_icon_choice:       apple_icon_choice === '2' ? '2' : '1',
+      tab_icon_choice:         tab_icon_choice === '2' ? '2' : '1',
       updated_at: new Date().toISOString(),
     }
 

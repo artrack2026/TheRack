@@ -312,6 +312,8 @@ export interface Database {
           two_factor_enabled: boolean
           textbelt_low_balance_alert_at: string | null
           consignment_enabled: boolean
+          apple_icon_choice: string
+          tab_icon_choice: string
           updated_at: string
         }
         Insert: {
@@ -336,6 +338,8 @@ export interface Database {
           two_factor_enabled?: boolean
           textbelt_low_balance_alert_at?: string | null
           consignment_enabled?: boolean
+          apple_icon_choice?: string
+          tab_icon_choice?: string
           updated_at?: string
         }
         Update: {
@@ -359,6 +363,8 @@ export interface Database {
           two_factor_enabled?: boolean
           textbelt_low_balance_alert_at?: string | null
           consignment_enabled?: boolean
+          apple_icon_choice?: string
+          tab_icon_choice?: string
           updated_at?: string
         }
         Relationships: Rel
@@ -496,6 +502,20 @@ export function createSupabaseServerClient(cookieStore: any) {
         }
       },
     },
+  })
+}
+
+/* ── Public server client (anon key, no cookies) ──
+   For server-side code that needs to read public data (RLS "using (true)"
+   tables like showroom_settings) without a request/cookie context — e.g.
+   generateMetadata(), which runs before there's a per-request cookie jar
+   to hand createSupabaseServerClient. Anonymous, stateless, read-only in
+   practice since it carries no auth. ── */
+
+export function createSupabasePublicClient() {
+  if (!isSupabaseConfigured) throw new Error('Supabase not configured.')
+  return createClient<Database>(supabaseUrl!, supabaseAnonKey!, {
+    auth: { autoRefreshToken: false, persistSession: false },
   })
 }
 
@@ -650,6 +670,8 @@ create table if not exists showroom_settings (
   two_factor_enabled boolean default false,
   textbelt_low_balance_alert_at timestamptz,
   consignment_enabled boolean default false,
+  apple_icon_choice text not null default '1',
+  tab_icon_choice text not null default '1',
   updated_at timestamptz default now(),
   constraint showroom_settings_id_check check (id = 1)
 );

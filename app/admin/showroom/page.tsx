@@ -1,11 +1,12 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
+import Image from 'next/image'
 import {
   RefreshCcw, Settings, Info, Save, AlertCircle,
   Plus, Trash2, GripVertical, ToggleLeft, ToggleRight, DollarSign, Truck, CreditCard,
   Palette, Eye, EyeOff, RotateCcw, Check, MessageSquareMore, Package, ClipboardList,
-  ShieldCheck, Search, Key, Loader, Handshake,
+  ShieldCheck, Search, Key, Loader, Handshake, Smartphone, Globe,
 } from 'lucide-react'
 import { motion, AnimatePresence, Reorder } from 'framer-motion'
 import { SiStripe, SiSquare } from 'react-icons/si'
@@ -46,6 +47,8 @@ interface ShowroomSettings {
   payment_methods: PaymentMethod[]
   two_factor_enabled: boolean
   consignment_enabled: boolean
+  apple_icon_choice: string
+  tab_icon_choice: string
 }
 
 const DEFAULT: ShowroomSettings = {
@@ -55,6 +58,43 @@ const DEFAULT: ShowroomSettings = {
   tax_rate: 0, shipping_fee: 0, free_shipping_threshold: 0, payment_methods: [],
   two_factor_enabled: false,
   consignment_enabled: false,
+  apple_icon_choice: '1',
+  tab_icon_choice: '1',
+}
+
+/** Both icon pickers share the same 2-option layout — same markup, different
+ *  file-name prefix and which form field it writes to. */
+function IconPicker({
+  prefix, value, onChange,
+}: { prefix: 'apple-icon' | 'tab-icon'; value: string; onChange: (choice: string) => void }) {
+  return (
+    <div className="grid grid-cols-2 gap-3 max-w-xs">
+      {['1', '2'].map(choice => {
+        const active = value === choice
+        return (
+          <button
+            key={choice}
+            type="button"
+            onClick={() => onChange(choice)}
+            className={`p-3 text-center transition-all relative ${active ? 'rainbow-ring' : ''}`}
+            style={{
+              background: 'var(--color-bg)',
+              border: active ? '2px solid transparent' : '1px solid var(--color-border)',
+              borderRadius: '14px',
+              cursor: 'pointer',
+            }}
+          >
+            <div className="relative w-16 h-16 mx-auto mb-2 rounded-xl overflow-hidden" style={{ background: '#0a0a0a' }}>
+              <Image src={`/icons/${prefix}-${choice}.png`} alt={`Option ${choice}`} fill className="object-cover" sizes="64px" />
+            </div>
+            <p className="text-xs font-semibold" style={{ color: active ? 'var(--color-text)' : 'var(--color-text-muted)' }}>
+              Option {choice}
+            </p>
+          </button>
+        )
+      })}
+    </div>
+  )
 }
 
 function newPaymentMethod(order: number): PaymentMethod {
@@ -595,6 +635,43 @@ export default function ShowroomSettingsPage() {
                 <RotateCcw size={14} /> Reset to Default
               </button>
             </div>
+
+            <section className="pt-6 border-t" style={{ borderColor: 'var(--color-border)' }}>
+              <div className="flex items-center gap-2 mb-2">
+                <Smartphone size={16} style={{ color: 'var(--color-accent)' }} />
+                <h2 className="text-sm tracking-widest uppercase font-bold" style={{ color: 'var(--color-text)' }}>
+                  App Icon (iPhone)
+                </h2>
+              </div>
+              <p className="text-xs mb-4" style={{ color: 'var(--color-text-muted)' }}>
+                Shown when someone adds the site to their iPhone home screen. Takes effect
+                immediately — no redeploy needed. Saves with the main &quot;Save All Changes&quot;
+                button above.
+              </p>
+              <IconPicker
+                prefix="apple-icon"
+                value={form.apple_icon_choice}
+                onChange={choice => setForm(f => ({ ...f, apple_icon_choice: choice }))}
+              />
+            </section>
+
+            <section className="pt-6 border-t" style={{ borderColor: 'var(--color-border)' }}>
+              <div className="flex items-center gap-2 mb-2">
+                <Globe size={16} style={{ color: 'var(--color-accent)' }} />
+                <h2 className="text-sm tracking-widest uppercase font-bold" style={{ color: 'var(--color-text)' }}>
+                  Browser Tab Icon
+                </h2>
+              </div>
+              <p className="text-xs mb-4" style={{ color: 'var(--color-text-muted)' }}>
+                Shown in the browser tab and bookmarks. Takes effect immediately — no redeploy
+                needed. Saves with the main &quot;Save All Changes&quot; button above.
+              </p>
+              <IconPicker
+                prefix="tab-icon"
+                value={form.tab_icon_choice}
+                onChange={choice => setForm(f => ({ ...f, tab_icon_choice: choice }))}
+              />
+            </section>
 
             <section className="pt-6 border-t" style={{ borderColor: 'var(--color-border)' }}>
               <div className="flex items-center gap-2 mb-2">
