@@ -2,7 +2,7 @@
 
 import { useEffect, useState, FormEvent, ChangeEvent } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, Pencil, Trash2, Star, X, Loader, Save, ImagePlus } from 'lucide-react'
+import { Plus, Pencil, Trash2, Star, X, Loader, Save, ImagePlus, AlertCircle } from 'lucide-react'
 import Image from 'next/image'
 import { isSupabaseConfigured, getSupabaseClient } from '@/lib/supabase'
 import { Product, ProductCategory } from '@/lib/types'
@@ -23,10 +23,13 @@ export default function AdminProductsPage() {
   const [saving, setSaving]     = useState(false)
   const [uploading, setUploading]     = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
+  const [loadError, setLoadError]     = useState<string | null>(null)
 
   const load = async () => {
     if (!isSupabaseConfigured) { setLoading(false); return }
-    const { data } = await getSupabaseClient().from('products').select('*').order('created_at', { ascending: false })
+    setLoadError(null)
+    const { data, error } = await getSupabaseClient().from('products').select('*').order('created_at', { ascending: false })
+    if (error) setLoadError(error.message)
     setProducts((data as Product[]) ?? [])
     setLoading(false)
   }
@@ -249,10 +252,23 @@ export default function AdminProductsPage() {
         )}
       </AnimatePresence>
 
+      {loadError && (
+        <div
+          className="flex items-center gap-2 text-sm px-3 py-2.5 rounded-lg mb-4"
+          style={{ background: 'rgba(224,88,88,0.1)', color: 'var(--r-red)', border: '1px solid rgba(224,88,88,0.25)' }}
+        >
+          <AlertCircle size={14} /> Couldn&apos;t load products: {loadError}
+        </div>
+      )}
+
       {/* Product list */}
       {loading ? (
         <div className="flex justify-center py-16">
           <div className="w-6 h-6 rounded-full border-2 animate-spin" style={{ borderColor: 'var(--color-accent)', borderTopColor: 'transparent' }} />
+        </div>
+      ) : products.length === 0 && !loadError ? (
+        <div className="text-center py-20" style={{ color: 'var(--color-text-muted)' }}>
+          <p>No products yet.</p>
         </div>
       ) : (
         <div className="flex flex-col gap-3">
