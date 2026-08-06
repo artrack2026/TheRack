@@ -3,8 +3,9 @@
 import { useEffect, useState, FormEvent } from 'react'
 import { formatName, formatEmail, formatPhone, formatCity, formatState, formatZip } from '@/lib/format'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Users, Plus, X, Loader, CheckCircle, Shield, User, AlertCircle, Eye, EyeOff, Pencil, Save, ShieldCheck, Handshake, UserX, UserCheck, Trash2 } from 'lucide-react'
+import { Users, Plus, X, Loader, CheckCircle, Shield, User, AlertCircle, Eye, EyeOff, Pencil, Save, ShieldCheck, Handshake, UserX, UserCheck, Trash2, KeyRound } from 'lucide-react'
 import PageHeader from '@/components/PageHeader'
+import ResetPasswordModal from '@/components/ResetPasswordModal'
 import { isSupabaseConfigured, getSupabaseClient } from '@/lib/supabase'
 import { PROTECTED_ADMIN_EMAIL } from '@/lib/constants'
 
@@ -55,6 +56,7 @@ export default function UsersPage() {
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
   const [deleting, setDeleting]               = useState(false)
   const [deleteErr, setDeleteErr]             = useState<string | null>(null)
+  const [resetPasswordUser, setResetPasswordUser] = useState<{ id: string; email: string } | null>(null)
 
   // Create form state
   const [createForm, setCreateForm] = useState({
@@ -661,6 +663,14 @@ export default function UsersPage() {
                             {u.status === 'inactive' ? 'Reactivate Account' : 'Deactivate Account'}
                           </button>
 
+                          <button
+                            type="button"
+                            onClick={() => setResetPasswordUser({ id: u.id, email: u.email })}
+                            className="cyber-btn art-btn-ghost text-sm"
+                          >
+                            <KeyRound size={13} /> Reset Password
+                          </button>
+
                           {u.email.toLowerCase() === PROTECTED_ADMIN_EMAIL ? (
                             <span className="text-xs flex items-center gap-1.5" style={{ color: 'var(--color-text-muted)' }}>
                               <Shield size={12} /> Protected account — cannot be deleted
@@ -710,6 +720,8 @@ export default function UsersPage() {
           ))}
         </div>
       )}
+
+      <ResetPasswordModal user={resetPasswordUser} onClose={() => setResetPasswordUser(null)} />
     </div>
   )
 }

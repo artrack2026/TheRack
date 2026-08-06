@@ -22,10 +22,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   useEffect(() => {
     if (loading) return
     if (!user) { router.replace('/login?from=/admin'); return }
+    if (profile?.must_change_password) { router.replace('/auth/change-password'); return }
     if (profile && profile.role !== 'admin') router.replace('/portal')
   }, [user, profile, loading, router])
 
-  const ready = !loading && user && profile?.role === 'admin'
+  const ready = !loading && user && profile?.role === 'admin' && !profile?.must_change_password
 
   if (!ready) {
     return (

@@ -113,7 +113,11 @@ export interface Database {
           state: string | null
           zip: string | null
           role: 'customer' | 'admin' | 'consignor'
+          status: 'active' | 'inactive'
           birthday: string | null
+          totp_secret_encrypted: string | null
+          totp_enabled: boolean
+          must_change_password: boolean
           created_at: string
         }
         Insert: {
@@ -129,7 +133,11 @@ export interface Database {
           state?: string | null
           zip?: string | null
           role?: 'customer' | 'admin' | 'consignor'
+          status?: 'active' | 'inactive'
           birthday?: string | null
+          totp_secret_encrypted?: string | null
+          totp_enabled?: boolean
+          must_change_password?: boolean
           created_at?: string
         }
         Update: {
@@ -144,7 +152,11 @@ export interface Database {
           state?: string | null
           zip?: string | null
           role?: 'customer' | 'admin' | 'consignor'
+          status?: 'active' | 'inactive'
           birthday?: string | null
+          totp_secret_encrypted?: string | null
+          totp_enabled?: boolean
+          must_change_password?: boolean
           created_at?: string
         }
         Relationships: Rel

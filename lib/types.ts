@@ -57,7 +57,16 @@ export interface Profile {
    *  enrollment/approval workflow and consignor-specific data model are not
    *  built yet; this is currently just a recognized role value. */
   role: 'customer' | 'admin' | 'consignor'
+  status: 'active' | 'inactive'
   birthday: string | null
+  /** True once an enrolled authenticator app has proven it produces valid
+   *  codes (see app/api/auth/totp/route.ts) — the encrypted secret itself
+   *  isn't part of this shared client-facing type. */
+  totp_enabled: boolean
+  /** Set when an admin issues a temporary password (app/api/admin/users/
+   *  reset-password/route.ts) — forces a stop at /auth/change-password on
+   *  the next login before /portal or /admin become reachable. */
+  must_change_password: boolean
   created_at: string
 }
 

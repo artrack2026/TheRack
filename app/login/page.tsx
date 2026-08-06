@@ -22,7 +22,7 @@ function LoginForm() {
   const [loading, setLoading]   = useState(false)
 
   /* ── 2FA step ── */
-  const [channel, setChannel]           = useState<'sms' | 'email' | null>(null)
+  const [channel, setChannel]           = useState<'sms' | 'email' | 'totp' | null>(null)
   const [challengeId, setChallengeId]   = useState<string | null>(null)
   const [maskedPhone, setMaskedPhone]   = useState<string | null>(null)
   const [otp, setOtp]                   = useState('')
@@ -132,7 +132,8 @@ function LoginForm() {
       }
 
       if (!challengeId) return
-      const res  = await fetch('/api/auth/login-step2', {
+      const endpoint = channel === 'totp' ? '/api/auth/login-step2-totp' : '/api/auth/login-step2'
+      const res  = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ challengeId, code: otp.trim() }),
@@ -231,6 +232,8 @@ function LoginForm() {
                 <ShieldCheck size={16} style={{ color: 'var(--color-accent)' }} />
                 {channel === 'sms'
                   ? <>We texted a 6-digit code to {maskedPhone ?? 'your phone'}.</>
+                  : channel === 'totp'
+                  ? <>Enter the 6-digit code from your authenticator app.</>
                   : <>We emailed a 6-digit code to {form.email.toLowerCase().trim()}.</>
                 }
               </div>
@@ -273,7 +276,7 @@ function LoginForm() {
                 {verifying ? <><Loader size={15} className="animate-spin" /> Verifying…</> : 'Verify & Sign In'}
               </button>
 
-              {channel === 'sms' && (
+              {(channel === 'sms' || channel === 'totp') && (
                 <button
                   type="button"
                   onClick={handleSwitchToEmail}
@@ -281,7 +284,10 @@ function LoginForm() {
                   className="flex items-center justify-center gap-1.5 text-xs tracking-widest uppercase"
                   style={{ color: 'var(--color-accent)', background: 'none', border: 'none', cursor: 'pointer' }}
                 >
-                  <Mail size={12} /> {switchingChannel ? 'Sending…' : "Didn't get a text? Email me a code"}
+                  <Mail size={12} />
+                  {switchingChannel
+                    ? 'Sending…'
+                    : channel === 'totp' ? 'Lost your authenticator app? Email me a code' : "Didn't get a text? Email me a code"}
                 </button>
               )}
 

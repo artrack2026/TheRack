@@ -2,10 +2,10 @@
 
 import { useState, useEffect, FormEvent } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Save, Loader, CheckCircle, Pencil, X, User, Phone, MapPin, Mail, ShieldCheck, AlertCircle } from 'lucide-react'
+import { Save, Loader, CheckCircle, Pencil, X, User, Phone, MapPin, Mail, ShieldCheck, AlertCircle, Send, Smartphone, Trash2 } from 'lucide-react'
 import { useAuth } from '@/components/AuthProvider'
 import { isSupabaseConfigured, getSupabaseClient } from '@/lib/supabase'
-import { formatPhone, formatName, formatState, formatCity, formatZip } from '@/lib/format'
+import { formatPhone, formatName, formatState, formatCity, formatZip, formatEmail } from '@/lib/format'
 import { Profile } from '@/lib/types'
 import PageHeader from '@/components/PageHeader'
 
@@ -54,6 +54,26 @@ export default function ProfilePage() {
   const [phoneVerifying, setPhoneVerifying]   = useState(false)
   const [phoneError, setPhoneError]           = useState<string | null>(null)
 
+  /* Authenticator app (TOTP) — an alternative 2FA method that never depends
+     on Textbelt or Supabase's email sending being up, so it's the most
+     resilient option if either is down. */
+  const [totpSetup, setTotpSetup]                     = useState<{ qrDataUrl: string; secret: string } | null>(null)
+  const [totpStarting, setTotpStarting]               = useState(false)
+  const [totpCode, setTotpCode]                       = useState('')
+  const [totpVerifying, setTotpVerifying]             = useState(false)
+  const [totpError, setTotpError]                     = useState<string | null>(null)
+  const [totpDisabling, setTotpDisabling]             = useState(false)
+  const [confirmDisableTotp, setConfirmDisableTotp]   = useState(false)
+
+  /* Email change — Supabase Auth owns confirmation entirely (a link sent to
+     the NEW address); nothing here is "changed" until that link is clicked
+     and auth.users.email updates, which a DB trigger then mirrors into
+     profiles.email (see supabase/migrations/email_change_and_totp.sql). */
+  const [changingEmail, setChangingEmail] = useState(false)
+  const [newEmail, setNewEmail]           = useState('')
+  const [emailStatus, setEmailStatus]     = useState<'idle' | 'sending' | 'pending' | 'error'>('idle')
+  const [emailError, setEmailError]       = useState<string | null>(null)
+
   useEffect(() => {
     if (profile) {
       setForm(formFromProfile(profile))
@@ -85,6 +105,98 @@ export default function ProfilePage() {
     setPhoneChallenge(null)
     setPhoneCode('')
     setPhoneError(null)
+    setChangingEmail(false)
+    setNewEmail('')
+    setEmailStatus('idle')
+    setEmailError(null)
+  }
+
+  const startChangingEmail = () => {
+    setNewEmail('')
+    setEmailStatus('idle')
+    setEmailError(null)
+    setChangingEmail(true)
+  }
+
+  const cancelChangingEmail = () => {
+    setChangingEmail(false)
+    setNewEmail('')
+    setEmailStatus('idle')
+    setEmailError(null)
+  }
+
+  const handleChangeEmail = async () => {
+    if (!isSupabaseConfigured) return
+    const trimmed = newEmail.toLowerCase().trim()
+    if (!trimmed) return
+    if (trimmed === (user?.email ?? '').toLowerCase()) {
+      setEmailError('That’s already your current email.')
+      setEmailStatus('error')
+      return
+    }
+    setEmailStatus('sending')
+    setEmailError(null)
+    const supabase = getSupabaseClient()
+    const { error } = await supabase.auth.updateUser(
+      { email: trimmed },
+      { emailRedirectTo: `${window.location.origin}/auth/confirm-email` }
+    )
+    if (error) {
+      setEmailError(error.message)
+      setEmailStatus('error')
+      return
+    }
+    setEmailStatus('pending')
+  }
+
+  const startTotpSetup = async () => {
+    setTotpStarting(true)
+    setTotpError(null)
+    const res = await fetch('/api/auth/totp', { method: 'POST' })
+    const data = await res.json()
+    if (!res.ok) {
+      setTotpError(data.error ?? 'Failed to start setup')
+      setTotpStarting(false)
+      return
+    }
+    setTotpSetup({ qrDataUrl: data.qrDataUrl, secret: data.secret })
+    setTotpCode('')
+    setTotpStarting(false)
+  }
+
+  const cancelTotpSetup = () => {
+    setTotpSetup(null)
+    setTotpCode('')
+    setTotpError(null)
+  }
+
+  const verifyTotpSetup = async () => {
+    if (totpCode.length !== 6) return
+    setTotpVerifying(true)
+    setTotpError(null)
+    const res = await fetch('/api/auth/totp', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code: totpCode }),
+    })
+    const data = await res.json()
+    if (!res.ok) {
+      setTotpError(data.error ?? 'Verification failed')
+      setTotpVerifying(false)
+      return
+    }
+    setTotpSetup(null)
+    setTotpCode('')
+    setTotpVerifying(false)
+    await refreshProfile()
+  }
+
+  const disableTotp = async () => {
+    setTotpDisabling(true)
+    await fetch('/api/auth/totp', { method: 'DELETE' })
+    setTotpDisabling(false)
+    setConfirmDisableTotp(false)
+    await refreshProfile()
   }
 
   /* When first name changes, auto-fill display name unless user edited it manually */
@@ -236,12 +348,80 @@ export default function ProfilePage() {
           /* ── Edit form ── */
           <form onSubmit={handleSubmit} className="flex flex-col gap-5">
 
-            {/* Email — read only */}
-            <div className="p-4 rounded-xl" style={{ background: 'var(--color-bg)', border: '1px solid var(--color-border)' }}>
-              <p className="text-xs tracking-widest uppercase font-semibold mb-1" style={{ color: 'var(--color-text-muted)' }}>
-                Email (read-only)
-              </p>
-              <p style={{ color: 'var(--color-text)' }}>{user?.email}</p>
+            {/* Email — changing requires clicking a confirmation link sent to the new address */}
+            <div className="p-4 rounded-xl flex flex-col gap-3" style={{ background: 'var(--color-bg)', border: '1px solid var(--color-border)' }}>
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-xs tracking-widest uppercase font-semibold mb-1" style={{ color: 'var(--color-text-muted)' }}>
+                    Email
+                  </p>
+                  <p style={{ color: 'var(--color-text)' }}>{user?.email}</p>
+                </div>
+                {!changingEmail && (
+                  <button type="button" onClick={startChangingEmail} className="cyber-btn art-btn-ghost btn--sm">
+                    <Pencil size={12} /> Change
+                  </button>
+                )}
+              </div>
+
+              {changingEmail && emailStatus !== 'pending' && (
+                <div className="flex flex-col gap-2" style={{ borderTop: '1px solid var(--color-border)', paddingTop: '12px' }}>
+                  <label className="text-xs font-semibold tracking-widest uppercase" style={{ color: 'var(--color-text-muted)' }}>
+                    New Email
+                  </label>
+                  <input
+                    type="text"
+                    className="cyber-input"
+                    placeholder="new@email.com"
+                    value={newEmail}
+                    onChange={e => { setNewEmail(formatEmail(e.target.value)); setEmailStatus('idle'); setEmailError(null) }}
+                  />
+                  <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                    We&apos;ll email a confirmation link to the new address — your login email won&apos;t change until you click it.
+                  </p>
+                  {emailError && (
+                    <p className="text-xs flex items-center gap-1.5" style={{ color: 'var(--r-red)' }}>
+                      <AlertCircle size={12} /> {emailError}
+                    </p>
+                  )}
+                  <div className="flex items-center gap-2 mt-1">
+                    <button
+                      type="button"
+                      onClick={handleChangeEmail}
+                      disabled={emailStatus === 'sending' || !newEmail.trim()}
+                      className="cyber-btn btn--sm"
+                    >
+                      {emailStatus === 'sending'
+                        ? <><Loader size={12} className="animate-spin" /> Sending…</>
+                        : <><Send size={12} /> Send Confirmation Link</>}
+                    </button>
+                    <button type="button" onClick={cancelChangingEmail} className="cyber-btn art-btn-ghost btn--sm">
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {emailStatus === 'pending' && (
+                <div
+                  className="flex items-start gap-2 text-xs p-3 rounded-lg"
+                  style={{ background: 'rgba(212,176,48,0.08)', border: '1px solid rgba(212,176,48,0.25)', color: 'var(--color-text)' }}
+                >
+                  <Mail size={14} className="shrink-0 mt-0.5" style={{ color: 'var(--color-accent)' }} />
+                  <span>
+                    Check <strong>{newEmail.trim()}</strong> for a confirmation link. Your login email stays{' '}
+                    <strong>{user?.email}</strong> until it&apos;s clicked.{' '}
+                    <button
+                      type="button"
+                      onClick={cancelChangingEmail}
+                      className="underline"
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', padding: 0 }}
+                    >
+                      Use a different address
+                    </button>
+                  </span>
+                </div>
+              )}
             </div>
 
             {/* First / Last name */}
@@ -436,6 +616,118 @@ export default function ProfilePage() {
             </div>
           </form>
         )}
+
+        {/* Authenticator app 2FA — its own security setting, independent of
+            whether the rest of the profile is being edited. */}
+        <div
+          className="rounded-2xl overflow-hidden mt-4"
+          style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderLeft: '3px solid var(--r-violet)' }}
+        >
+          <div className="flex items-center gap-2.5 px-6 pt-5 pb-4">
+            <Smartphone size={15} style={{ color: 'var(--r-violet)' }} />
+            <h3 className="text-xs font-bold tracking-widest uppercase" style={{ color: 'var(--r-violet)' }}>
+              Authenticator App
+            </h3>
+          </div>
+          <div className="px-6 pb-6 flex flex-col gap-3">
+            <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
+              An alternative 2FA code from an app like Google Authenticator or Authy — it works even if text
+              messages or email delivery are ever down, since it never depends on either being reachable.
+            </p>
+
+            {profile?.totp_enabled && !totpSetup && (
+              <div className="flex items-center gap-3 flex-wrap">
+                <span className="flex items-center gap-1.5 text-sm font-semibold" style={{ color: 'var(--r-green)' }}>
+                  <ShieldCheck size={14} /> Enabled
+                </span>
+                {confirmDisableTotp ? (
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs" style={{ color: 'var(--r-red)' }}>Turn off authenticator app 2FA?</span>
+                    <button
+                      type="button"
+                      onClick={disableTotp}
+                      disabled={totpDisabling}
+                      className="cyber-btn btn--sm"
+                      style={{ color: 'var(--r-red)', borderColor: 'var(--r-red)' }}
+                    >
+                      {totpDisabling ? <Loader size={12} className="animate-spin" /> : <Trash2 size={12} />} Confirm
+                    </button>
+                    <button type="button" onClick={() => setConfirmDisableTotp(false)} className="cyber-btn art-btn-ghost btn--sm">
+                      Cancel
+                    </button>
+                  </div>
+                ) : (
+                  <button type="button" onClick={() => setConfirmDisableTotp(true)} className="cyber-btn art-btn-ghost btn--sm">
+                    <X size={12} /> Disable
+                  </button>
+                )}
+              </div>
+            )}
+
+            {!profile?.totp_enabled && !totpSetup && (
+              <button type="button" onClick={startTotpSetup} disabled={totpStarting} className="cyber-btn btn--sm self-start">
+                {totpStarting ? <><Loader size={12} className="animate-spin" /> Starting…</> : <><Smartphone size={12} /> Set Up Authenticator App</>}
+              </button>
+            )}
+
+            {totpError && !totpSetup && (
+              <p className="text-xs flex items-center gap-1.5" style={{ color: 'var(--r-red)' }}>
+                <AlertCircle size={12} /> {totpError}
+              </p>
+            )}
+
+            {totpSetup && (
+              <div className="flex flex-col gap-3" style={{ borderTop: '1px solid var(--color-border)', paddingTop: '16px' }}>
+                <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                  Scan this with your authenticator app, or enter the key manually, then type the 6-digit code it shows.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-4 items-start">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={totpSetup.qrDataUrl} alt="Authenticator app QR code" width={160} height={160} style={{ borderRadius: '10px' }} />
+                  <div className="flex flex-col gap-1.5">
+                    <p className="text-xs font-semibold tracking-widest uppercase" style={{ color: 'var(--color-text-muted)' }}>
+                      Manual entry key
+                    </p>
+                    <p className="text-sm font-mono break-all" style={{ color: 'var(--color-text)' }}>{totpSetup.secret}</p>
+                  </div>
+                </div>
+                <div className="flex flex-col gap-1.5 max-w-[200px]">
+                  <label className="text-xs font-semibold tracking-widest uppercase" style={{ color: 'var(--color-text-muted)' }}>
+                    6-digit code
+                  </label>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={6}
+                    className="cyber-input text-center"
+                    style={{ letterSpacing: '0.3em' }}
+                    placeholder="123456"
+                    value={totpCode}
+                    onChange={e => setTotpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  />
+                </div>
+                {totpError && (
+                  <p className="text-xs flex items-center gap-1.5" style={{ color: 'var(--r-red)' }}>
+                    <AlertCircle size={12} /> {totpError}
+                  </p>
+                )}
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={verifyTotpSetup}
+                    disabled={totpVerifying || totpCode.length !== 6}
+                    className="cyber-btn btn--sm"
+                  >
+                    {totpVerifying ? <Loader size={12} className="animate-spin" /> : <ShieldCheck size={12} />} Verify & Enable
+                  </button>
+                  <button type="button" onClick={cancelTotpSetup} className="cyber-btn art-btn-ghost btn--sm">
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
       </motion.div>
     </div>
   )

@@ -13,15 +13,17 @@ const portalLinks = [
 ]
 
 export default function PortalLayout({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth()
+  const { user, profile, loading } = useAuth()
   const router   = useRouter()
   const pathname = usePathname()
 
   useEffect(() => {
-    if (!loading && !user) router.replace('/login?from=/portal')
-  }, [user, loading, router])
+    if (loading) return
+    if (!user) { router.replace('/login?from=/portal'); return }
+    if (profile?.must_change_password) router.replace('/auth/change-password')
+  }, [user, profile, loading, router])
 
-  if (loading || !user) {
+  if (loading || !user || profile?.must_change_password) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="w-6 h-6 rounded-full border-2 animate-spin" style={{ borderColor: 'var(--color-accent)', borderTopColor: 'transparent' }} />

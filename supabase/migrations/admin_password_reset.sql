@@ -1,0 +1,18 @@
+-- Run this once in the Supabase SQL editor against your existing project.
+--
+-- Also requires, in your dashboard:
+--   Authentication → URL Configuration → Redirect URLs: add
+--   <your-site-url>/auth/change-password (and the localhost equivalent for
+--   dev), or the "send reset link" email's link will be rejected.
+--
+-- Backs the admin "Reset Password" action on a user's profile
+-- (app/admin/users/page.tsx → app/api/admin/users/reset-password/route.ts),
+-- which offers two options:
+--   1. Email the user a reset link (Supabase Auth owns that flow entirely —
+--      nothing to store here).
+--   2. Set a temporary password directly. must_change_password records that
+--      so the very next login forces a stop at app/auth/change-password
+--      before the account can reach /portal or /admin — see the layout
+--      gates in app/admin/layout.tsx and app/portal/layout.tsx. Cleared the
+--      moment they set their own new password.
+alter table profiles add column if not exists must_change_password boolean not null default false;

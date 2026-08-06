@@ -10,12 +10,17 @@ function hashCode(code: string): string {
 }
 
 /** Step 1 of login: verify email/password without creating a persisted
- *  session, then — if 2FA is enabled — text a one-time code via Textbelt
- *  and hand back a challenge id. If SMS can't be sent for any reason (no
- *  phone on file, Textbelt not configured, quota exhausted, send error),
- *  this falls back to emailing a code via Supabase Auth instead — so a
- *  dead phone number or an empty Textbelt balance never locks anyone out,
- *  including an admin who needs back in to fix it.
+ *  session, then — if 2FA is enabled — challenge a second factor and hand
+ *  back a challenge id.
+ *
+ *  Channel order: an enrolled authenticator app (TOTP) is preferred first,
+ *  since it's the one method that depends on neither Textbelt nor
+ *  Supabase's email sending being up. Otherwise it's SMS via Textbelt,
+ *  falling back to emailing a code via Supabase Auth if SMS can't be sent
+ *  for any reason (no phone on file, Textbelt not configured, quota
+ *  exhausted, send error) — so a dead phone number or an empty Textbelt
+ *  balance never locks anyone out, including an admin who needs back in to
+ *  fix it.
  *  The real Supabase session is only established client-side, in step 2
  *  (or immediately here, if 2FA doesn't apply). */
 export async function POST(req: NextRequest) {
@@ -80,9 +85,23 @@ export async function POST(req: NextRequest) {
 
   const { data: profile } = await admin
     .from('profiles')
-    .select('phone')
+    .select('phone, totp_enabled')
     .eq('id', userId)
     .single()
+
+  if (profile?.totp_enabled) {
+    const { data: challenge, error: insertError } = await admin
+      .from('login_totp_challenges')
+      .insert([{ user_id: userId, expires_at: new Date(Date.now() + 5 * 60 * 1000).toISOString() }])
+      .select('id')
+      .single()
+
+    if (insertError || !challenge) {
+      return NextResponse.json({ error: 'Failed to start verification. Please try again.' }, { status: 500 })
+    }
+
+    return NextResponse.json({ ok: true, requiresOtp: true, channel: 'totp' as const, challengeId: challenge.id })
+  }
 
   const phone = profile?.phone as string | null | undefined
   const key   = process.env.TEXTBELT_API_KEY
