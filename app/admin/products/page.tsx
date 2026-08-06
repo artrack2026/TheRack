@@ -2,7 +2,7 @@
 
 import { useEffect, useState, FormEvent, ChangeEvent } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, Pencil, Trash2, Star, X, Loader, Save, ImagePlus, AlertCircle } from 'lucide-react'
+import { Plus, Pencil, Trash2, Star, X, Loader, Save, ImagePlus, AlertCircle, Search } from 'lucide-react'
 import Image from 'next/image'
 import { isSupabaseConfigured, getSupabaseClient } from '@/lib/supabase'
 import { Product, ProductCategory } from '@/lib/types'
@@ -24,6 +24,15 @@ export default function AdminProductsPage() {
   const [uploading, setUploading]     = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
   const [loadError, setLoadError]     = useState<string | null>(null)
+  const [search, setSearch]           = useState('')
+  const [categoryFilter, setCategoryFilter] = useState<'all' | ProductCategory>('all')
+
+  const filteredProducts = products.filter(p => {
+    if (categoryFilter !== 'all' && p.category !== categoryFilter) return false
+    if (!search.trim()) return true
+    const q = search.trim().toLowerCase()
+    return p.title.toLowerCase().includes(q) || (p.sku ?? '').toLowerCase().includes(q)
+  })
 
   const load = async () => {
     if (!isSupabaseConfigured) { setLoading(false); return }
@@ -261,18 +270,76 @@ export default function AdminProductsPage() {
         </div>
       )}
 
+      {/* Search + category filter */}
+      {!loading && products.length > 0 && (
+        <div className="flex flex-col gap-2 mb-4">
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="relative flex-1">
+              <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: 'var(--color-text-muted)' }} />
+              <input
+                type="text"
+                className="cyber-input w-full"
+                style={{ paddingLeft: '2.5rem', paddingRight: search ? '2.5rem' : undefined }}
+                placeholder="Search by title or product ID…"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+              />
+              {search && (
+                <button
+                  type="button"
+                  onClick={() => setSearch('')}
+                  aria-label="Clear search"
+                  className="absolute right-3 top-1/2 -translate-y-1/2"
+                  style={{ color: 'var(--color-text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}
+                >
+                  <X size={14} />
+                </button>
+              )}
+            </div>
+
+            <div className="flex gap-2 shrink-0">
+              {([['all', 'All'], ['artwork', 'Artwork'], ['reclaimed', 'Reclaimed'], ['goods', 'Goods']] as const).map(([key, label]) => {
+                const active = categoryFilter === key
+                const color  = key === 'all' ? 'var(--color-accent)' : CAT_COLOR[key]
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setCategoryFilter(key)}
+                    className="px-3 py-2 text-xs font-semibold tracking-wide rounded-lg transition-colors shrink-0"
+                    style={{
+                      background: active ? 'var(--color-surface-2)' : 'transparent',
+                      color:      active ? color : 'var(--color-text-muted)',
+                      border:     `1px solid ${active ? color : 'var(--color-border)'}`,
+                    }}
+                  >
+                    {label}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          {(search || categoryFilter !== 'all') && (
+            <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+              {filteredProducts.length} of {products.length} products
+            </p>
+          )}
+        </div>
+      )}
+
       {/* Product list */}
       {loading ? (
         <div className="flex justify-center py-16">
           <div className="w-6 h-6 rounded-full border-2 animate-spin" style={{ borderColor: 'var(--color-accent)', borderTopColor: 'transparent' }} />
         </div>
-      ) : products.length === 0 && !loadError ? (
+      ) : filteredProducts.length === 0 && !loadError ? (
         <div className="text-center py-20" style={{ color: 'var(--color-text-muted)' }}>
-          <p>No products yet.</p>
+          <p>{products.length === 0 ? 'No products yet.' : 'No products match your search.'}</p>
         </div>
       ) : (
         <div className="flex flex-col gap-3">
-          {products.map((product, i) => {
+          {filteredProducts.map((product, i) => {
             const c = CAT_COLOR[product.category] ?? '#ccc'
             return (
               <motion.div
