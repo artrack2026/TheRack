@@ -1,5 +1,5 @@
 import jsPDF from 'jspdf'
-import { Order, OrderItem, Profile } from './types'
+import { Order, OrderItem, OrderRefund, Profile } from './types'
 
 export const STATUS_LABELS: Record<string, string> = {
   new:           'New',
@@ -23,15 +23,26 @@ interface InvoiceData {
   order: Order & { items?: OrderItem[] }
   profile?: Profile | null
   businessName?: string
+  /** Partial refunds render as "Post-Sale Discount" lines for bookkeeping —
+   *  full refunds/voids are already reflected via order.status. */
+  refunds?: OrderRefund[]
 }
 
 /** Pure HTML string generator — usable in the browser (print/PDF) and on the server (email). */
-export function buildInvoiceHtml({ order, profile, businessName = 'Art-R-Ack' }: InvoiceData): string {
-  const items    = order.items ?? []
-  const subtotal = items.reduce((s, i) => s + i.price * i.quantity, 0)
-  const balance  = Math.max(0, order.total - order.amount_paid)
-  const short    = shortOrderId(order.id)
-  const date     = new Date(order.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+export function buildInvoiceHtml({ order, profile, businessName = 'Art-R-Ack', refunds = [] }: InvoiceData): string {
+  const items      = order.items ?? []
+  const subtotal   = items.reduce((s, i) => s + i.price * i.quantity, 0)
+  const balance    = Math.max(0, order.total - order.amount_paid)
+  const short      = shortOrderId(order.id)
+  const date       = new Date(order.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+  const discounts  = refunds.filter(r => !r.is_full_refund)
+
+  const discountRows = discounts.map(r => `
+    <tr>
+      <td style="padding:3px 4px;color:#7a1f2b;">Post-Sale Discount — ${new Date(r.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</td>
+      <td style="padding:3px 4px;text-align:right;color:#7a1f2b;">−${money(r.amount)}</td>
+    </tr>
+  `).join('')
 
   const addressLines = [order.address_line1, order.address_line2, [order.city, order.state, order.zip].filter(Boolean).join(', ')]
     .filter(Boolean).join('<br/>')
@@ -91,6 +102,7 @@ export function buildInvoiceHtml({ order, profile, businessName = 'Art-R-Ack' }:
         <tr><td style="padding:3px 4px;color:#666;">Shipping</td><td style="padding:3px 4px;text-align:right;">${order.shipping_total === 0 ? 'Free' : money(order.shipping_total)}</td></tr>
         <tr><td style="padding:3px 4px;color:#666;">Tax</td><td style="padding:3px 4px;text-align:right;">${money(order.tax_total)}</td></tr>
         <tr style="border-top:2px solid #222;"><td style="padding:6px 4px;font-weight:bold;">Total</td><td style="padding:6px 4px;text-align:right;font-weight:bold;">${money(order.total)}</td></tr>
+        ${discountRows}
         <tr><td style="padding:3px 4px;color:#3a9a5a;">Amount Paid</td><td style="padding:3px 4px;text-align:right;color:#3a9a5a;">${money(order.amount_paid)}</td></tr>
         ${balance > 0 ? `<tr><td style="padding:3px 4px;color:#7a1f2b;font-weight:bold;">Balance Due</td><td style="padding:3px 4px;text-align:right;color:#7a1f2b;font-weight:bold;">${money(balance)}</td></tr>` : ''}
       </table>
@@ -116,11 +128,12 @@ function escapeHtml(s: string) {
 }
 
 /** Client-only — triggers a browser download of a basic PDF invoice. */
-export function downloadInvoicePdf({ order, businessName = 'Art-R-Ack' }: InvoiceData) {
-  const items    = order.items ?? []
-  const subtotal = items.reduce((s, i) => s + i.price * i.quantity, 0)
-  const balance  = Math.max(0, order.total - order.amount_paid)
-  const short    = shortOrderId(order.id)
+export function downloadInvoicePdf({ order, businessName = 'Art-R-Ack', refunds = [] }: InvoiceData) {
+  const items      = order.items ?? []
+  const subtotal   = items.reduce((s, i) => s + i.price * i.quantity, 0)
+  const balance    = Math.max(0, order.total - order.amount_paid)
+  const short      = shortOrderId(order.id)
+  const discounts  = refunds.filter(r => !r.is_full_refund)
 
   const doc = new jsPDF()
   let y = 20
@@ -177,6 +190,10 @@ export function downloadInvoicePdf({ order, businessName = 'Art-R-Ack' }: Invoic
   row('Shipping', order.shipping_total === 0 ? 'Free' : `$${order.shipping_total.toFixed(2)}`)
   row('Tax', `$${order.tax_total.toFixed(2)}`)
   row('Total', `$${order.total.toFixed(2)}`, true)
+  discounts.forEach(r => {
+    const label = `Post-Sale Discount — ${new Date(r.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
+    row(label, `−$${r.amount.toFixed(2)}`, false, [122, 31, 43])
+  })
   row('Amount Paid', `$${order.amount_paid.toFixed(2)}`, false, [58, 154, 90])
   if (balance > 0) row('Balance Due', `$${balance.toFixed(2)}`, true, [122, 31, 43])
 

@@ -145,3 +145,32 @@ export interface Order {
   created_at: string
   items?: OrderItem[]
 }
+
+/* ── Refunds / store credit ── */
+
+export type RefundMethod = 'cash' | 'store_credit' | 'original_payment_method'
+
+export interface OrderRefund {
+  id: string
+  order_id: string
+  amount: number
+  method: RefundMethod
+  is_full_refund: boolean
+  note: string | null
+  created_at: string
+  created_by: string | null
+}
+
+/** Append-only ledger row — a customer's store-credit balance is the sum of
+ *  their rows' `amount` (positive = credit issued; a future redemption
+ *  feature would post negative rows to spend it down). */
+export interface StoreCredit {
+  id: string
+  user_id: string | null
+  customer_email: string
+  amount: number
+  reason: string
+  order_id: string | null
+  created_at: string
+  created_by: string | null
+}

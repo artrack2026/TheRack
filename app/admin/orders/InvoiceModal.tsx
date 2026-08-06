@@ -2,10 +2,11 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Printer, Download, Mail, Loader, CheckCircle, AlertCircle, Save, DollarSign } from 'lucide-react'
+import { X, Printer, Download, Mail, Loader, CheckCircle, AlertCircle, Save, DollarSign, RotateCcw } from 'lucide-react'
 import { getSupabaseClient } from '@/lib/supabase'
-import { Order, OrderItem, Profile } from '@/lib/types'
+import { Order, OrderItem, OrderRefund, Profile } from '@/lib/types'
 import { buildInvoiceHtml, downloadInvoicePdf, shortOrderId } from '@/lib/invoice'
+import RefundModal from './RefundModal'
 
 interface Props {
   orderId: string | null
@@ -16,6 +17,7 @@ interface Props {
 export default function InvoiceModal({ orderId, onClose, onOrderUpdate }: Props) {
   const [order, setOrder]     = useState<(Order & { items?: OrderItem[] }) | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
+  const [refunds, setRefunds] = useState<OrderRefund[]>([])
   const [loading, setLoading] = useState(false)
 
   const [amountPaid, setAmountPaid]   = useState('')
@@ -24,6 +26,8 @@ export default function InvoiceModal({ orderId, onClose, onOrderUpdate }: Props)
 
   const [emailState, setEmailState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
   const [emailError, setEmailError] = useState<string | null>(null)
+
+  const [refundOpen, setRefundOpen] = useState(false)
 
   const load = useCallback(async (id: string) => {
     setLoading(true)
@@ -41,6 +45,13 @@ export default function InvoiceModal({ orderId, onClose, onOrderUpdate }: Props)
       setOrder(o)
       setAmountPaid(o ? String(o.amount_paid) : '0')
 
+      const { data: refundData } = await sb
+        .from('order_refunds')
+        .select('*')
+        .eq('order_id', id)
+        .order('created_at', { ascending: true })
+      setRefunds((refundData as OrderRefund[]) ?? [])
+
       if (o?.customer_email) {
         const { data: profileData } = await sb
           .from('profiles')
@@ -57,7 +68,7 @@ export default function InvoiceModal({ orderId, onClose, onOrderUpdate }: Props)
 
   useEffect(() => {
     if (orderId) load(orderId)
-    else { setOrder(null); setProfile(null) }
+    else { setOrder(null); setProfile(null); setRefunds([]); setRefundOpen(false) }
   }, [orderId, load])
 
   const saveAmountPaid = async () => {
@@ -76,6 +87,14 @@ export default function InvoiceModal({ orderId, onClose, onOrderUpdate }: Props)
     finally { setSavingPaid(false) }
   }
 
+  const handleRefundSuccess = (updated: Order) => {
+    const merged = order ? { ...order, ...updated } : updated
+    setOrder(merged)
+    setAmountPaid(String(updated.amount_paid))
+    onOrderUpdate?.(merged)
+    if (order) load(order.id) // pick up the new order_refunds row for the invoice/discount line
+  }
+
   const sendInvoiceEmail = async () => {
     if (!order) return
     setEmailState('sending')
@@ -92,7 +111,7 @@ export default function InvoiceModal({ orderId, onClose, onOrderUpdate }: Props)
     }
   }
 
-  const invoiceHtml = order ? buildInvoiceHtml({ order, profile }) : ''
+  const invoiceHtml = order ? buildInvoiceHtml({ order, profile, refunds }) : ''
 
   return (
     <AnimatePresence>
@@ -169,15 +188,22 @@ export default function InvoiceModal({ orderId, onClose, onOrderUpdate }: Props)
             {/* Footer actions */}
             {order && (
               <div className="flex items-center justify-end gap-2 px-6 py-4 no-print flex-wrap" style={{ borderTop: '1px solid var(--color-border)' }}>
-                {emailState === 'error' && (
-                  <span className="text-xs flex items-center gap-1 mr-auto" style={{ color: 'var(--r-red)' }}>
-                    <AlertCircle size={12} /> {emailError}
-                  </span>
-                )}
+                <div className="flex items-center gap-2 mr-auto flex-wrap">
+                  {emailState === 'error' && (
+                    <span className="text-xs flex items-center gap-1" style={{ color: 'var(--r-red)' }}>
+                      <AlertCircle size={12} /> {emailError}
+                    </span>
+                  )}
+                  {order.amount_paid > 0 && (
+                    <button onClick={() => setRefundOpen(true)} className="cyber-btn btn--red btn--sm flex items-center gap-1.5">
+                      <RotateCcw size={13} /> Void / Refund
+                    </button>
+                  )}
+                </div>
                 <button onClick={() => window.print()} className="cyber-btn btn--sm flex items-center gap-1.5">
                   <Printer size={13} /> Print
                 </button>
-                <button onClick={() => downloadInvoicePdf({ order, profile })} className="cyber-btn btn--sm flex items-center gap-1.5">
+                <button onClick={() => downloadInvoicePdf({ order, profile, refunds })} className="cyber-btn btn--sm flex items-center gap-1.5">
                   <Download size={13} /> Download
                 </button>
                 <button onClick={sendInvoiceEmail} disabled={emailState === 'sending'} className="cyber-btn btn--blue btn--sm flex items-center gap-1.5">
@@ -192,6 +218,14 @@ export default function InvoiceModal({ orderId, onClose, onOrderUpdate }: Props)
             )}
           </motion.div>
         </>
+      )}
+
+      {order && (
+        <RefundModal
+          order={refundOpen ? order : null}
+          onClose={() => setRefundOpen(false)}
+          onSuccess={handleRefundSuccess}
+        />
       )}
     </AnimatePresence>
   )

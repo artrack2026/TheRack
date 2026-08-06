@@ -460,6 +460,54 @@ export interface Database {
         }
         Relationships: Rel
       }
+      order_refunds: {
+        Row: {
+          id: string
+          order_id: string
+          amount: number
+          method: 'cash' | 'store_credit' | 'original_payment_method'
+          is_full_refund: boolean
+          note: string | null
+          created_at: string
+          created_by: string | null
+        }
+        Insert: {
+          id?: string
+          order_id: string
+          amount: number
+          method: 'cash' | 'store_credit' | 'original_payment_method'
+          is_full_refund?: boolean
+          note?: string | null
+          created_at?: string
+          created_by?: string | null
+        }
+        Update: Record<string, never>
+        Relationships: Rel
+      }
+      store_credits: {
+        Row: {
+          id: string
+          user_id: string | null
+          customer_email: string
+          amount: number
+          reason: string
+          order_id: string | null
+          created_at: string
+          created_by: string | null
+        }
+        Insert: {
+          id?: string
+          user_id?: string | null
+          customer_email: string
+          amount: number
+          reason?: string
+          order_id?: string | null
+          created_at?: string
+          created_by?: string | null
+        }
+        Update: Record<string, never>
+        Relationships: Rel
+      }
     }
   }
 }
@@ -768,6 +816,38 @@ create table if not exists vendor_credentials (
   primary key (vendor, credential_key)
 );
 
+-- ── Refunds / store credit ─────────────────────────────────────────
+-- order_refunds: audit trail of every void/refund action on an order (full
+-- or partial). Partial refunds render as a "Post-Sale Discount" line on the
+-- invoice, sourced from this table.
+-- store_credits: append-only ledger — a customer's balance is sum(amount)
+-- for their rows. Not wired into checkout redemption yet.
+create table if not exists order_refunds (
+  id uuid primary key default gen_random_uuid(),
+  order_id uuid not null references orders(id) on delete cascade,
+  amount numeric(10,2) not null check (amount > 0),
+  method text not null check (method in ('cash', 'store_credit', 'original_payment_method')),
+  is_full_refund boolean not null default false,
+  note text,
+  created_at timestamptz not null default now(),
+  created_by uuid references auth.users(id) on delete set null
+);
+
+create table if not exists store_credits (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references auth.users(id) on delete set null,
+  customer_email text not null,
+  amount numeric(10,2) not null,
+  reason text not null default 'refund',
+  order_id uuid references orders(id) on delete set null,
+  created_at timestamptz not null default now(),
+  created_by uuid references auth.users(id) on delete set null
+);
+
+create index if not exists order_refunds_order_id_idx on order_refunds(order_id);
+create index if not exists store_credits_customer_email_idx on store_credits(lower(customer_email));
+create index if not exists store_credits_user_id_idx on store_credits(user_id);
+
 -- ── Row-Level Security ────────────────────────────────────────────
 alter table products    enable row level security;
 alter table inquiries   enable row level security;
@@ -781,6 +861,8 @@ alter table login_otp_challenges enable row level security;
 alter table phone_change_challenges enable row level security;
 alter table rate_limit_windows enable row level security;
 alter table vendor_credentials enable row level security;
+alter table order_refunds enable row level security;
+alter table store_credits enable row level security;
 
 create policy "products_public_read"   on products for select using (true);
 create policy "products_admin_all"     on products for all using (
@@ -808,4 +890,11 @@ create policy "order_items_open"       on order_items for all using (true);
 create policy "showroom_settings_public_read" on showroom_settings for select using (true);
 create policy "showroom_settings_admin_update" on showroom_settings for update using (
   exists (select 1 from profiles where id = auth.uid() and role = 'admin'));
+
+create policy "order_refunds_admin_all" on order_refunds for all using (
+  exists (select 1 from profiles where id = auth.uid() and role = 'admin'));
+
+create policy "store_credits_admin_all" on store_credits for all using (
+  exists (select 1 from profiles where id = auth.uid() and role = 'admin'));
+create policy "store_credits_own_select" on store_credits for select using (auth.uid() = user_id);
 `

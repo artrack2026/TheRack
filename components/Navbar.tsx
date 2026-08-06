@@ -101,6 +101,9 @@ export default function Navbar() {
 
         {/* Right side */}
         <div className="hidden md:flex items-center gap-2">
+          {/* Search icon — expands into the input field to its left when clicked */}
+          <HeaderSearch collapsible />
+
           {/* Cart button */}
           <button
             onClick={openCart}
@@ -225,12 +228,6 @@ export default function Navbar() {
             {open ? <X size={22} /> : <Menu size={22} />}
           </button>
         </div>
-      </div>
-
-      {/* Search — its own centered row below the main nav, desktop only
-          (mobile gets it inside the hamburger menu instead). */}
-      <div className="hidden md:flex justify-center px-6 pb-3">
-        <HeaderSearch className="w-full max-w-md" />
       </div>
 
       {/* Mobile menu */}
