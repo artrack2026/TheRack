@@ -509,7 +509,7 @@ export default function CheckoutPage() {
                       >
                         <Image
                           src={item.image || '/images/placeholder.svg'}
-                          alt={item.title} fill className="object-cover" sizes="52px"
+                          alt={item.title} fill unoptimized className="object-cover" sizes="52px"
                         />
                       </div>
                       <div className="flex-1 min-w-0">

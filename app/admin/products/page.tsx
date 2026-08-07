@@ -24,6 +24,7 @@ export default function AdminProductsPage() {
   const [uploading, setUploading]     = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
   const [loadError, setLoadError]     = useState<string | null>(null)
+  const [saveError, setSaveError]     = useState<string | null>(null)
   const [search, setSearch]           = useState('')
   const [categoryFilter, setCategoryFilter] = useState<'all' | ProductCategory>('all')
 
@@ -45,26 +46,34 @@ export default function AdminProductsPage() {
 
   useEffect(() => { load() }, [])
 
-  const openNew  = () => setEditing({ ...EMPTY })
-  const openEdit = (p: Product) => setEditing({ ...p })
+  const openNew  = () => { setEditing({ ...EMPTY }); setSaveError(null); setUploadError(null) }
+  const openEdit = (p: Product) => { setEditing({ ...p }); setSaveError(null); setUploadError(null) }
   const close    = () => setEditing(null)
 
   const handleSave = async (e: FormEvent) => {
     e.preventDefault()
     if (!editing || !isSupabaseConfigured) return
     setSaving(true)
+    setSaveError(null)
     const supabase = getSupabaseClient()
 
-    if (editing.id) {
-      const { id, created_at, ...rest } = editing as Product
-      await supabase.from('products').update(rest).eq('id', id)
-    } else {
-      await supabase.from('products').insert([editing as Product])
-    }
+    try {
+      if (editing.id) {
+        const { id, created_at, ...rest } = editing as Product
+        const { error } = await supabase.from('products').update(rest).eq('id', id)
+        if (error) throw error
+      } else {
+        const { error } = await supabase.from('products').insert([editing as Product])
+        if (error) throw error
+      }
 
-    await load()
-    setSaving(false)
-    close()
+      await load()
+      close()
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'Failed to save product')
+    } finally {
+      setSaving(false)
+    }
   }
 
   const handleImageUpload = async (e: ChangeEvent<HTMLInputElement>) => {
@@ -211,7 +220,7 @@ export default function AdminProductsPage() {
                           className="relative aspect-square rounded-lg overflow-hidden"
                           style={{ background: 'var(--color-bg)', border: '1px solid var(--color-border)' }}
                         >
-                          <Image src={url} alt="" fill className="object-cover" sizes="80px" />
+                          <Image src={url} alt="" fill unoptimized className="object-cover" sizes="80px" />
                           <button
                             type="button"
                             onClick={() => removeImage(url)}
@@ -248,6 +257,12 @@ export default function AdminProductsPage() {
                     onChange={e => setEditing(prev => ({ ...prev, featured: e.target.checked }))} />
                   <span className="text-sm font-medium" style={{ color: 'var(--color-text)' }}>Mark as Featured (shows on rack)</span>
                 </label>
+
+                {saveError && (
+                  <div className="flex items-center gap-2 text-sm px-3 py-2.5 rounded-lg" style={{ background: 'rgba(224,88,88,0.1)', color: 'var(--r-red)', border: '1px solid rgba(224,88,88,0.25)' }}>
+                    <AlertCircle size={14} /> {saveError}
+                  </div>
+                )}
 
                 <div className="flex gap-3 pt-2">
                   <button type="submit" disabled={saving} className="cyber-btn">
@@ -356,7 +371,7 @@ export default function AdminProductsPage() {
                 {/* Thumbnail */}
                 <div className="w-12 h-12 rounded-lg overflow-hidden shrink-0" style={{ background: 'var(--color-bg)' }}>
                   {product.images?.[0] ? (
-                    <Image src={product.images[0]} alt={product.title} width={48} height={48} className="object-cover w-full h-full" />
+                    <Image src={product.images[0]} alt={product.title} width={48} height={48} unoptimized className="object-cover w-full h-full" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-lg">🎨</div>
                   )}

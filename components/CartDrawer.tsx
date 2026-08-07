@@ -138,6 +138,7 @@ export default function CartDrawer() {
                           src={item.image || '/images/placeholder.svg'}
                           alt={item.title}
                           fill
+                          unoptimized
                           className="object-cover"
                           sizes="64px"
                         />

@@ -146,6 +146,7 @@ export default function ProductDetailPage() {
               src={product.images[activeImage] || '/images/placeholder.svg'}
               alt={product.title}
               fill
+              unoptimized
               className="object-cover"
               sizes="(max-width: 1024px) 100vw, 50vw"
               priority
@@ -176,7 +177,7 @@ export default function ProductDetailPage() {
                     background: 'var(--color-surface)',
                   }}
                 >
-                  <Image src={img} alt="" fill className="object-cover" sizes="64px" />
+                  <Image src={img} alt="" fill unoptimized className="object-cover" sizes="64px" />
                 </button>
               ))}
             </div>

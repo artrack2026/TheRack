@@ -82,6 +82,7 @@ export default function ProductCard({ product, index = 0 }: Props) {
                 src={imageSrc}
                 alt={product.title}
                 fill
+                unoptimized
                 className="object-cover transition-transform duration-500 group-hover:scale-105"
                 sizes="(max-width: 768px) 100vw, 33vw"
               />

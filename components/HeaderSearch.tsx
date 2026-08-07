@@ -139,7 +139,7 @@ export default function HeaderSearch({ className = '', onNavigate, collapsible =
             >
               <div className="relative shrink-0 rounded-lg overflow-hidden" style={{ width: 40, height: 40, background: 'var(--color-bg)' }}>
                 {product.images?.[0] && (
-                  <Image src={product.images[0]} alt="" fill className="object-cover" sizes="40px" />
+                  <Image src={product.images[0]} alt="" fill unoptimized className="object-cover" sizes="40px" />
                 )}
               </div>
               <div className="flex-1 min-w-0">
