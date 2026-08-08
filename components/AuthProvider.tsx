@@ -136,7 +136,12 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) return
       if (!hasMarkerCookie(SESSION_STARTED_COOKIE) || !hasMarkerCookie(LAST_ACTIVE_COOKIE)) {
-        await supabase.auth.signOut()
+        // scope: 'local' — this only ends the session in *this* browser.
+        // The default scope is 'global', which revokes the refresh token
+        // for every device/tab signed into this account; an idle tab in
+        // one window has no business logging out an active session in
+        // another.
+        await supabase.auth.signOut({ scope: 'local' })
         return
       }
       setMarkerCookie(LAST_ACTIVE_COOKIE, SESSION_INACTIVITY_MAX_AGE)

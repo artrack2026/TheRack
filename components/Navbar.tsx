@@ -149,7 +149,7 @@ export default function Navbar() {
               {/* No AnimatePresence — static show/hide so buttons always fire */}
               {userMenu && (
                 <div
-                  className="absolute right-0 mt-2 py-1 min-w-[180px]"
+                  className="absolute right-0 mt-2 py-1 min-w-[220px]"
                   style={{
                     background: 'var(--color-surface)',
                     border: '1px solid var(--color-border)',
@@ -158,6 +158,19 @@ export default function Navbar() {
                     zIndex: 100,
                   }}
                 >
+                  {/* Always-visible identity — a display name alone can look
+                      the same across two different accounts (e.g. testing a
+                      second profile in the same browser); email + role make
+                      a session mix-up obvious immediately instead of only
+                      showing up later as a missing admin link. */}
+                  <div className="px-4 pt-2.5 pb-2" style={{ borderBottom: '1px solid var(--color-border)' }}>
+                    <p className="text-xs truncate" style={{ color: 'var(--color-text-muted)' }}>{user?.email}</p>
+                    {isAdmin && (
+                      <p className="text-[10px] font-bold tracking-widest uppercase mt-0.5" style={{ color: 'var(--r-violet)' }}>
+                        Admin
+                      </p>
+                    )}
+                  </div>
                   <Link
                     href="/portal"
                     className="flex items-center gap-2.5 px-4 py-2.5 text-sm transition-colors hover:bg-white/5"

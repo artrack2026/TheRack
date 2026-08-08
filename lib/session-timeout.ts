@@ -19,5 +19,10 @@ export const LAST_ACTIVE_COOKIE = 'last_active_at'
 /** Absolute cap on a login, regardless of activity. */
 export const SESSION_ABSOLUTE_MAX_AGE = 60 * 60 * 24 // 24 hours
 
-/** How long a session may sit idle before it's treated as expired. */
-export const SESSION_INACTIVITY_MAX_AGE = 60 * 60 * 2 // 2 hours
+/** How long a session may sit idle before it's treated as expired. Kept
+ *  short on purpose: this is also what forces a stale/idle admin session
+ *  to sign out on its own — e.g. an admin tab left open in one browser
+ *  window while a test customer account is signed into another — so it
+ *  can't keep hanging around long enough to cause the "which account is
+ *  even active here" confusion a full-day session would allow. */
+export const SESSION_INACTIVITY_MAX_AGE = 60 * 30 // 30 minutes
