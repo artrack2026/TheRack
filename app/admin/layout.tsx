@@ -1,9 +1,9 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
-import { LayoutDashboard, Package, MessageSquare, Users, LogOut, ChevronRight, Shield, Settings } from 'lucide-react'
+import { LayoutDashboard, Package, MessageSquare, Users, LogOut, ChevronRight, Shield, Settings, AlertCircle, RotateCcw } from 'lucide-react'
 import { useAuth } from '@/components/AuthProvider'
 
 const adminLinks = [
@@ -15,7 +15,7 @@ const adminLinks = [
 ]
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  const { user, profile, loading } = useAuth()
+  const { user, profile, loading, refreshProfile } = useAuth()
   const router   = useRouter()
   const pathname = usePathname()
 
@@ -26,7 +26,43 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     if (profile && profile.role !== 'admin') router.replace('/portal')
   }, [user, profile, loading, router])
 
+  /* A logged-in user whose profile row fails to load (RLS hiccup, network
+     blip) previously fell through every branch above forever — `user` is
+     truthy so it's not the "not logged in" case, but `profile` is null so
+     it's not the "wrong role" case either, and nothing ever redirected.
+     That left this page spinning indefinitely with no way out. This turns
+     that into a visible, recoverable state instead. */
+  const [profileTimedOut, setProfileTimedOut] = useState(false)
+  useEffect(() => {
+    if (loading || !user || profile) { setProfileTimedOut(false); return }
+    const timer = setTimeout(() => setProfileTimedOut(true), 6000)
+    return () => clearTimeout(timer)
+  }, [loading, user, profile])
+
   const ready = !loading && user && profile?.role === 'admin' && !profile?.must_change_password
+
+  if (!ready && profileTimedOut) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4 px-4 text-center">
+        <AlertCircle size={28} style={{ color: 'var(--r-red)' }} />
+        <p style={{ color: 'var(--color-text)' }}>Couldn&apos;t load your account. This is usually a brief connection hiccup.</p>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => { setProfileTimedOut(false); refreshProfile() }}
+            className="cyber-btn text-sm"
+          >
+            <RotateCcw size={14} /> Retry
+          </button>
+          <button
+            onClick={() => { window.location.href = '/api/auth/signout' }}
+            className="cyber-btn art-btn-ghost text-sm"
+          >
+            Sign Out
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   if (!ready) {
     return (

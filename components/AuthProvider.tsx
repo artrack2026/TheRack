@@ -54,14 +54,19 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
     if (!isSupabaseConfigured) return
     try {
       const supabase = getSupabaseClient()
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', uid)
         .single()
+      if (error) throw error
       setProfile(data ?? null)
-    } catch {
-      // Profile fetch failed — non-fatal, user is still logged in
+    } catch (err) {
+      // Non-fatal — user is still logged in with profile null, but log it:
+      // a null profile silently blocks admin/portal role checks downstream,
+      // so a swallowed error here used to be invisible until it manifested
+      // as a stuck loading screen with no clue why.
+      console.error('Failed to load profile:', err)
       setProfile(null)
     }
   }, [])
