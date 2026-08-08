@@ -232,22 +232,30 @@ const TABS: { key: TabKey; label: string; icon: typeof Palette }[] = [
   { key: 'messaging',    label: 'Messaging',    icon: MessageSquareMore },
   { key: 'products',     label: 'Products',     icon: Package },
   { key: 'orders',       label: 'Orders',       icon: ClipboardList },
-  { key: 'vendors',      label: 'CC Vendors',   icon: CreditCard },
+  { key: 'vendors',      label: 'Payments',     icon: CreditCard },
   { key: 'consignment',  label: 'Consignment',  icon: Handshake },
 ]
 
 /* ── CC Vendors ──
    Credentials are encrypted server-side (lib/vendor-credentials.ts) and
-   stored in Supabase — this list is just the UI catalog of which vendors
-   have a slot, not the credentials themselves. */
-const VENDORS: {
+   stored in Supabase — this list is just the UI catalog of a few known
+   vendors with real branding. Anything the owner adds through the "Add
+   Vendor" form in the Payments tab isn't in this array at all — it's
+   reconstructed at render time from whatever's actually in the
+   vendor_credentials table (see vendorSlots in ShowroomSettingsPage),
+   which is exactly how a brand-new processor can be wired in with no code
+   change or redeploy: the vendor/credentialKey typed into that form *is*
+   the display label, stored as entered rather than a separate slug. */
+interface VendorSlot {
   vendor: string
   credentialKey: string
   label: string
   credentialLabel: string
   Icon: React.ElementType
   color: string
-}[] = [
+}
+
+const SUGGESTED_VENDORS: VendorSlot[] = [
   { vendor: 'stripe', credentialKey: 'secret_key',   label: 'Stripe', credentialLabel: 'Secret Key',    Icon: SiStripe, color: '#635BFF' },
   { vendor: 'square', credentialKey: 'access_token', label: 'Square', credentialLabel: 'Access Token',  Icon: SiSquare, color: '#3E4348' },
 ]
@@ -272,10 +280,12 @@ export default function ShowroomSettingsPage() {
   const [saveError, setSaveError] = useState<string | null>(null)
   const [saveSuccess, setSaveSuccess] = useState(false)
 
-  /* Unsaved-changes guard — only the main form (Messaging/Products/Orders/CC
-     Vendors) is tracked. Branding colors save instantly on every pick
-     (useTheme's setColors writes to localStorage immediately), so there's
-     never an "unsaved" branding state to warn about. */
+  /* Unsaved-changes guard — only the main form (Security/Messaging/
+     Products/Orders/Payments) is tracked. Branding colors save instantly
+     on every pick (useTheme's setColors writes to localStorage
+     immediately), so there's never an "unsaved" branding state to warn
+     about. Vendor credentials also save on their own, separately from
+     this form. */
   const hasUnsavedChanges = JSON.stringify(form) !== JSON.stringify(settings)
 
   /* ── CC Vendors ── */
@@ -285,6 +295,25 @@ export default function ShowroomSettingsPage() {
   const [vendorSaving, setVendorSaving] = useState<string | null>(null)
   const [vendorError, setVendorError]   = useState<Record<string, string | null>>({})
   const [vendorSaved, setVendorSaved]   = useState<Record<string, boolean>>({})
+
+  /* Every configured vendor:credentialKey pair beyond the suggested Stripe/
+     Square ones is a processor the owner added themselves through "Add
+     Vendor" below — reconstructed straight from vendor_credentials, so it
+     persists and reappears on reload with no code involved. */
+  const customVendorSlots: VendorSlot[] = Object.keys(vendorStatus)
+    .filter(key => !SUGGESTED_VENDORS.some(v => `${v.vendor}:${v.credentialKey}` === key))
+    .map(key => {
+      const [vendor, credentialKey] = key.split(':')
+      return { vendor, credentialKey, label: vendor, credentialLabel: credentialKey, Icon: Key, color: 'var(--color-text-muted)' }
+    })
+  const vendorSlots = [...SUGGESTED_VENDORS, ...customVendorSlots]
+
+  const [showAddVendor, setShowAddVendor]           = useState(false)
+  const [newVendorName, setNewVendorName]           = useState('')
+  const [newVendorCredLabel, setNewVendorCredLabel] = useState('')
+  const [newVendorValue, setNewVendorValue]         = useState('')
+  const [addingVendor, setAddingVendor]             = useState(false)
+  const [addVendorError, setAddVendorError]         = useState<string | null>(null)
 
   /* ── Loaders ── */
 
@@ -435,6 +464,43 @@ export default function ShowroomSettingsPage() {
       setVendorStatus(s => ({ ...s, [vendorKey]: { configured: false, lastFour: null, updatedAt: null } }))
     } finally {
       setVendorSaving(null)
+    }
+  }
+
+  /* Adds a brand-new processor slot on the fly — the vendor name and
+     credential label are stored exactly as typed and become that row's
+     display text from then on, so this is the entire mechanism for wiring
+     a new vendor's API key into the site with no code change or redeploy. */
+  const handleAddVendor = async () => {
+    const vendor        = newVendorName.trim()
+    const credentialKey = newVendorCredLabel.trim()
+    const value          = newVendorValue.trim()
+    if (!vendor || !credentialKey || !value) {
+      setAddVendorError('Vendor name, credential label, and the key value are all required.')
+      return
+    }
+    setAddingVendor(true)
+    setAddVendorError(null)
+    try {
+      const res  = await fetch('/api/admin/vendor-credentials', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ vendor, credentialKey, value }),
+      })
+      const data = await res.json()
+      if (!res.ok) { setAddVendorError(data.error ?? 'Failed to add vendor'); return }
+      setVendorStatus(s => ({
+        ...s,
+        [`${vendor}:${credentialKey}`]: { configured: true, lastFour: data.lastFour, updatedAt: new Date().toISOString() },
+      }))
+      setNewVendorName('')
+      setNewVendorCredLabel('')
+      setNewVendorValue('')
+      setShowAddVendor(false)
+    } catch {
+      setAddVendorError('Failed to add vendor')
+    } finally {
+      setAddingVendor(false)
     }
   }
 
@@ -975,9 +1041,15 @@ export default function ShowroomSettingsPage() {
                 </p>
               )}
             </section>
+          </>
+        )}
 
-            <section className="pt-6 border-t" style={{ borderColor: 'var(--color-border)', borderLeft: '3px solid var(--r-blue)', paddingLeft: '1rem' }}>
-              <div className="flex items-center justify-between mb-6">
+        {/* ── Payments tab ── */}
+        {activeTab === 'vendors' && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* ── Left: Payment Methods ── */}
+            <section style={{ borderLeft: '3px solid var(--r-blue)', paddingLeft: '1rem' }}>
+              <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
                 <div className="flex items-center gap-3">
                   <div className="p-3 rounded-xl" style={{ background: 'rgba(56,120,224,0.12)' }}>
                     <CreditCard size={18} style={{ color: 'var(--r-blue)' }} />
@@ -1021,7 +1093,7 @@ export default function ShowroomSettingsPage() {
                       transition={{ duration: 0.15 }}
                     >
                       {/* Method header row — name, detail, type, and controls all in one compact row */}
-                      <div className="flex items-center gap-2 mb-3">
+                      <div className="flex items-center gap-2 mb-3 flex-wrap">
                         {/* Drag handle */}
                         <GripVertical size={16} style={{ color: 'var(--color-border)', cursor: 'grab', flexShrink: 0 }} />
 
@@ -1048,6 +1120,7 @@ export default function ShowroomSettingsPage() {
                           placeholder="Detail — e.g. @username or payments@example.com"
                           title="Shown to the customer to know where to send payment"
                           className="cyber-input flex-1 text-sm"
+                          style={{ minWidth: '10rem' }}
                         />
 
                         {/* Type */}
@@ -1142,8 +1215,8 @@ export default function ShowroomSettingsPage() {
                         {(method.type === 'stripe' || method.type === 'square') && (
                           <div className="p-3 rounded-lg text-sm" style={{ background: 'rgba(56,120,224,0.06)', border: '1px solid rgba(56,120,224,0.15)', color: 'var(--color-text-muted)' }}>
                             {method.type === 'stripe'
-                              ? 'Add your Stripe Secret Key under the CC Vendors tab above. Live checkout integration is separate future work — see the payment + tax project notes in the docs.'
-                              : 'Add your Square Access Token under the CC Vendors tab above. Live checkout integration is separate future work — see the payment + tax project notes in the docs.'
+                              ? 'Add your Stripe Secret Key in the CC Vendors column to the right. Live checkout integration is separate future work — see the payment + tax project notes in the docs.'
+                              : 'Add your Square Access Token in the CC Vendors column to the right. Live checkout integration is separate future work — see the payment + tax project notes in the docs.'
                             }
                           </div>
                         )}
@@ -1159,107 +1232,181 @@ export default function ShowroomSettingsPage() {
                 </p>
               )}
             </section>
-          </>
-        )}
 
-        {/* ── CC Vendors tab ── */}
-        {activeTab === 'vendors' && (
-          <section>
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-3 rounded-xl" style={{ background: 'rgba(200,144,42,0.12)' }}>
-                <CreditCard size={18} style={{ color: 'var(--color-accent)' }} />
+            {/* ── Right: CC Vendors ── */}
+            <section style={{ borderLeft: '3px solid var(--color-accent)', paddingLeft: '1rem' }}>
+              <div className="flex items-center gap-3 mb-2">
+                <div className="p-3 rounded-xl" style={{ background: 'rgba(200,144,42,0.12)' }}>
+                  <CreditCard size={18} style={{ color: 'var(--color-accent)' }} />
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-[0.3em] font-semibold" style={{ color: 'var(--color-text-muted)' }}>Payment Processors</p>
+                  <h2 className="text-xl font-bold" style={{ color: 'var(--color-text)' }}>CC Vendors</h2>
+                </div>
               </div>
-              <div>
-                <p className="text-xs uppercase tracking-[0.3em] font-semibold" style={{ color: 'var(--color-text-muted)' }}>Payment Processors</p>
-                <h2 className="text-xl font-bold" style={{ color: 'var(--color-text)' }}>CC Vendors</h2>
-              </div>
-            </div>
-            <p className="text-sm mb-6" style={{ color: 'var(--color-text-muted)' }}>
-              Enter each processor&apos;s credential here instead of Vercel&apos;s environment variables.
-              It&apos;s encrypted before being stored and never shown again after saving — only the last
-              4 characters stay visible so you can confirm which key is active. Each field saves on its
-              own the moment you click Save, separately from the main &quot;Save All Changes&quot; button.
-            </p>
+              <p className="text-sm mb-6" style={{ color: 'var(--color-text-muted)' }}>
+                Enter each processor&apos;s credential here instead of Vercel&apos;s environment variables.
+                It&apos;s encrypted before being stored and never shown again after saving — only the last
+                4 characters stay visible so you can confirm which key is active. Each field saves on its
+                own the moment you click Save, separately from the main &quot;Save All Changes&quot; button.
+              </p>
 
-            <div className="flex flex-col gap-4">
-              {VENDORS.map(v => {
-                const vendorKey = `${v.vendor}:${v.credentialKey}`
-                const status  = vendorStatus[vendorKey]
-                const busy    = vendorSaving === vendorKey
-                const showing = !!vendorShow[vendorKey]
-                return (
-                  <div key={vendorKey} className="rounded-xl p-4" style={{ background: 'var(--color-bg)', border: '1px solid var(--color-border)' }}>
-                    <div className="flex items-center gap-3 mb-3">
-                      <v.Icon size={22} style={{ color: v.color }} />
-                      <div className="flex-1 min-w-0">
-                        <p className="font-bold text-sm" style={{ color: 'var(--color-text)' }}>{v.label}</p>
-                        <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-                          {status?.configured
-                            ? `Configured — ending •••• ${status.lastFour}${status.updatedAt ? ` · updated ${new Date(status.updatedAt).toLocaleDateString()}` : ''}`
-                            : 'Not configured'}
-                        </p>
+              <div className="flex flex-col gap-4">
+                {vendorSlots.map(v => {
+                  const vendorKey = `${v.vendor}:${v.credentialKey}`
+                  const status  = vendorStatus[vendorKey]
+                  const busy    = vendorSaving === vendorKey
+                  const showing = !!vendorShow[vendorKey]
+                  return (
+                    <div key={vendorKey} className="rounded-xl p-4" style={{ background: 'var(--color-bg)', border: '1px solid var(--color-border)' }}>
+                      <div className="flex items-center gap-3 mb-3">
+                        <v.Icon size={22} style={{ color: v.color }} />
+                        <div className="flex-1 min-w-0">
+                          <p className="font-bold text-sm" style={{ color: 'var(--color-text)' }}>{v.label}</p>
+                          <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                            {status?.configured
+                              ? `Configured — ending •••• ${status.lastFour}${status.updatedAt ? ` · updated ${new Date(status.updatedAt).toLocaleDateString()}` : ''}`
+                              : 'Not configured'}
+                          </p>
+                        </div>
+                        {status?.configured && (
+                          <button
+                            onClick={() => removeVendorCredential(vendorKey, v.vendor, v.credentialKey)}
+                            disabled={busy}
+                            className="text-xs flex items-center gap-1"
+                            style={{ color: 'var(--r-red)', background: 'none', border: 'none', cursor: 'pointer' }}
+                          >
+                            <Trash2 size={13} /> Remove
+                          </button>
+                        )}
                       </div>
-                      {status?.configured && (
+
+                      <div className="flex items-center gap-2">
+                        <div className="relative flex-1">
+                          <input
+                            type={showing ? 'text' : 'password'}
+                            value={vendorInputs[vendorKey] ?? ''}
+                            onChange={e => setVendorInputs(i => ({ ...i, [vendorKey]: e.target.value }))}
+                            placeholder={status?.configured ? `New ${v.credentialLabel} (replaces current)` : v.credentialLabel}
+                            className="cyber-input w-full pr-10 text-sm"
+                            autoComplete="off"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setVendorShow(s => ({ ...s, [vendorKey]: !s[vendorKey] }))}
+                            className="absolute right-3 top-1/2 -translate-y-1/2"
+                            style={{ color: 'var(--color-text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}
+                          >
+                            {showing ? <EyeOff size={14} /> : <Eye size={14} />}
+                          </button>
+                        </div>
                         <button
-                          onClick={() => removeVendorCredential(vendorKey, v.vendor, v.credentialKey)}
-                          disabled={busy}
-                          className="text-xs flex items-center gap-1"
-                          style={{ color: 'var(--r-red)', background: 'none', border: 'none', cursor: 'pointer' }}
+                          onClick={() => saveVendorCredential(vendorKey, v.vendor, v.credentialKey)}
+                          disabled={busy || !vendorInputs[vendorKey]?.trim()}
+                          className="cyber-btn btn--sm"
                         >
-                          <Trash2 size={13} /> Remove
+                          {busy ? <Loader size={13} className="animate-spin" /> : <Save size={13} />}
                         </button>
+                      </div>
+
+                      {vendorError[vendorKey] && (
+                        <p className="text-xs mt-1.5 flex items-center gap-1" style={{ color: 'var(--r-red)' }}>
+                          <AlertCircle size={12} /> {vendorError[vendorKey]}
+                        </p>
+                      )}
+                      {vendorSaved[vendorKey] && (
+                        <p className="text-xs mt-1.5 flex items-center gap-1" style={{ color: 'var(--r-green)' }}>
+                          <Check size={12} /> Saved and encrypted
+                        </p>
                       )}
                     </div>
+                  )
+                })}
+              </div>
 
-                    <div className="flex items-center gap-2">
-                      <div className="relative flex-1">
+              {/* Add a brand-new processor slot — no code change or redeploy needed */}
+              <div className="mt-4">
+                {!showAddVendor ? (
+                  <button
+                    type="button"
+                    onClick={() => setShowAddVendor(true)}
+                    className="cyber-btn art-btn-ghost btn--sm w-full justify-center"
+                  >
+                    <Plus size={13} /> Add Vendor
+                  </button>
+                ) : (
+                  <div className="rounded-xl p-4 flex flex-col gap-3" style={{ background: 'var(--color-bg)', border: '1px dashed var(--color-border)' }}>
+                    <p className="text-xs font-semibold tracking-widest uppercase" style={{ color: 'var(--color-text-muted)' }}>
+                      New Processor
+                    </p>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="flex flex-col gap-1">
+                        <label className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Vendor Name</label>
                         <input
-                          type={showing ? 'text' : 'password'}
-                          value={vendorInputs[vendorKey] ?? ''}
-                          onChange={e => setVendorInputs(i => ({ ...i, [vendorKey]: e.target.value }))}
-                          placeholder={status?.configured ? `New ${v.credentialLabel} (replaces current)` : v.credentialLabel}
-                          className="cyber-input w-full pr-10 text-sm"
-                          autoComplete="off"
+                          type="text"
+                          value={newVendorName}
+                          onChange={e => setNewVendorName(e.target.value)}
+                          placeholder="e.g. PayPal, Authorize.net"
+                          className="cyber-input text-sm"
                         />
-                        <button
-                          type="button"
-                          onClick={() => setVendorShow(s => ({ ...s, [vendorKey]: !s[vendorKey] }))}
-                          className="absolute right-3 top-1/2 -translate-y-1/2"
-                          style={{ color: 'var(--color-text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}
-                        >
-                          {showing ? <EyeOff size={14} /> : <Eye size={14} />}
-                        </button>
                       </div>
+                      <div className="flex flex-col gap-1">
+                        <label className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Credential Label</label>
+                        <input
+                          type="text"
+                          value={newVendorCredLabel}
+                          onChange={e => setNewVendorCredLabel(e.target.value)}
+                          placeholder="e.g. API Key, Secret Key"
+                          className="cyber-input text-sm"
+                        />
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Key Value</label>
+                      <input
+                        type="password"
+                        value={newVendorValue}
+                        onChange={e => setNewVendorValue(e.target.value)}
+                        placeholder="Pasted key is encrypted immediately on save"
+                        className="cyber-input text-sm"
+                        autoComplete="off"
+                      />
+                    </div>
+                    {addVendorError && (
+                      <p className="text-xs flex items-center gap-1" style={{ color: 'var(--r-red)' }}>
+                        <AlertCircle size={12} /> {addVendorError}
+                      </p>
+                    )}
+                    <div className="flex items-center gap-2">
                       <button
-                        onClick={() => saveVendorCredential(vendorKey, v.vendor, v.credentialKey)}
-                        disabled={busy || !vendorInputs[vendorKey]?.trim()}
+                        type="button"
+                        onClick={handleAddVendor}
+                        disabled={addingVendor}
                         className="cyber-btn btn--sm"
                       >
-                        {busy ? <Loader size={13} className="animate-spin" /> : <Save size={13} />}
+                        {addingVendor ? <Loader size={13} className="animate-spin" /> : <Save size={13} />} Save Vendor
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setShowAddVendor(false); setAddVendorError(null) }}
+                        className="cyber-btn art-btn-ghost btn--sm"
+                      >
+                        Cancel
                       </button>
                     </div>
-
-                    {vendorError[vendorKey] && (
-                      <p className="text-xs mt-1.5 flex items-center gap-1" style={{ color: 'var(--r-red)' }}>
-                        <AlertCircle size={12} /> {vendorError[vendorKey]}
-                      </p>
-                    )}
-                    {vendorSaved[vendorKey] && (
-                      <p className="text-xs mt-1.5 flex items-center gap-1" style={{ color: 'var(--r-green)' }}>
-                        <Check size={12} /> Saved and encrypted
-                      </p>
-                    )}
                   </div>
-                )
-              })}
-            </div>
+                )}
+              </div>
 
-            <div className="mt-6 p-3 rounded-lg text-xs" style={{ background: 'rgba(212,176,48,0.08)', border: '1px solid rgba(212,176,48,0.2)', color: 'var(--color-text-muted)' }}>
-              These are stored for future use once a payment integration is actually built — saving a
-              key here secures it in place but does not yet enable live charges. See the payment +
-              tax project notes in the project docs before wiring one up.
-            </div>
-          </section>
+              <div className="mt-6 p-3 rounded-lg text-xs" style={{ background: 'rgba(212,176,48,0.08)', border: '1px solid rgba(212,176,48,0.2)', color: 'var(--color-text-muted)' }}>
+                These are stored for future use once a payment integration is actually built — saving a
+                key here secures it in place but does not yet enable live charges. Adding a vendor here
+                takes effect immediately, with no redeploy or code change — but wiring its checkout flow
+                up to actually charge cards is separate work. See the payment + tax project notes in the
+                project docs before wiring one up.
+              </div>
+            </section>
+          </div>
         )}
 
         {/* ── Consignment tab ── */}

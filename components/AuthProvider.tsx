@@ -4,6 +4,24 @@ import { createContext, useContext, useEffect, useState, useCallback } from 'rea
 import type { User } from '@supabase/supabase-js'
 import { isSupabaseConfigured, getSupabaseClient } from '@/lib/supabase'
 import { Profile } from '@/lib/types'
+import {
+  SESSION_STARTED_COOKIE,
+  LAST_ACTIVE_COOKIE,
+  SESSION_ABSOLUTE_MAX_AGE,
+  SESSION_INACTIVITY_MAX_AGE,
+} from '@/lib/session-timeout'
+
+function setMarkerCookie(name: string, maxAgeSeconds: number) {
+  document.cookie = `${name}=1; path=/; max-age=${maxAgeSeconds}; samesite=lax`
+}
+
+function hasMarkerCookie(name: string) {
+  return document.cookie.split('; ').some(c => c.startsWith(`${name}=`))
+}
+
+function clearMarkerCookie(name: string) {
+  document.cookie = `${name}=; path=/; max-age=0`
+}
 
 interface AuthContextValue {
   user:    User | null
@@ -86,22 +104,53 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
       setLoading(false)
     })
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       setUser(session?.user ?? null)
       if (session?.user) {
+        // SIGNED_IN is a genuine new login — start the absolute-timeout
+        // clock. Every other event with a live session (focus checks,
+        // token refreshes) just counts as activity for the sliding
+        // inactivity window, without resetting the absolute one.
+        if (event === 'SIGNED_IN') setMarkerCookie(SESSION_STARTED_COOKIE, SESSION_ABSOLUTE_MAX_AGE)
+        setMarkerCookie(LAST_ACTIVE_COOKIE, SESSION_INACTIVITY_MAX_AGE)
         await fetchProfile(session.user.id)
       } else {
+        clearMarkerCookie(SESSION_STARTED_COOKIE)
+        clearMarkerCookie(LAST_ACTIVE_COOKIE)
         setProfile(null)
       }
       setLoading(false)
     })
 
-    /* Force session refresh when page regains focus — catches auth state mismatches */
-    const handleFocus = () => { refreshSession() }
+    /* App-level session-timeout enforcement — replaces Supabase's
+       Pro-only "time-box user sessions" / inactivity controls. If Supabase
+       still considers the session valid but either marker cookie has
+       expired, force a real sign-out rather than silently letting the
+       (up to 400-day) refresh token keep the login alive. */
+    const enforceSessionTimeout = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) return
+      if (!hasMarkerCookie(SESSION_STARTED_COOKIE) || !hasMarkerCookie(LAST_ACTIVE_COOKIE)) {
+        await supabase.auth.signOut()
+        return
+      }
+      setMarkerCookie(LAST_ACTIVE_COOKIE, SESSION_INACTIVITY_MAX_AGE)
+    }
+
+    /* Force session refresh when page regains focus — catches auth state
+       mismatches. Also re-checks the timeout, since a laptop closed for
+       days and reopened fires focus, not a fresh page load. */
+    const handleFocus = () => { enforceSessionTimeout(); refreshSession() }
     window.addEventListener('focus', handleFocus)
+
+    // A focused-but-idle tab never fires `focus` again, so an interval is
+    // the only way to catch "walked away and left it open."
+    const timeoutCheckInterval = setInterval(enforceSessionTimeout, 5 * 60 * 1000)
+    enforceSessionTimeout()
 
     return () => {
       clearTimeout(timeout)
+      clearInterval(timeoutCheckInterval)
       subscription.unsubscribe()
       window.removeEventListener('focus', handleFocus)
     }
