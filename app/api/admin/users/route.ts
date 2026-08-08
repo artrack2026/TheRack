@@ -21,7 +21,7 @@ export async function GET() {
   const admin = createSupabaseAdminClient()
   const { data, error } = await admin
     .from('profiles')
-    .select('id, email, first_name, last_name, display_name, phone, address_line1, address_line2, city, state, zip, role, status, created_at')
+    .select('id, email, first_name, last_name, display_name, phone, address_line1, address_line2, city, state, zip, role, status, totp_enabled, created_at')
     .order('created_at', { ascending: false })
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })

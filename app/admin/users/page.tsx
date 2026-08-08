@@ -23,10 +23,11 @@ interface UserRow {
   zip: string | null
   role: 'customer' | 'admin' | 'consignor'
   status: 'active' | 'inactive'
+  totp_enabled: boolean
   created_at: string
 }
 
-type EditForm = Omit<UserRow, 'id' | 'email' | 'created_at' | 'role' | 'status'>
+type EditForm = Omit<UserRow, 'id' | 'email' | 'created_at' | 'role' | 'status' | 'totp_enabled'>
 
 const ROLE_TABS: { key: UserRow['role']; label: string; icon: typeof User }[] = [
   { key: 'customer',  label: 'Customers',  icon: User },
@@ -645,6 +646,11 @@ export default function UsersPage() {
                       <div style={{ borderTop: '1px solid var(--color-border)', marginTop: '20px', paddingTop: '16px' }}>
                         <p className="text-xs font-semibold tracking-widest uppercase mb-3" style={{ color: 'var(--color-text-muted)' }}>
                           Account Status
+                        </p>
+                        <p className="text-xs flex items-center gap-1.5 mb-3" style={{ color: u.totp_enabled ? 'var(--r-green)' : 'var(--color-text-muted)' }}>
+                          <ShieldCheck size={12} />
+                          Authenticator app: {u.totp_enabled ? 'Enrolled' : 'Not enrolled'}
+                          <span style={{ color: 'var(--color-text-muted)' }}>— managed from the account&apos;s own Profile page</span>
                         </p>
                         <div className="flex flex-wrap items-center gap-3">
                           <button

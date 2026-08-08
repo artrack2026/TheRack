@@ -531,11 +531,24 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
 export const isSupabaseConfigured = !!(supabaseUrl && supabaseAnonKey)
 
+/* ── Session cookie lifetime ──
+   @supabase/ssr's own default is a 400-day maxAge (its hard cap — see
+   DEFAULT_COOKIE_OPTIONS in node_modules/@supabase/ssr), which is why a
+   login here would otherwise survive weeks of inactivity, device restarts,
+   even OS reinstalls. Passing `maxAge: undefined` here strips the Max-Age/
+   Expires attributes entirely, making it a true session cookie — cleared
+   by the browser when it fully closes, not just when a tab does. Both
+   clients below need this set the same way: the browser client writes it
+   on login, and the server client can also rewrite it on a token refresh,
+   which would silently reintroduce the 400-day default if only one side
+   were fixed. */
+const SESSION_COOKIE_OPTIONS = { maxAge: undefined }
+
 /* ── Browser / data client ──
    Must use createBrowserClient (not createClient) so the session is stored
-   in BOTH localStorage AND cookies. The middleware reads cookies to check auth —
-   if we use plain createClient the middleware never sees the session and
-   redirects every protected route back to /login.
+   in cookies, not just in-memory — server-side code (API routes, server
+   components) reads the session via createSupabaseServerClient below,
+   which only has access to cookies, not this client's runtime state.
 ── */
 
 export function getSupabaseClient() {
@@ -543,7 +556,9 @@ export function getSupabaseClient() {
     throw new Error('Supabase not configured. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to .env.local')
   }
   // createBrowserClient is internally a singleton keyed by URL+anonKey
-  return createBrowserClient<Database>(supabaseUrl!, supabaseAnonKey!)
+  return createBrowserClient<Database>(supabaseUrl!, supabaseAnonKey!, {
+    cookieOptions: SESSION_COOKIE_OPTIONS,
+  })
 }
 
 /* ── Server client (API routes / middleware) ── */
@@ -552,6 +567,7 @@ export function getSupabaseClient() {
 export function createSupabaseServerClient(cookieStore: any) {
   if (!isSupabaseConfigured) throw new Error('Supabase not configured.')
   return createServerClient<Database>(supabaseUrl!, supabaseAnonKey!, {
+    cookieOptions: SESSION_COOKIE_OPTIONS,
     cookies: {
       getAll() { return cookieStore.getAll() },
       setAll(toSet: { name: string; value: string; options?: object }[]) {

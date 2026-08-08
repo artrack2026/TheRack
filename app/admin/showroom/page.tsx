@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
 import {
   RefreshCcw, Settings, Info, Save, AlertCircle,
   Plus, Trash2, GripVertical, ToggleLeft, ToggleRight, DollarSign, Truck, CreditCard,
@@ -223,10 +224,11 @@ function isActivePreset(preset: ThemeColors, current: ThemeColors): boolean {
 
 /* ── Tabs ── */
 
-type TabKey = 'branding' | 'messaging' | 'products' | 'orders' | 'vendors' | 'consignment'
+type TabKey = 'branding' | 'security' | 'messaging' | 'products' | 'orders' | 'vendors' | 'consignment'
 
 const TABS: { key: TabKey; label: string; icon: typeof Palette }[] = [
   { key: 'branding',     label: 'Branding',     icon: Palette },
+  { key: 'security',     label: 'Security',     icon: ShieldCheck },
   { key: 'messaging',    label: 'Messaging',    icon: MessageSquareMore },
   { key: 'products',     label: 'Products',     icon: Package },
   { key: 'orders',       label: 'Orders',       icon: ClipboardList },
@@ -735,8 +737,8 @@ export default function ShowroomSettingsPage() {
           </div>
         )}
 
-        {/* ── Messaging tab ── */}
-        {activeTab === 'messaging' && (
+        {/* ── Security tab ── */}
+        {activeTab === 'security' && (
           <>
             <section>
               <div className="flex items-center justify-between gap-4 flex-wrap">
@@ -745,7 +747,7 @@ export default function ShowroomSettingsPage() {
                     <ShieldCheck size={18} style={{ color: 'var(--r-green)' }} />
                   </div>
                   <div>
-                    <p className="text-xs uppercase tracking-[0.3em] font-semibold" style={{ color: 'var(--color-text-muted)' }}>Security</p>
+                    <p className="text-xs uppercase tracking-[0.3em] font-semibold" style={{ color: 'var(--color-text-muted)' }}>Login</p>
                     <h2 className="text-xl font-bold" style={{ color: 'var(--color-text)' }}>SMS login verification</h2>
                   </div>
                 </div>
@@ -764,7 +766,10 @@ export default function ShowroomSettingsPage() {
                 When enabled, every login is texted a 6-digit code via Textbelt after the password
                 step and must enter it to finish signing in. Codes are sent to the phone number on
                 each profile and expire after 5 minutes. This setting saves with the main &quot;Save
-                All Changes&quot; button above.
+                All Changes&quot; button above. Textbelt balance and API key live on the{' '}
+                <button type="button" onClick={() => setActiveTab('messaging')} className="underline" style={{ color: 'var(--color-accent)' }}>
+                  Messaging tab
+                </button>.
               </p>
               <p className="text-sm mt-2" style={{ color: 'var(--color-text-muted)' }}>
                 <strong style={{ color: 'var(--color-text)' }}>Email backup, built in:</strong> if a
@@ -777,6 +782,42 @@ export default function ShowroomSettingsPage() {
             </section>
 
             <section className="pt-6 border-t" style={{ borderColor: 'var(--color-border)' }}>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-3 rounded-xl" style={{ background: 'rgba(138,64,216,0.12)' }}>
+                  <Smartphone size={18} style={{ color: 'var(--r-violet)' }} />
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-[0.3em] font-semibold" style={{ color: 'var(--color-text-muted)' }}>Login</p>
+                  <h2 className="text-xl font-bold" style={{ color: 'var(--color-text)' }}>Authenticator app codes</h2>
+                </div>
+              </div>
+              <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
+                A per-account alternative to SMS — each customer or admin enrolls their own authenticator
+                app (Google Authenticator, Authy, etc.) from their own Profile page. There&apos;s no
+                site-wide switch for this one: unlike SMS, it can&apos;t be turned on or off globally,
+                since each account&apos;s codes only exist once that account has set it up.
+              </p>
+              <p className="text-sm mt-2" style={{ color: 'var(--color-text-muted)' }}>
+                Whenever an account has it enrolled, login prefers it over SMS automatically — it&apos;s
+                the one 2FA method that depends on neither Textbelt nor Supabase&apos;s email sending being
+                up, so it keeps working even if either is down. Accounts can still fall back to an emailed
+                code from the login screen if they&apos;ve lost access to their authenticator app.
+              </p>
+              <p className="text-sm mt-2" style={{ color: 'var(--color-text-muted)' }}>
+                To review or remove a specific account&apos;s enrollment, open it from{' '}
+                <Link href="/admin/users" className="underline" style={{ color: 'var(--color-accent)' }}>
+                  Users
+                </Link>{' '}
+                — for now, only that account&apos;s own Profile page can add or change its authenticator app.
+              </p>
+            </section>
+          </>
+        )}
+
+        {/* ── Messaging tab ── */}
+        {activeTab === 'messaging' && (
+          <>
+            <section>
               <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
                 <div className="flex items-center gap-3">
                   <div className="p-3 rounded-xl" style={{ background: 'rgba(138,64,216,0.12)' }}>
