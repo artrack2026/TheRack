@@ -228,6 +228,11 @@ export interface Database {
           payment_method: string | null
           payment_detail: string | null
           payment_instructions: string | null
+          payment_type: string | null
+          payment_redirect_url: string | null
+          payment_confirmation_code: string | null
+          payment_confirmation_submitted_at: string | null
+          payment_reminder_sent_at: string | null
           created_at: string
         }
         Insert: {
@@ -251,6 +256,11 @@ export interface Database {
           payment_method?: string | null
           payment_detail?: string | null
           payment_instructions?: string | null
+          payment_type?: string | null
+          payment_redirect_url?: string | null
+          payment_confirmation_code?: string | null
+          payment_confirmation_submitted_at?: string | null
+          payment_reminder_sent_at?: string | null
           created_at?: string
         }
         Update: {
@@ -271,6 +281,11 @@ export interface Database {
           payment_method?: string | null
           payment_detail?: string | null
           payment_instructions?: string | null
+          payment_type?: string | null
+          payment_redirect_url?: string | null
+          payment_confirmation_code?: string | null
+          payment_confirmation_submitted_at?: string | null
+          payment_reminder_sent_at?: string | null
         }
         Relationships: Rel
       }

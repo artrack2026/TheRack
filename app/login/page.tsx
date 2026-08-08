@@ -30,6 +30,13 @@ function LoginForm() {
   const [otpError, setOtpError]         = useState<string | null>(null)
   const [switchingChannel, setSwitchingChannel] = useState(false)
 
+  /* ── Forgot password ── */
+  const [forgotPassword, setForgotPassword]   = useState(false)
+  const [forgotEmail, setForgotEmail]         = useState('')
+  const [forgotSubmitting, setForgotSubmitting] = useState(false)
+  const [forgotSent, setForgotSent]           = useState(false)
+  const [forgotError, setForgotError]         = useState<string | null>(null)
+
   /* Redirect after a session already exists — shared by every path that
      successfully establishes auth (no-2FA, SMS-verified, email-verified). */
   const redirectAfterAuth = async () => {
@@ -189,6 +196,39 @@ function LoginForm() {
     setOtpError(null)
   }
 
+  const openForgotPassword = () => {
+    setForgotEmail(form.email)
+    setForgotError(null)
+    setForgotSent(false)
+    setForgotPassword(true)
+  }
+
+  const backToSignIn = () => {
+    setForgotPassword(false)
+    setForgotSent(false)
+    setForgotError(null)
+  }
+
+  const handleForgotPassword = async (e: FormEvent) => {
+    e.preventDefault()
+    setForgotError(null)
+    setForgotSubmitting(true)
+    try {
+      const res = await fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: forgotEmail.trim() }),
+      })
+      const data = await res.json()
+      if (!res.ok) { setForgotError(data.error ?? 'Something went wrong. Please try again.'); return }
+      setForgotSent(true)
+    } catch {
+      setForgotError('Something went wrong. Please try again.')
+    } finally {
+      setForgotSubmitting(false)
+    }
+  }
+
   return (
     <div className="relative min-h-screen flex items-center justify-center overflow-hidden px-4 py-20">
       <ParticleField />
@@ -213,7 +253,11 @@ function LoginForm() {
             Welcome Back
           </p>
           <p className="mt-2 text-sm" style={{ color: 'var(--color-text-muted)' }}>
-            {channel ? 'Enter your verification code' : 'Sign in to your account'}
+            {channel
+              ? 'Enter your verification code'
+              : forgotPassword
+              ? 'Reset your password'
+              : 'Sign in to your account'}
           </p>
         </div>
 
@@ -300,6 +344,79 @@ function LoginForm() {
                 <ArrowLeft size={12} /> Back
               </button>
             </form>
+          ) : forgotPassword ? (
+            forgotSent ? (
+              <div className="flex flex-col gap-5 items-center text-center">
+                <ShieldCheck size={28} style={{ color: 'var(--r-green)' }} />
+                <p className="text-sm" style={{ color: 'var(--color-text)' }}>
+                  If an account exists for <strong>{forgotEmail.trim()}</strong>, we&apos;ve sent a link to reset
+                  its password. Check your inbox (and spam folder) — the link expires after a while, so use it
+                  soon.
+                </p>
+                <button
+                  type="button"
+                  onClick={backToSignIn}
+                  className="flex items-center justify-center gap-1.5 text-xs tracking-widest uppercase"
+                  style={{ color: 'var(--color-accent)', background: 'none', border: 'none', cursor: 'pointer' }}
+                >
+                  <ArrowLeft size={12} /> Back to Sign In
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleForgotPassword} className="flex flex-col gap-5">
+                <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
+                  Enter the email on your account and we&apos;ll send you a link to set a new password.
+                </p>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-semibold tracking-widest uppercase" style={{ color: 'var(--color-text-muted)' }}>
+                    Email
+                  </label>
+                  <div className="relative">
+                    <Mail size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: 'var(--color-text-muted)' }} />
+                    <input
+                      type="text"
+                      required
+                      autoComplete="email"
+                      className="cyber-input"
+                      style={{ paddingLeft: '2.5rem' }}
+                      placeholder="you@example.com"
+                      value={forgotEmail}
+                      onChange={e => setForgotEmail(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                {forgotError && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex items-center gap-2 text-sm px-3 py-2.5 rounded-lg"
+                    style={{ background: 'rgba(224,88,88,0.1)', color: 'var(--r-red)', border: '1px solid rgba(224,88,88,0.25)' }}
+                  >
+                    <AlertCircle size={14} />
+                    {forgotError}
+                  </motion.div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={forgotSubmitting}
+                  className="cyber-btn w-full justify-center"
+                >
+                  {forgotSubmitting ? <><Loader size={15} className="animate-spin" /> Sending…</> : 'Send Reset Link'}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={backToSignIn}
+                  className="flex items-center justify-center gap-1.5 text-xs tracking-widest uppercase"
+                  style={{ color: 'var(--color-text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}
+                >
+                  <ArrowLeft size={12} /> Back to Sign In
+                </button>
+              </form>
+            )
           ) : (
             <form onSubmit={handleSubmit} className="flex flex-col gap-5">
               {/* Email */}
@@ -352,6 +469,14 @@ function LoginForm() {
                     {showPass ? <EyeOff size={15} /> : <Eye size={15} />}
                   </button>
                 </div>
+                <button
+                  type="button"
+                  onClick={openForgotPassword}
+                  className="self-end text-xs"
+                  style={{ color: 'var(--color-accent)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                >
+                  Forgot password?
+                </button>
               </div>
 
               {/* Error */}

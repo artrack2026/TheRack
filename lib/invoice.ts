@@ -123,7 +123,7 @@ export function buildInvoiceHtml({ order, profile, businessName = 'Art-R-Ack', r
   `
 }
 
-function escapeHtml(s: string) {
+export function escapeHtml(s: string) {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 }
 

@@ -83,12 +83,32 @@ export async function POST(req: NextRequest) {
     // keeps its own copy for the invoice.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const methods = Array.isArray(settings?.payment_methods) ? (settings.payment_methods as any[]) : []
-    const selectedMethod      = methods.find(m => m.id === paymentMethod)
-    const paymentMethodName   = selectedMethod?.name ?? null
-    const paymentDetail       = selectedMethod?.detail ?? null
-    const paymentInstructions = selectedMethod?.type === 'instruction' && selectedMethod?.instructions
+    const selectedMethod = methods.find(m => m.id === paymentMethod)
+
+    // The client already filters to .enabled methods when listing them
+    // (app/checkout/page.tsx), but a stale page (open in a tab since
+    // before an admin edit) could still submit an id that's been deleted
+    // or disabled since — without this check the order used to go through
+    // anyway with every payment_* field silently null, leaving the
+    // customer with no way to know how to pay.
+    if (!selectedMethod || selectedMethod.enabled === false) {
+      return NextResponse.json(
+        { error: 'That payment method is no longer available. Please refresh the page and pick another.' },
+        { status: 400 },
+      )
+    }
+
+    const paymentMethodName   = selectedMethod.name ?? null
+    const paymentDetail       = selectedMethod.detail ?? null
+    // Instructions apply to any method type that has them, not just
+    // 'instruction' — 'redirect' methods (Venmo/Cash App/PayPal.me) can
+    // carry admin-authored notes too (app/admin/showroom/page.tsx), and
+    // those need to survive onto the order the same way.
+    const paymentInstructions = selectedMethod.instructions
       ? String(selectedMethod.instructions).replace(/\{detail\}/g, selectedMethod.detail ?? '').replace(/\{name\}/g, selectedMethod.detail ?? '')
       : null
+    const paymentType        = selectedMethod.type ?? null
+    const paymentRedirectUrl = selectedMethod.type === 'redirect' ? (selectedMethod.redirect_url ?? null) : null
 
     // Calculate totals
     const subtotal = items.reduce(
@@ -120,9 +140,11 @@ export async function POST(req: NextRequest) {
         state:          state || null,
         zip:            zip || null,
         notes:          notes || null,
-        payment_method:       paymentMethodName,
-        payment_detail:       paymentDetail,
-        payment_instructions: paymentInstructions,
+        payment_method:        paymentMethodName,
+        payment_detail:        paymentDetail,
+        payment_instructions:  paymentInstructions,
+        payment_type:          paymentType,
+        payment_redirect_url:  paymentRedirectUrl,
       })
       .select()
       .single()
@@ -151,8 +173,9 @@ export async function POST(req: NextRequest) {
     await admin.from('carts').delete().eq('id', cartId)
 
     return NextResponse.json({
-      orderId:   order.id,
-      total:     order.total,
+      orderId:     order.id,
+      total:       order.total,
+      paymentType: paymentType,
       subtotal,
       shipping,
       tax,

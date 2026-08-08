@@ -1195,6 +1195,11 @@ export default function ShowroomSettingsPage() {
                               <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
                                 At checkout, the customer gets a button that opens this link in a new tab to complete payment on {method.name || 'the'}&apos;s own site.
                               </p>
+                              {method.enabled && !method.redirect_url && (
+                                <p className="text-xs mt-1.5 flex items-center gap-1.5" style={{ color: 'var(--r-yellow)' }}>
+                                  <AlertCircle size={12} /> This method is enabled but has no link — customers who pick it won&apos;t have a way to pay. Add a link or turn it off.
+                                </p>
+                              )}
                             </div>
                             <div>
                               <label className="block text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: 'var(--color-text-muted)' }}>

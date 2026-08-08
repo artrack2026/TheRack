@@ -181,10 +181,13 @@ export default function CheckoutPage() {
 
       clearCart()
 
-      // Pass payment instructions for success page
+      // Pass payment instructions along for whichever confirmation screen
+      // comes next — any method type can carry instructions, not just
+      // 'instruction' (a 'redirect' method's admin-authored note matters
+      // just as much, and now reaches the customer the same way).
       const method = config?.payment_methods.find(m => m.id === selectedMethod)
-      const instructions = method?.type === 'instruction'
-        ? interpolateInstructions(method.instructions ?? '', method.detail)
+      const instructions = method?.instructions
+        ? interpolateInstructions(method.instructions, method.detail)
         : null
       if (instructions) sessionStorage.setItem('order_instructions', instructions)
 
@@ -226,7 +229,16 @@ export default function CheckoutPage() {
         }
       }
 
-      router.push(`/checkout/success?id=${data.orderId}&total=${data.total}${newAccount ? '&newAccount=1' : ''}`)
+      // Redirect-type methods (Venmo/Cash App/PayPal.me) have no automatic
+      // payment callback — route through the confirmation-code screen
+      // first, which itself continues on to /checkout/success once the
+      // customer either submits a code or chooses to do it later.
+      const successParams = `id=${data.orderId}&total=${data.total}${newAccount ? '&newAccount=1' : ''}`
+      if (data.paymentType === 'redirect') {
+        router.push(`/orders/${data.orderId}/confirm-payment?${successParams}`)
+      } else {
+        router.push(`/checkout/success?${successParams}`)
+      }
     } catch {
       setError('Something went wrong. Please try again.')
     } finally {
@@ -434,17 +446,13 @@ export default function CheckoutPage() {
                                         {interpolateInstructions(method.instructions, method.detail)}
                                       </p>
                                     )}
-                                    {method.redirect_url && (
-                                      <a
-                                        href={method.redirect_url}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        onClick={e => e.stopPropagation()}
-                                        className="cyber-btn btn--sm w-fit"
-                                      >
-                                        Continue to {method.name || 'payment'} to Pay
-                                      </a>
-                                    )}
+                                    {/* No pay link here on purpose — there's no order yet, so no order
+                                        number exists to reference in the payment note. The actual pay
+                                        link (with the amount pre-filled) appears right after placing
+                                        the order, on the payment-confirmation screen. */}
+                                    <p className="text-xs leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
+                                      You&apos;ll get a secure {method.name || 'payment'} link with your order number right after you place your order.
+                                    </p>
                                   </motion.div>
                                 )}
                                 {active && method.type === 'stripe' && (

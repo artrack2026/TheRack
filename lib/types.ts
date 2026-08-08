@@ -151,6 +151,15 @@ export interface Order {
   payment_method: string | null
   payment_detail: string | null
   payment_instructions: string | null
+  /** Snapshot of the selected method's type/link at checkout — only
+   *  meaningful for 'redirect' methods (Venmo/Cash App/PayPal.me), which
+   *  is what the payment-confirmation flow (app/orders/[id]/confirm-payment)
+   *  is built for. */
+  payment_type: PaymentMethodType | null
+  payment_redirect_url: string | null
+  payment_confirmation_code: string | null
+  payment_confirmation_submitted_at: string | null
+  payment_reminder_sent_at: string | null
   created_at: string
   items?: OrderItem[]
 }
