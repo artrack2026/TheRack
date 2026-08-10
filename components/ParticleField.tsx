@@ -12,6 +12,11 @@ interface Particle {
   color: string
 }
 
+/** How close the cursor has to be to a dot before a line is drawn to it —
+ *  matches the same distance-based fade used for dot-to-dot connections
+ *  below, just centered on the pointer instead. */
+const MOUSE_LINK_RADIUS = 160
+
 export default function ParticleField() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
@@ -24,6 +29,8 @@ export default function ParticleField() {
     let raf: number
     const particles: Particle[] = []
     const count = 60
+    // null = pointer isn't over this canvas right now, so no lines to it.
+    const mouse: ({ x: number; y: number } | null)[] = [null]
 
     const resize = () => {
       canvas.width = canvas.offsetWidth
@@ -39,7 +46,7 @@ export default function ParticleField() {
           vx: (Math.random() - 0.5) * 0.4,
           vy: (Math.random() - 0.5) * 0.4,
           size: Math.random() * 2 + 0.5,
-          opacity: Math.random() * 0.6 + 0.1,
+          opacity: Math.random() * 0.6 + 0.3,
           color: [
             '#e05858', '#e07838', '#d4b030', '#3ab870',
             '#1ab4c0', '#3878e0', '#8844d8', '#d84490',
@@ -69,6 +76,27 @@ export default function ParticleField() {
         }
       }
 
+      // Draw lines from nearby dots to the pointer, same fade-by-distance
+      // logic as above but a touch stronger so the pointer trail reads
+      // clearly against the dot-to-dot web.
+      const m = mouse[0]
+      if (m) {
+        for (const p of particles) {
+          const dx = p.x - m.x
+          const dy = p.y - m.y
+          const dist = Math.sqrt(dx * dx + dy * dy)
+          if (dist < MOUSE_LINK_RADIUS) {
+            ctx.beginPath()
+            ctx.strokeStyle = p.color
+            ctx.globalAlpha = (1 - dist / MOUSE_LINK_RADIUS) * 0.5
+            ctx.lineWidth = 0.8
+            ctx.moveTo(p.x, p.y)
+            ctx.lineTo(m.x, m.y)
+            ctx.stroke()
+          }
+        }
+      }
+
       // Draw particles
       for (const p of particles) {
         ctx.beginPath()
@@ -90,14 +118,31 @@ export default function ParticleField() {
       raf = requestAnimationFrame(draw)
     }
 
+    const handleResize = () => { resize(); init() }
+
+    // Listens on window (not the canvas) since the canvas has
+    // pointer-events-none — it never receives mouse events directly, so
+    // hovering it doesn't block clicks on whatever's layered above it.
+    // clientX/Y are converted to canvas-local coordinates, and set back to
+    // null once the pointer leaves this canvas's bounds so lines don't
+    // keep pointing at a stale position on a tall page.
+    const handleMouseMove = (e: MouseEvent) => {
+      const rect = canvas.getBoundingClientRect()
+      const x = e.clientX - rect.left
+      const y = e.clientY - rect.top
+      mouse[0] = x >= 0 && x <= rect.width && y >= 0 && y <= rect.height ? { x, y } : null
+    }
+
     resize()
     init()
     draw()
 
-    window.addEventListener('resize', () => { resize(); init() })
+    window.addEventListener('resize', handleResize)
+    window.addEventListener('mousemove', handleMouseMove)
     return () => {
       cancelAnimationFrame(raf)
-      window.removeEventListener('resize', () => { resize(); init() })
+      window.removeEventListener('resize', handleResize)
+      window.removeEventListener('mousemove', handleMouseMove)
     }
   }, [])
 
@@ -105,7 +150,7 @@ export default function ParticleField() {
     <canvas
       ref={canvasRef}
       className="absolute inset-0 w-full h-full pointer-events-none"
-      style={{ opacity: 0.6 }}
+      style={{ opacity: 0.85 }}
     />
   )
 }
